@@ -11,6 +11,7 @@ import IconMdiWarningOctagonOutline from '~icons/mdi/warning-octagon-outline';
 import { useAppStore } from '@/stores/app.store'
 import { ref, reactive } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
+import { TestPassword } from '@/popup/libs/tools'
 
 const showPassword = ref(false);
 const formData = reactive({
@@ -40,7 +41,7 @@ const formErrors = ref({
 
 const validateForm = () => {
   formErrors.value.passwordError = 
-    formData.password.length < 8 || formData.password.length > 12
+    !TestPassword(formData.password.length)
       ? 'Password must be 8-12 characters long.'
       : '';
   

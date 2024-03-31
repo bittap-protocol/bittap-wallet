@@ -33,9 +33,9 @@ export default {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const accounts = computed(() => store.accountList)
     // @ts-ignore
-    const activeAccount = computed(() => store.activeAccount)
+    // const activeAccount = computed(() => store.activeAccount)
     return {
-      accountCount, goBack, goBackUrl, goToPrevious, isHome, accounts, activeAccount, store, router
+      accountCount, goBack, goBackUrl, goToPrevious, isHome, accounts, store, router
     }
   },
   data() {

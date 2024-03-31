@@ -30,21 +30,23 @@ const router = useRouter()
 if(count.value <= 0) {
   router.push('/common/welcome')
 }
+const activeAccount = computed(() => store.getActiveAccount())
 
 </script>
 
 <template>
   <div class="text-center m-2 flex flex-col gap-y-2">
     <div class="min-box">
-      <div v-if="activeAccount && !activeAccount.backup" class="flex flex-col gap-x-2 justify-center space-y-5 mb-2">
+      <div v-if="count > 0 && activeAccount" class="flex flex-col gap-x-2 justify-center space-y-5 ">
         <RouterLink
-          class="underline "
+          v-if="!activeAccount.backup"
+          class="underline mb-2"
           to="/common/backupKey"
         >
         Backup Account
         </RouterLink>
       </div>
-      <HomeCenter></HomeCenter>
+      <HomeCenter v-if="count>0"></HomeCenter>
     </div>
 
     

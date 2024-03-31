@@ -79,9 +79,12 @@ export const useAppStore = defineStore('app', () => {
     return getActiveAccountForIndex(activeAccount.value)
   }
   const getActiveAccountForIndex = (index: number) => {
-    return accountList.value[index]
+    return accountList.value.length <= 0 || index <=-1 || index > accountList.value.length-1 ? null : accountList.value[index]
   }
   
+  const AuthenticationPassword= (pwd: string) =>{
+    return password.value != pwd
+  }
 
   const createMnemonicPhrase = () => { 
     // console.log('browserCrypto', browserCrypto)
@@ -298,6 +301,7 @@ const createAccount = async () => {
 
     changeAccountName,
     savePassword,
+    AuthenticationPassword,
     createAccount,
     updateAccountCount,
     switchActiveAccount,

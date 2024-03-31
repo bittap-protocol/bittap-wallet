@@ -79,7 +79,6 @@ export default {
       // { label: 'NFT', value: 'nft' },
       { label: 'History', value: 'history' },
     ])
-    // const activeAccount = computed(() => store.getActiveAccount())
     const activeTab = ref('token')
     return {
       account, tabs, showAddress, activeTab, store
@@ -92,14 +91,13 @@ export default {
       accountInfo: {
         balance: 0,
       },
-      // activeAccount: store.activeAccount,
     }
   },
   computed: {
     usdtBalance() {
       return this.btcPrice * this.accountInfo.balance
     },
-    activeAccount() {
+    activeAccountIndex() {
       const store = useAppStore()
       return store.activeAccount
     }
@@ -107,7 +105,7 @@ export default {
   // computed(() => store.getActiveAccount())
 
   watch: {
-    'activeAccount': function(k, v) {
+    'activeAccountIndex': function(k, v) {
       if(k>= 0 && k!=v) {
         this.initAccount()
       }
@@ -115,15 +113,16 @@ export default {
   },
   created(){
     // this.store = useAppStore()
-    this.initAccount()
+    setTimeout(() => {
+      this.initAccount()
+    }, 1000)
   },
   methods: {
     async initAccount() {
-      console.log('initAccount 1: ', this.activeAccount)
-      if(this.activeAccount < 0) {
+      const store = useAppStore()
+      if(store.activeAccount < 0) {
         return 
       }
-      console.log('initAccount2 : ', this.activeAccount)
       // @ts-ignore
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.accountInfo.balance = await getBalance(this.account.address)

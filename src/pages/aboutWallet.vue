@@ -16,9 +16,14 @@
 export default {
     data() {
         return {
+            // @ts-ignore
             version: __VERSION__
         }
     },
+    created() {
+        // @ts-ignore
+        this.$root.setTitle('About us')
+    }
 }
 </script>
 

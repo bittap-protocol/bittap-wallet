@@ -10,6 +10,9 @@ import BIP32Factory from 'bip32';
 import { Buffer } from 'buffer'
 
 
+import { ListAssets, ListTransfers } from '@/popup/api/btc/blockStream'
+
+
 // @ts-ignore
 // import browserCrypto from 'browser-crypto';
 
@@ -38,6 +41,44 @@ export const useAppStore = defineStore('app', () => {
   const accountList = useStorage('accountList', [])
   const activeAccount = useStorage('activeAccount', -1)
 
+  const networkType = useStorage('networkType', 0)
+  const networkRpcUrl = useStorage('networkRpcUrl', '')
+  const networkRpcToken = useStorage('networkRpcToken', '')
+
+  const assetsList = useStorage('assetsList', [])
+  const transferList = useStorage('transferList', [])
+
+  const getNetWorkType = () => {
+    const nt = networkType.value || 0
+    if(nt<0 || nt > 1) {
+      return 0
+    }
+    return nt
+  }
+
+  const getNetWorkConfig = () => {
+    return {
+      netType: getNetWorkType(),
+      url: networkRpcUrl.value,
+      token: networkRpcToken.value
+    }
+  }
+
+  const changeNetWork = (nt, url = '', token = '') => { 
+    if(![0,1].includes(nt)) {
+      throw 'Network type not support'
+    }
+    if(nt === 1) {
+      if(url === '') {
+        throw 'Custom url must be specified'
+      }
+      networkRpcUrl.value = url
+      networkRpcToken.value = token
+    }
+    // nt is 0 not supported by configuration
+    networkType.value = nt
+  }
+
   // chrome.storage.local.set({ key: value }).then(() => { console.log("Value is set"); });
 
   // chrome.storage.local.get(["key"]).then((result) => { console.log("Value is " + result.key); });
@@ -56,6 +97,27 @@ export const useAppStore = defineStore('app', () => {
   }
   const setGoBackUrl = (url: string | null ) => {
     goBackUrl.value = url
+  }
+
+  const updateAssets = async () => {
+    return ListAssets().then(res => {
+      if(res) {
+        assetsList.value = res
+      }
+    })
+  }
+  const getAssetsList = () => {
+    return  assetsList.value
+  }
+  const updateListTransfers = async () => {
+    return ListTransfers().then(res => {
+      if(res) {
+        transferList.value = res
+      }
+    })
+  }
+  const getTransferList = () => {
+    return  transferList.value
   }
 
   // const initConfig = async () => {
@@ -311,6 +373,12 @@ const createAccount = async () => {
     getActiveAccount,
     getActiveAccountForIndex,
     updateCurrentAccountBackupState,
-    importAccountFromWords
+    importAccountFromWords,
+    getNetWorkConfig,
+    changeNetWork,
+    updateAssets,
+    getAssetsList,
+    updateListTransfers,
+    getTransferList,
   }
 })

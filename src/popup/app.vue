@@ -11,6 +11,8 @@ import { useAppStore } from '@/stores/app.store'
 
 import { useRouter } from 'vue-router'
 
+// import { ListAccounts, ImportAccount } from '@/popup/api/btc/blockStream'
+
 
 export default {
   components: {
@@ -30,12 +32,12 @@ export default {
     const isHome = computed(() => ['/', '/popup'].includes(router.currentRoute.value.fullPath))
     console.log('isHome: ', isHome.value, accountCount.value)
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const accounts = computed(() => store.accountList)
+   
+    
     // @ts-ignore
     // const activeAccount = computed(() => store.activeAccount)
     return {
-      accountCount, goBack, goBackUrl, goToPrevious, isHome, accounts, store, router
+      accountCount, goBack, goBackUrl, goToPrevious, isHome, store, router
     }
   },
   data() {
@@ -47,7 +49,59 @@ export default {
       title: ''
     }
   },
+  async mounted(){
+    try {
+      await this.initApp()
+    }catch (e) {
+      // this._toast(e, 'error')
+    }
+  },
   methods: {
+    async initApp(){
+      // @ts-ignore
+      // chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      //   // 2. A page requested user data, respond with a copy of `user`
+      //   console.log('chrome.runtime.onMessage:', message)
+      //   const data = message && JSON.parse(message)
+      //   if (data.event === 'toast') {
+      //     this._toast(data.text, data.type, data.delay)
+      //   }
+      //   sendResponse({ result: true })
+      // });
+      window.addEventListener("message", (event) =>  {
+        console.log('event: ', event)
+        const { data }= event
+        if(!data) {  return false }
+        if (data.event === 'toast') {
+          const { text, type, delay } = data.data
+          this._toast(text, type, delay)
+        }
+      }, false);
+      // console.log('store: ', this.$store)
+      const store = useAppStore()
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const accounts = store.accountList
+      console.log('accounts: ', accounts, accounts.length)
+      // @ts-ignore
+      if(accounts.length > 0) {
+        // const nodeAccounts = await ListAccounts().catch(e => [])
+        // console.log('nodeAccounts: ', nodeAccounts)
+        // // // @ts-ignore
+        // for(var i = 0 ; i< accounts.length ; i++) {
+        //   // @ts-ignore
+        //   const acc = accounts[i]
+        //   console.log('acc: ', acc)
+        //   ImportAccount({
+        //     name: acc.name,
+        //     extended_public_key: acc.publicKey,
+        //     master_key_fingerprint: acc.privateKey,
+        //   }).then(res => {
+        //     console.log('res: ', res)
+        //   })
+        // }
+      }
+      
+    },
     _toast(text:string, type = 'info', delay = 3000)  {
       this.toastData.text = text
       this.toastData.type = type
@@ -112,7 +166,7 @@ export default {
 
   <div class="toast toast-top toast-center" >
     <div v-if="toastData.text" :class="['alert', 'alert-'+toastData.type, 'text-white', 'font-bold', 'rounded-sm', 'shadow-md']">
-      <div class="flex flex-row justify-center items-center">
+      <div class="flex flex-row justify-center items-center break-all w-72" style="word-break: break-all;">
         <IconMdiInformationSlabCircleOutline v-if="toastData.type === 'info'" class="mr-1" />
         <IconMdiSuccessCircle v-if="toastData.type === 'success'" class="mr-1" />
         {{ toastData.text }}

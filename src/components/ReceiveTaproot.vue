@@ -11,6 +11,13 @@
                     <button class="btn btn-primary join-item rounded-r-full" @click="selectAsset">Select asset</button>
                 </div>
             </label>
+            <label class="form-control w-full max-w-xs">
+                <div class="label">
+                    <span class="label-text">Send asset address
+                    </span>
+                </div>
+                <input v-model="formData.proof_courier_addr" type="text" placeholder="Please enter" class="field" />
+            </label>
 
             <label class="form-control w-full max-w-xs">
                 <div class="label">
@@ -46,77 +53,80 @@
                 <div class="flex flex-col flex-nowrap justify-start items-center h-4/5 min-h-96 py-2 w-full overflow-y-auto overflow-x-hidden">
                     <div v-for="(acc, index) in assets" :key="'acc-'+index" class="switchItem" @click="checkedToken(acc)">
                         <div class="name-label uppercase">
-                            <span class="font-bold">{{ acc.symbol }}</span>
-                             ({{ acc.name }})
+                            <span class="font-bold">{{ acc.asset_genesis.name }}</span>
+                                <!-- ({{ acc.name }}) -->
                         </div>
                     </div>
                 </div>
             </div>
         </dialog>
     </div>
-  </template>
-  
-  <script lang="ts">
-  import { useAppStore } from '@/stores/app.store';
-  
-  export default {
-      name: 'ReceiveTaproot',
-      setup(){
-          const store = useAppStore()
-          const account = computed(() => store.getActiveAccount())
-          return {
-              account
-          }
-      },
-      data() {
-          return {
+</template>
+
+<script lang="ts">
+import { useAppStore } from '@/stores/app.store';
+import { NewAddressAssets } from '@/popup/api/btc/blockStream'
+
+export default {
+    name: 'ReceiveTaproot',
+    setup(){
+        const store = useAppStore()
+        const account = computed(() => store.getActiveAccount())
+        return {
+            account
+        }
+    },
+    data() {
+        return {
             formData: {
                 name: '',
                 amount: '',
+                assetsId: '',
+                proof_courier_addr: '',
             },
-            assets: [
-                { symbol: 'BIT', name: 'token name' },
-                { symbol: 'AVM', name: 'Art visible' },
-                { symbol: 'DTF', name: 'do where' },
-                { symbol: 'BIT', name: 'token name' },
-                { symbol: 'AVM', name: 'Art visible' },
-                { symbol: 'DTF', name: 'do where' },
-                { symbol: 'BIT', name: 'token name' },
-                { symbol: 'AVM', name: 'Art visible' },
-                { symbol: 'DTF', name: 'do where' },
-            ],
-            receiveAddress: ''
-          }
-      },
-      methods: {
-          async createReceive() {
-            // @ts-ignore
-            this.$root._toast('Create receive address success', 'success')
-            setTimeout(() => {
-                this.receiveAddress = 'First version, complete the basic architecture and core functions First version, complete the basic architecture and core functions'
-            }, 1000)
-          },
-          selectAsset(){
+            assets: [],
+            receiveAddress: '',
+            selectAssetInfo: null
+        }
+    },
+    methods: {
+        async createReceive() {
+            await NewAddressAssets({
+                asset_id: this.formData.assetsId,
+                amt: this.formData.amount,
+                proof_courier_addr: this.formData.proof_courier_addr
+            }).then(res => {
+                console.log('NewAddressAssets: ', res)
+                // @ts-ignore
+                this.$root._toast('Create receive address success', 'success')
+                this.receiveAddress = res.encoded
+            })
+
+        },
+        selectAsset(){
             // @ts-ignore
             my_modal_select_asset.showModal()
-          },
-          checkedToken(token: { symbol: string; name: string; }) {
-            const { symbol } = token
-            this.formData.name = symbol
+            const store = useAppStore()
+            this.assets = store.getAssetsList()
+        },
+        checkedToken(token: any) {
+            this.formData.name = token.asset_genesis.name
+            this.formData.assetsId = token.asset_genesis.asset_id
+            this.selectAssetInfo = token
             // @ts-ignore
             my_modal_select_asset.close()
-          },
-          async copyData(){
+        },
+        async copyData(){
             await navigator.clipboard.writeText(this.receiveAddress)
             // @ts-ignore
             this.$root._toast('Copy successfully.', 'success')
-          }
-      }
-  }
-  </script>
-  
-  <style lang="scss" scoped>
-  .receiveTaproot{
+        }
+    }
+}
+</script>
+
+<style lang="scss" scoped>
+.receiveTaproot{
     .form-control{
         .label{
         .faq{
@@ -133,19 +143,19 @@
             @apply block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-400 sm:text-sm sm:leading-6;
         }
     }
-     .switchItem{
-        @apply text-left w-full my-1 p-3 rounded-md shadow-sm border border-gray-200 border-solid bg-gray-200 transition duration-200 ease-out hover:ease-in;
+    .switchItem{
+    @apply text-left w-full my-1 p-3 rounded-md shadow-sm border border-gray-200 border-solid bg-gray-200 transition duration-200 ease-out hover:ease-in;
         &:hover, :focus, :active{
             @apply border-sky-400 bg-sky-400 cursor-pointer shadow-sm shadow-sky-500;
             .font-bold{
                 @apply text-white;
             }
         }
-     }
-     .show{
+    }
+    .show{
         .receiveAddress{
             word-break: break-all;
         }
-     }
-  }
-  </style>
+    }
+}
+</style>

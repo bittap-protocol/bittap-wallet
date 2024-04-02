@@ -88,7 +88,7 @@
             <!-- if there is a button in form, it will close the modal -->
             <button class="btn rounded-md btn-sm">Close</button>
           </form>
-          <button class="btn btn-primary rounded-md btn-sm">Confirm</button>
+          <button class="btn btn-primary rounded-md btn-sm" @click="confirmSubmit">Confirm</button>
         </div>
       </div>
     </dialog>
@@ -98,6 +98,7 @@
 <script lang="ts">
 // import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app.store'
+import { MintAssets, AssetsFinalize } from '@/popup/api/btc/blockStream'
 
 
 export default {
@@ -143,6 +144,19 @@ export default {
     submit(){
       // @ts-ignore
       my_confirm_dialog.showModal()
+    },
+    confirmSubmit(){
+      MintAssets({
+        name: this.formData.name,
+        amount: this.formData.amount,
+        // asset_meta: {
+        //   data: this.formData.file
+        // }
+      }).then(res => {
+        AssetsFinalize()
+        // @ts-ignore
+        this.$root._toast('Success', 'success')
+      })
     }
   }
 }

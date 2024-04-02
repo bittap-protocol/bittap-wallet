@@ -35,13 +35,40 @@
         </div>
         <div class="contents">
           <div v-if="activeTab === 'token'" class="content-tab">
-            Tab content 1
+            <template v-if="assets.length > 0">
+              <div v-for="ass in assets" :key="ass.asset_genesis.asset_id" class="w-full my-2 flex flex-row justify-between items-center border-b border-gray-200 border-solid py-3 mb-2">
+                <div class="font-bold name pl-2">{{ ass.asset_genesis.name }}</div>
+                <div class="balance pr-2">Balance: {{ ass.amount }}</div>
+              </div>
+            </template>
+            <template v-else>
+              <div class="flex flex-col h-20 p-20">
+                <div class="alert text-center">
+                  No data
+                </div>
+              </div>
+            </template>
           </div>
           <!-- <div v-if="activeTab === 'nft'" class="content-tab">
             Tab content 2
           </div> -->
           <div v-if="activeTab === 'history'" class="content-tab">
-            Tab content 3
+
+            <template v-if="transfers.length > 0">
+              <div v-for="tr in transfers" :key="tr.anchor_tx_hash" class="w-full my-2 flex flex-col justify-between items-start rounded-md shadow-md shadow-gray-300  p-2 border border-gray-200 border-solid py-3 mb-4">
+                <div class="font-bold name break-all">Hash: {{ tr.anchor_tx_hash }}</div>
+                <div class="balance">Time: {{ new Date(tr.transfer_timestamp * 1000).toLocaleString() }}</div>
+                <div class="font-bold name">Fees: {{ tr.anchor_tx_chain_fees }}</div>
+                <div class="font-bold balance">Height: {{ tr.anchor_tx_height_hint }}</div>
+              </div>
+            </template>
+            <template v-else>
+              <div class="flex flex-col h-20 p-20">
+                <div class="alert text-center">
+                  No data
+                </div>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -56,8 +83,10 @@ import IconMdiContentCopy from '~icons/mdi/content-copy';
 
 import { useAppStore } from '@/stores/app.store'
 // @ts-ignore
-import { getBalance, getBTCUSDTPrice } from '@/popup/api/btc/blockStream'
+// import { getBalance, getBTCUSDTPrice } from '@/popup/api/btc/blockStream'
 
+
+// import { ListAccounts, ImportAccount } from '@/popup/api/btc/blockStream'
 
 
 
@@ -91,6 +120,8 @@ export default {
       accountInfo: {
         balance: 0,
       },
+      assets: [],
+      transfers: [],
     }
   },
   computed: {
@@ -125,8 +156,15 @@ export default {
       }
       // @ts-ignore
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.accountInfo.balance = await getBalance(this.account.address)
-      this.btcPrice = await getBTCUSDTPrice()
+      // this.accountInfo.balance = await getBalance(this.account.address)
+      // this.btcPrice = await getBTCUSDTPrice()
+
+      await store.updateAssets()
+      await store.updateListTransfers()
+
+      this.assets = store.getAssetsList()
+      this.transfers = store.getTransferList()
+      
     },
     /* eslint-disable array-callback-return */
     async copyAddress(address: string) {

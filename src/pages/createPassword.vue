@@ -15,8 +15,8 @@ import { TestPassword } from '@/popup/libs/tools'
 
 const showPassword = ref(false);
 const formData = reactive({
-  password: '12345678',
-  passwordConfirm: '12345678',
+  password: 'Abc123456',
+  passwordConfirm: 'Abc123456',
   agree: false,
 })
 
@@ -40,9 +40,13 @@ const formErrors = ref({
 })
 
 const validateForm = () => {
+  console.log('check:', [
+    TestPassword(formData.password),
+    formData.password
+  ])
   formErrors.value.passwordError = 
-    !TestPassword(formData.password.length)
-      ? 'Password must be 8-12 characters long.'
+    !TestPassword(formData.password)
+      ? 'The password must be 8 to 16 characters starting with an uppercase letter.'
       : '';
   
   formErrors.value.passwordConfirmError = 

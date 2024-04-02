@@ -22,6 +22,7 @@ module.exports = {
     '@typescript-eslint/ban-ts-comment': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     'vue/multi-word-component-names': 'off',
+    "typescript-eslint/no-explicit-any": 'off',
     'no-unref': 'off',
     'no-undef': 'off',
   },

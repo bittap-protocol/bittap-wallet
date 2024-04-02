@@ -9,6 +9,25 @@
       <input v-model="formData.to" type="text" placeholder="Please enter" class="field" />
     </label>
 
+    <div class="form-control w-full max-w-xs">
+      <SelectGas v-model:value="formData.gas" />
+    </div>
+
+    <div class="w-full text-left leading-6 flex flex-col justify-center items-start border border-sky-300 border-solid shadow-sm shadow-sky-300 my-4 p-4" v-if="showInfo && showInfo.asset_id && showInfo.asset_id.length > 5">
+      <div class="id w-full break-all">
+        Asset Id: {{ showInfo.asset_id }}
+      </div>
+      <div class="asset_type">
+        Asset Type: {{ showInfo.asset_type }}
+      </div>
+      <div class="asset_version">
+        Version: {{ showInfo.asset_version }}
+      </div>
+      <div class="amount">
+        Amount: {{ showInfo.amount }}
+      </div>
+    </div>
+
     <label class="form-control w-full max-w-xs my-4">
       <button class="button" @click="send">Send</button>
     </label>
@@ -17,18 +36,51 @@
 </template>
 
 <script>
+import { DecodeAssetsAddress, SendAssets } from '@/popup/api/btc/blockStream'
+
 export default {
     name: 'SendTaproot',
     data() {
         return {
             formData: {
                 to: '',
+                gas: 100
+            },
+            showInfo: {
+              "encoded": '', // <string> 
+              "asset_id": '', // <bytes> 
+              "asset_type": '', // <AssetType> 
+              "amount": '', // <uint64> 
+              "group_key": '', // <bytes> 
+              "script_key": '', // <bytes> 
+              "internal_key": '', // <bytes> 
+              "tapscript_sibling": '', // <bytes> 
+              "taproot_output_key": '', // <bytes> 
+              "proof_courier_addr": '', // <string> 
+              "asset_version": '', // <AssetVersion> 
             }
         }
     },
+    watch: {
+      'formData.to': function(k,v) {
+        if(k!=v && k && this.formData.to.length > 64 ) {
+          this.showAddressInfo()
+        }
+      }
+    },
     methods: {
-        send(){
+      showAddressInfo() {
+        DecodeAssetsAddress({addr: this.formData.to}).then(res => {
+          this.showInfo = res
+        })
+      },
+       async send(){
+        SendAssets({
+            tap_addrs: this.formData.to,
+            fee_rate: this.formData.gas,
+          }).then(res => {
             this.$root._toast('Success', 'success')
+          })
         }
     }
 }

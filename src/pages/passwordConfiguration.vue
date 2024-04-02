@@ -1,8 +1,8 @@
 <template>
-  <div class="w-full min-box">
-    <div class="w-full py-20 flex flex-col justify-center items-center">
+  <div class="w-full min-box pwd">
+    <div class="w-full py-20 flex flex-col justify-center items-center px-4">
       <div class="item">
-        <input v-model="confirmPassword" type="password" class="field" placeholder="current password" />
+        <input v-model="confirmPassword" type="password" class="field" placeholder="Current password" />
       </div>
       <div class="item">
         <input v-model="newPassword" type="password" class="field" placeholder="New password" />
@@ -18,7 +18,7 @@
 <script lang="ts">
 // @ts-ignore
 import { useAppStore } from '@/stores/app.store'
-
+// @ts-ignore
 import { TestPassword } from '@/popup/libs/tools'
 
 export default {
@@ -82,5 +82,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
+.pwd {
+  .item{
+    @apply mb-4 w-full ;
+    .field{
+      @apply w-full ;
+    }
+  }
+}
 </style>

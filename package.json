@@ -68,7 +68,7 @@
   "name": "bit-tap",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mubaidr/vite-vue3-chrome-extension-v3"
+    "url": "https://github.com/bittap-protocol/bittap-wallet.git"
   },
   "overrides": {
     "@crxjs/vite-plugin": "$@crxjs/vite-plugin"

@@ -9,15 +9,13 @@ import { VueRouterAutoImports } from 'unplugin-vue-router'
 import VueRouter from 'unplugin-vue-router/vite'
 import { URL, fileURLToPath } from 'url'
 import { defineConfig, type Plugin } from 'vite'
-import zip from "rollup-plugin-zip"
+// import zip from "rollup-plugin-zip"
 
 
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
-import {NodeGlobalsPolyfillPlugin} from "@esbuild-plugins/node-globals-polyfill";
 
-import RollupPluginNodePolyfills from "rollup-plugin-node-polyfills"
-
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 // import VueDevTools from 'vite-plugin-vue-devtools'
 import { defineViteConfig as define } from './define.config'
@@ -46,16 +44,37 @@ export default defineConfig({
       '~': fileURLToPath(new URL('./src', import.meta.url)),
       src: fileURLToPath(new URL('./src', import.meta.url)),
       // stream: "stream-browserify",
-      util: "rollup-plugin-node-polyfills/polyfills/util",
-      buffer: 'rollup-plugin-node-polyfills/polyfills/buffer-es6',
-      process: 'rollup-plugin-node-polyfills/polyfills/process-es6',
-      events: 'rollup-plugin-node-polyfills/polyfills/events',
-      stream: 'rollup-plugin-node-polyfills/polyfills/stream',
+      // util: "rollup-plugin-node-polyfills/polyfills/util",
+      // buffer: 'rollup-plugin-node-polyfills/polyfills/buffer-es6',
+      // process: 'rollup-plugin-node-polyfills/polyfills/process-es6',
+      // events: 'rollup-plugin-node-polyfills/polyfills/events',
+      // stream: 'rollup-plugin-node-polyfills/polyfills/stream',
       // crypto: 'rollup-plugin-node-polyfills/polyfills/crypto-es6',
     },
   },
   
   plugins: [
+    nodePolyfills({
+      // To add only specific polyfills, add them here. If no option is passed, adds all polyfills
+      include: ['path', 'crypto','url','process','stream', 'http','https', 'path', 'stream', 'util'],
+      // To exclude specific polyfills, add them to this list. Note: if include is provided, this has no effect
+      // exclude: [
+      //   'http', // Excludes the polyfill for `http` and `node:http`.
+      // ],
+      // Whether to polyfill specific globals.
+      globals: {
+        Buffer: true, // can also be 'build', 'dev', or false
+        global: true,
+        process: true,
+      },
+      // Override the default polyfills for specific modules.
+      // overrides: {
+      //   // Since `fs` is not supported in browsers, we can use the `memfs` package to polyfill it.
+      //   fs: 'memfs',
+      // },
+      // Whether to polyfill `node:` protocol imports.
+      protocolImports: true,
+    }),
     wasm(),
     topLevelAwait(),
     crx({ manifest }),
@@ -148,7 +167,19 @@ export default defineConfig({
         setup: 'src/setup/index.html',
       },
       plugins: [
-        RollupPluginNodePolyfills()
+        // RollupPluginNodePolyfills({
+        //   include: [
+        //     // 'process',
+        //     // 'events',
+        //     'stream',
+        //     'util',
+        //     'buffer',
+        //     'url',
+        //     'crypto',
+        //   ],
+        //   exclude: [],
+        //   sourceMap: true,
+        // })
       ]
     },
   },
@@ -163,20 +194,21 @@ export default defineConfig({
   optimizeDeps: {
     include: ['vue', '@vueuse/core'],
     exclude: ['vue-demi'],
-    allowNodeBuiltins: [
-      'crypto'
-    ],
+    // force: true,
+    // allowNodeBuiltins: [
+    //   'crypto'
+    // ],
     esbuildOptions: {
       define: {
           global: "globalThis",
       },
       plugins: [
-        NodeGlobalsPolyfillPlugin({
-              buffer: true,
-              process: true,
-              // events: true,
-              // stream: true,
-          }),
+        // NodeGlobalsPolyfillPlugin({
+        //       buffer: true,
+        //       process: true,
+        //       // events: true,
+        //       // stream: true,
+        //   }),
       ],
     },
   },

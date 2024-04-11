@@ -18,6 +18,7 @@
     "stream": "^0.0.2",
     "tiny-secp256k1": "^2.2.3",
     "util": "^0.12.5",
+    "vite-plugin-node-polyfills": "^0.21.0",
     "vue": "^3.4.10",
     "vue-qr": "^4.0.9",
     "vue-router": "^4.2.5"
@@ -25,7 +26,6 @@
   "description": "BitTap of chrome extensions",
   "devDependencies": {
     "@crxjs/vite-plugin": "2.0.0-beta.22",
-    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@iconify-json/carbon": "^1.1.31",
     "@iconify-json/mdi": "^1.1.64",
     "@tailwindcss/forms": "^0.5.7",
@@ -48,7 +48,6 @@
     "postcss": "^8.4.33",
     "prettier": "^3.1.1",
     "prettier-plugin-tailwindcss": "^0.5.11",
-    "rollup-plugin-node-polyfills": "^0.2.1",
     "rollup-plugin-zip": "^1.0.3",
     "sass": "^1.69.7",
     "tailwindcss": "^3.4.1",
@@ -86,8 +85,8 @@
   },
   "private": true,
   "scripts": {
-    "build": "vite build",
-    "dev": "vite",
+    "build": "rm -rf ./dist/build &&vite build --sourcemap",
+    "dev": "rm -rf ./dist/dev && vite",
     "lint": "eslint . --fix --ext js,mjs,cjs,ts,mts,cts,vue",
     "preview": "vite preview",
     "makeLib": "npx browserify --standalone bitcoin - -o ./src/popup/bitcoinjs-lib.js <<<'module.exports = require('bitcoinjs-lib');'"

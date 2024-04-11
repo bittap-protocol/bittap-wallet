@@ -141,6 +141,7 @@
       async createAccount() {
         const store = useAppStore()
         await store.createAccount()
+        store.updateCurrentAccountBackupState()
         this.$root._toast('Create account success!', 'success')
       },
       importAccount(){

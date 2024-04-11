@@ -1,14 +1,4 @@
 <script setup lang="ts">
-// @ts-ignore
-import myWasmModule from '@/popup/libs/main.wasm?url';
-
-// @ts-ignore
-const go = new Go(); // 假设你已经有了 Go 的实例化对象
-
-
-WebAssembly.instantiateStreaming(fetch(myWasmModule), go.importObject).then(result => {
-  go.run(result.instance);
-});
 
 
 import { useAppStore } from '@/stores/app.store'

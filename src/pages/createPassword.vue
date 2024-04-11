@@ -15,8 +15,8 @@ import { TestPassword } from '@/popup/libs/tools'
 
 const showPassword = ref(false);
 const formData = reactive({
-  password: 'Abc123456',
-  passwordConfirm: 'Abc123456',
+  password: 'Abc123456##',
+  passwordConfirm: 'Abc123456##',
   agree: false,
 })
 

@@ -32,6 +32,17 @@ export default defineManifest(async (env) => ({
       run_at: 'document_start',
     },
   ],
+  content_security_policy: {
+    // extension_pages: "script-src 'self' 'wasm-eval'; object-src 'self';",
+    extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
+    // extension_pages: "script-src 'self'; object-src 'self';",
+    sandbox: "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'wasm-eval' 'unsafe-eval'; child-src 'self';"
+  },
+  externally_connectable: {
+    "matches": ["https://*/*"],
+    "ids": ["*"]
+  },
+  minimum_chrome_version: "88",
   host_permissions: ['*://*/*'],
   options_page: 'src/options/index.html',
   permissions: ['storage','clipboardWrite'],

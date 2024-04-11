@@ -109,6 +109,7 @@ export default {
             const store = useAppStore()
             this.assets = store.getAssetsList()
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         checkedToken(token: any) {
             this.formData.name = token.asset_genesis.name
             this.formData.assetsId = token.asset_genesis.asset_id

@@ -1,6 +1,11 @@
+// import '@/assets/wasm_exec.js'
+// // @ts-ignore
+// import myWasmModule from '@/assets/main.wasm?url';
+
 chrome.runtime.onInstalled.addListener(async (opt) => {
   // Check if reason is install or update. Eg: opt.reason === 'install' // If extension is installed.
   // opt.reason === 'update' // If extension is updated.
+  console.log('chrome runtime: ', opt.reason)
   if (opt.reason === 'install') {
     await chrome.storage.local.clear()
 
@@ -18,6 +23,16 @@ chrome.runtime.onInstalled.addListener(async (opt) => {
       url: chrome.runtime.getURL('./src/setup/index.html?type=update'),
     })
   }
+  
+
+  // // @ts-ignore
+  // const go = new Go(); // 假设你已经有了 Go 的实例化对象
+
+
+  // WebAssembly.instantiateStreaming(fetch(myWasmModule), go.importObject).then(result => {
+  //   go.run(result.instance);
+  // });
+
 })
 
 console.log('hello world from background')

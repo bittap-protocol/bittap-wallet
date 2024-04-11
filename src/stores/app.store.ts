@@ -34,7 +34,7 @@ import { ListAssets, ListTransfers } from '@/popup/api/btc/blockStream'
 export const useAppStore = defineStore('app', () => {
   const count = useStorage('count', 0)
   const name = useStorage('name', 'BitTap')
-  const password = useStorage('password', null)
+  const password = useStorage('password', '')
   const goBack = useStorage('goBack', false)
   const goBackUrl = useStorage('goBackUrl', '')
 
@@ -236,6 +236,7 @@ const createAccount = async () => {
     })
   }
 
+  // @ts-ignore
   const importAccountFromWords = (words, pk) => {
     console.log('importAccountFromWords initalization', words, pk)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
@@ -244,7 +245,8 @@ const createAccount = async () => {
       let phrase = ''
       let p2trPrimary = null;
       const path = "m/86'/0'/0'/0/0"
-      let accountRaw: { address: any; phrase?: string; publicKey?: string; publicKeyXOnly?: any; path?: any; WIF?: string; privateKey?: any; backup?: boolean; name?: string; } | null = null;
+      // @ts-ignore
+      let accountRaw: { address: unknown; phrase?: string; publicKey?: string; publicKeyXOnly?: unknown; path?: unknown; WIF?: string; privateKey?: unknown; backup?: boolean; name?: string; } | null = null;
       try {
         console.log('importAccountFromWords initalization 3')
         initEccLib(ecc)
@@ -324,6 +326,7 @@ const createAccount = async () => {
               name: 'Import-'+accountList.value.length
           }
         }
+        // @ts-ignore
         if(accountList.value.some(x => x.address === accountRaw.address)){
           throw 'Account already exists'
         }
@@ -342,6 +345,7 @@ const createAccount = async () => {
   }
 
   const updateCurrentAccountBackupState = () => {
+    // @ts-ignore
     accountList.value[activeAccount.value].backup = true
   }
   // @ts-ignore

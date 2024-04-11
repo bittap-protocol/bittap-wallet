@@ -42,9 +42,10 @@ const requestRpc = async (api, data = null, options = {}) => {
         return data
       }
     }else{
-      return {}
+      throw 'Request failed'
+      // return {}
     }
-  });
+  })
 }
 // export async function requestRpc
 

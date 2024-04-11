@@ -23,7 +23,7 @@ import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router/auto'
 import App from './app.vue'
 import './index.scss'
-import './libs/wasm_exec.js'
+
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),

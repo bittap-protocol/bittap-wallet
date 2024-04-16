@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <div class="top">
-      <div class="w-full border-0 rounded-sm bg-gray-200 flex flex-col justify-between items-center py-2 px-2">
+      <div class="w-full border-0 rounded-md bg-gray-200 flex flex-col justify-between items-center py-2 px-2">
         <div class="address flex flex-row justify-between items-center space-x-2 w-full">
           <div class="label">
             {{ showAddress(account.address) }}
@@ -142,14 +142,14 @@ export default {
       }
     }
   },
-  created(){
+  mounted(){
     // this.store = useAppStore()
     setTimeout(() => {
       this.initAccount()
     }, 1000)
   },
   methods: {
-    async initAccount() {
+    initAccount() {
       const store = useAppStore()
       if(store.activeAccount < 0) {
         return 
@@ -158,13 +158,12 @@ export default {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       // this.accountInfo.balance = await getBalance(this.account.address)
       // this.btcPrice = await getBTCUSDTPrice()
-
-      await store.updateAssets()
-      await store.updateListTransfers()
-
-      this.assets = store.getAssetsList()
-      this.transfers = store.getTransferList()
-      
+      store.updateAssets().then(()=> {
+        return store.updateListTransfers()
+      }).then(() => {
+        this.assets = store.getAssetsList()
+        this.transfers = store.getTransferList()
+      })
     },
     /* eslint-disable array-callback-return */
     async copyAddress(address: string) {

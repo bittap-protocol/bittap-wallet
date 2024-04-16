@@ -64,7 +64,7 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
-  const changeNetWork = (nt, url = '', token = '') => { 
+  const changeNetWork = (nt:number, url = '', token = '') => { 
     if(![0,1].includes(nt)) {
       throw 'Network type not support'
     }
@@ -194,16 +194,29 @@ const createAccount = async () => {
             internalPubkey: childNodeXOnlyPubkeyPrimary,
             network: networks.bitcoin
         });
+        console.log('p2trPrimary: ', p2trPrimary)
+
+        // { "name":"p2tr",
+        //   "network":{"messagePrefix":"\\u0018Bitcoin Signed Message:\\n","bech32":"bc","bip32":{"public":76067358,"private":76066276},"pubKeyHash":0,"scriptHash":5,"wif":128},
+        //   "address":"bc1pmjas4wsx6jxcw75jf0fc4cj70gzrje8sk7lcnqm455nysfdy8rasy9f2k6",
+        //   "hash":null,
+        //   "output":{"type":"Buffer","data":[81,32,220,187,10,186,6,212,141,135,122,146,75,211,138,226,94,122,4,57,100,240,183,191,137,131,117,165,38,72,37,164,56,251]},
+        //   "redeemVersion":192,
+        //   "pubkey":{"type":"Buffer","data":[220,187,10,186,6,212,141,135,122,146,75,211,138,226,94,122,4,57,100,240,183,191,137,131,117,165,38,72,37,164,56,251]},
+        //   "internalPubkey":{"type":"Buffer","data":[95,23,218,210,16,67,108,151,191,128,173,239,249,246,67,219,253,242,175,12,7,104,41,89,61,151,118,245,133,252,20,149]}
+        // }
 
         if (!p2trPrimary.address || !p2trPrimary.output) {
           throw "error creating p2tr"
-          
         }
+
+        const scriptHash = crypto.sha256(p2trPrimary.output);
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const tweakedChildNodePrimary = childNodePrimary.tweak(
           crypto.taggedHash('TapTweak', childNodeXOnlyPubkeyPrimary),
         );
+        // console.log('tweakedChildNodePrimary: ', tweakedChildNodePrimary)
 
         // Do a sanity check with the WIF serialized and then verify childNodePrimary is the same
         const wif = childNodePrimary.toWIF();
@@ -215,8 +228,10 @@ const createAccount = async () => {
         const accountRaw =  {
             phrase,
             address: p2trPrimary.address,
+            scriptPubKey: scriptHash.toString('hex'),
+            output: p2trPrimary.output.toString('hex'),
             publicKey: childNodePrimary.publicKey.toString('hex'),
-            publicKeyXOnly: childNodeXOnlyPubkeyPrimary.toString('hex'),
+            internalPubkey: childNodeXOnlyPubkeyPrimary.toString('hex'),
             path,
             WIF: childNodePrimary.toWIF(),
             privateKey: childNodePrimary.privateKey?.toString('hex'),
@@ -246,7 +261,7 @@ const createAccount = async () => {
       let p2trPrimary = null;
       const path = "m/86'/0'/0'/0/0"
       // @ts-ignore
-      let accountRaw: { address: unknown; phrase?: string; publicKey?: string; publicKeyXOnly?: unknown; path?: unknown; WIF?: string; privateKey?: unknown; backup?: boolean; name?: string; } | null = null;
+      let accountRaw: { address: unknown; phrase?: string; publicKey?: string; scriptPubKey?: unknown; internalPubkey: string, output:string, path?: unknown; WIF?: string; privateKey?: unknown; backup?: boolean; name?: string; } | null = null;
       try {
         console.log('importAccountFromWords initalization 3')
         initEccLib(ecc)
@@ -291,11 +306,14 @@ const createAccount = async () => {
           if (childNodePrimary.publicKey.toString('hex') !== keyPair.publicKey.toString('hex')) {
               throw 'createKeyPair error child node not match sanity check'
           }
+          const scriptHash = crypto.sha256(p2trPrimary.output);
           accountRaw =  {
               phrase,
               address: p2trPrimary.address,
               publicKey: childNodePrimary.publicKey.toString('hex'),
-              publicKeyXOnly: childNodeXOnlyPubkeyPrimary.toString('hex'),
+              output: p2trPrimary.output.toString('hex'),
+              scriptPubKey: scriptHash.toString('hex'),
+              internalPubkey: internalPubkey.toString('hex'),
               path,
               WIF: childNodePrimary.toWIF(),
               privateKey: childNodePrimary.privateKey?.toString('hex'),
@@ -313,12 +331,15 @@ const createAccount = async () => {
               internalPubkey: internalPubkey,
               network: networks.bitcoin
           });
+          const scriptHash = crypto.sha256(p2trPrimary.output);
           console.log('importAccountFromWords initalization 7')
           accountRaw =  {
               phrase,
               address: p2trPrimary.address,
+              output: p2trPrimary.output.toString('hex'),
+              scriptPubKey: scriptHash.toString('hex'),
+              internalPubkey: internalPubkey.toString('hex'),
               publicKey: keyPair.publicKey.toString('hex'),
-              publicKeyXOnly: internalPubkey.toString('hex'),
               path,
               WIF: keyPair.toWIF(),
               privateKey: pk,

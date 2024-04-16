@@ -110,7 +110,7 @@
     },
     methods: {
         showAddress(address:string)  {
-            return [address.substring(0, 16), address.substring(address.length-16)].join('...')
+            return address ? [address.substring(0, 16), address.substring(address.length-16)].join('...') : ''
         },
 
       initData() {

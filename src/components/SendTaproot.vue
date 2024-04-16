@@ -26,6 +26,15 @@
       <div class="amount">
         Amount: {{ showInfo.amount }}
       </div>
+      <div class="amount">
+        Script Key: {{ showInfo.script_key }}
+      </div>
+      <div class="amount">
+        Internal Key: {{ showInfo.internal_key }}
+      </div>
+      <div class="amount">
+        Taproot Output Key: {{ showInfo.taproot_output_key }}
+      </div>
     </div>
 
     <label class="form-control w-full max-w-xs my-4">

@@ -11,13 +11,6 @@
                     <button class="btn btn-primary join-item rounded-r-full" @click="selectAsset">Select asset</button>
                 </div>
             </label>
-            <label class="form-control w-full max-w-xs">
-                <div class="label">
-                    <span class="label-text">Send asset address
-                    </span>
-                </div>
-                <input v-model="formData.proof_courier_addr" type="text" placeholder="Please enter" class="field" />
-            </label>
 
             <label class="form-control w-full max-w-xs">
                 <div class="label">
@@ -82,7 +75,6 @@ export default {
                 name: '',
                 amount: '',
                 assetsId: '',
-                proof_courier_addr: '',
             },
             assets: [],
             receiveAddress: '',
@@ -91,11 +83,21 @@ export default {
     },
     methods: {
         async createReceive() {
-            await NewAddressAssets({
+            const store = useAppStore()
+            // @ts-ignore
+            const { internalPubkey, scriptPubKey } = store.getActiveAccount()
+            // const { address } = store.getActiveAccount()
+            // return decodeAddress(address).then(res => {
+            //     console.log('decoded address: ', res)
+            // })
+            const sendData = {
                 asset_id: this.formData.assetsId,
                 amt: this.formData.amount,
-                proof_courier_addr: this.formData.proof_courier_addr
-            }).then(res => {
+                script_key: scriptPubKey,
+                internal_key: internalPubkey,
+            }
+            console.log('NewAddressAssets sendData: ',sendData )
+            await NewAddressAssets(sendData).then(res => {
                 console.log('NewAddressAssets: ', res)
                 // @ts-ignore
                 this.$root._toast('Create receive address success', 'success')
@@ -107,6 +109,7 @@ export default {
             // @ts-ignore
             my_modal_select_asset.showModal()
             const store = useAppStore()
+            store.updateAssets()
             this.assets = store.getAssetsList()
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

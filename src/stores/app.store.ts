@@ -7,11 +7,27 @@ import { payments, initEccLib, crypto } from 'bitcoinjs-lib'
 
 import { mnemonicToSeedSync, generateMnemonic, validateMnemonic } from 'bip39';
 import BIP32Factory from 'bip32';
+import BIP86 from 'bip86';
+
 import { Buffer } from 'buffer'
 
 
 import { ListAssets, ListTransfers } from '@/popup/api/btc/blockStream'
 
+export interface Account { 
+  address: unknown; 
+  phrase?: string; 
+  publicKey?: string; 
+  scriptPubKey?: unknown; 
+  internalPubkey: string, 
+  output:string, 
+  path?: unknown; 
+  WIF?: string; 
+  privateKey?: unknown; 
+  backup?: boolean; 
+  name?: string; 
+};
+type AccountInfo = Account | null;
 
 // @ts-ignore
 // import browserCrypto from 'browser-crypto';
@@ -137,10 +153,10 @@ export const useAppStore = defineStore('app', () => {
     activeAccount.value = index
   }
 
-  const getActiveAccount = () => {
+  const getActiveAccount = (): AccountInfo => {
     return getActiveAccountForIndex(activeAccount.value)
   }
-  const getActiveAccountForIndex = (index: number) => {
+  const getActiveAccountForIndex = (index: number): AccountInfo => {
     return accountList.value.length <= 0 || index <=-1 || index > accountList.value.length-1 ? null : accountList.value[index]
   }
   
@@ -261,7 +277,7 @@ const createAccount = async () => {
       let p2trPrimary = null;
       const path = "m/86'/0'/0'/0/0"
       // @ts-ignore
-      let accountRaw: { address: unknown; phrase?: string; publicKey?: string; scriptPubKey?: unknown; internalPubkey: string, output:string, path?: unknown; WIF?: string; privateKey?: unknown; backup?: boolean; name?: string; } | null = null;
+      let accountRaw: Account | null = null;
       try {
         console.log('importAccountFromWords initalization 3')
         initEccLib(ecc)

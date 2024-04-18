@@ -60,6 +60,9 @@
 import { useAppStore } from '@/stores/app.store';
 import { NewAddressAssets } from '@/popup/api/btc/blockStream'
 
+import BIP86 from 'bip86';
+// const BIP86 = require('bip86')
+
 export default {
     name: 'ReceiveTaproot',
     setup(){
@@ -85,16 +88,45 @@ export default {
         async createReceive() {
             const store = useAppStore()
             // @ts-ignore
-            const { internalPubkey, scriptPubKey } = store.getActiveAccount()
+            const { internalPubkey, scriptPubKey, phrase } = store.getActiveAccount()
             // const { address } = store.getActiveAccount()
             // return decodeAddress(address).then(res => {
             //     console.log('decoded address: ', res)
             // })
+            console.log('BIP86:', BIP86)
+            var root = new BIP86.fromMnemonic(phrase)
+            var child0 = root.deriveAccount(0)
+
+            console.log('mnemonic:', phrase)
+            console.log('rootpriv:', root.getRootPrivateKey())
+            console.log('rootpub:', root.getRootPublicKey())
+            console.log('getAddress:', root.getAddress())
+            console.log('\n');
+            
+
+            throw new Error('Receive end')
+
+
             const sendData = {
                 asset_id: this.formData.assetsId,
                 amt: this.formData.amount,
-                script_key: scriptPubKey,
-                internal_key: internalPubkey,
+                script_key: {
+                    pub_key: scriptPubKey,
+                    key_desc: {
+                        raw_key_bytes: '02'+internalPubkey,
+                        key_loc: {
+                            "key_family":"212",
+                            "key_index":"0"
+                        }
+                    }
+                },
+                internal_key: {
+                    raw_key_bytes: '02'+internalPubkey,
+                    key_loc: {
+                        "key_family":"212",
+                        "key_index":"0"
+                    }
+                },
             }
             console.log('NewAddressAssets sendData: ',sendData )
             await NewAddressAssets(sendData).then(res => {

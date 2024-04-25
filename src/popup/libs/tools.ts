@@ -7,10 +7,16 @@ export function TestUrl(url) {
     return /^(http|ftp|https):\/\/[\w\-_]+/.test(url)
 }
 
+
 export function postMsg(eventType, data){
     window.postMessage({ event: eventType, data: data }, '*')
 }
 
 export function postToast(text, type = 'error', delay = 3000){
     postMsg('toast', { text, type, delay })
+}
+
+
+export function sendMessage(type, data){
+    chrome.runtime.sendMessage(null,{ type, data: data })  
 }

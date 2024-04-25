@@ -163,6 +163,9 @@ export default {
       }).then(() => {
         this.assets = store.getAssetsList()
         this.transfers = store.getTransferList()
+        // subscribe all encoded
+        store.initConfig()
+        store.subscribeReceiveAllEncoded()
       })
     },
     /* eslint-disable array-callback-return */

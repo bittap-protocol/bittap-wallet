@@ -7,7 +7,7 @@
                     </span>
                 </div>
                 <div class="join">
-                    <input v-model="formData.name" type="text" placeholder="Please enter" class="join-item" />
+                    <input v-model="formData.name" type="text" readonly placeholder="Please select" class="join-item" />
                     <button class="btn btn-primary join-item rounded-r-full" @click="selectAsset">Select asset</button>
                 </div>
             </label>
@@ -24,9 +24,10 @@
                 <button class="button" @click="createReceive">Create receive</button>
             </label>
         </div>
-        <div v-if="receiveAddress.length >= 1"  class="show w-full py-4">
+        <div v-if="receiveAddress.length >= 1" class="show w-full py-4">
             <div class="text-left my-4 text-red-500">
-                Please note that the collection address is for one-time use. Please do not send multiple transactions to these addresses
+                Please note that the collection address is for one-time use. Please do not send multiple transactions to
+                these addresses
             </div>
             <div class="text-left receiveAddress w-full px-2">
                 {{ receiveAddress }}
@@ -36,18 +37,25 @@
             </div>
         </div>
 
+        <div class="w-full flex flex-col justify-center">
+            <router-link to="/common/receiveList" class="btn btn-neutral">History
+                receive</router-link>
+        </div>
+
         <dialog id="my_modal_select_asset" class="modal">
             <div class="modal-box rounded-md">
                 <form method="dialog">
                     <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
                 </form>
                 <h3 class="font-bold text-lg">Select asset</h3>
-                
-                <div class="flex flex-col flex-nowrap justify-start items-center h-4/5 min-h-96 py-2 w-full overflow-y-auto overflow-x-hidden">
-                    <div v-for="(acc, index) in assets" :key="'acc-'+index" class="switchItem" @click="checkedToken(acc)">
+
+                <div
+                    class="flex flex-col flex-nowrap justify-start items-center h-4/5 min-h-96 py-2 w-full overflow-y-auto overflow-x-hidden">
+                    <div v-for="(acc, index) in assets" :key="'acc-'+index" class="switchItem"
+                        @click="checkedToken(acc)">
                         <div class="name-label uppercase">
                             <span class="font-bold">{{ acc.asset_genesis.name }}</span>
-                                <!-- ({{ acc.name }}) -->
+                            <!-- ({{ acc.name }}) -->
                         </div>
                     </div>
                 </div>
@@ -60,16 +68,15 @@
 import { useAppStore } from '@/stores/app.store';
 import { NewAddressAssets } from '@/popup/api/btc/blockStream'
 
-import BIP86 from 'bip86';
-// const BIP86 = require('bip86')
-
 export default {
     name: 'ReceiveTaproot',
     setup(){
         const store = useAppStore()
         const account = computed(() => store.getActiveAccount())
+        const historyList = computed(() => store.getInternalKeyList().filter(e => e.encoded))
         return {
-            account
+            account,
+            historyList
         }
     },
     data() {
@@ -87,33 +94,17 @@ export default {
     methods: {
         async createReceive() {
             const store = useAppStore()
-            // @ts-ignore
-            const { internalPubkey, scriptPubKey, phrase } = store.getActiveAccount()
-            // const { address } = store.getActiveAccount()
-            // return decodeAddress(address).then(res => {
-            //     console.log('decoded address: ', res)
-            // })
-            console.log('BIP86:', BIP86)
-            var root = new BIP86.fromMnemonic(phrase)
-            var child0 = root.deriveAccount(0)
 
-            console.log('mnemonic:', phrase)
-            console.log('rootpriv:', root.getRootPrivateKey())
-            console.log('rootpub:', root.getRootPublicKey())
-            console.log('getAddress:', root.getAddress())
-            console.log('\n');
-            
-
-            throw new Error('Receive end')
-
+            const { scriptPubKey, internalPubkey, tweakPubKey  } = store.generateInternalKey()
 
             const sendData = {
                 asset_id: this.formData.assetsId,
                 amt: this.formData.amount,
                 script_key: {
-                    pub_key: scriptPubKey,
+                    // pub_key: scriptPubKey,
+                    pub_key: tweakPubKey,
                     key_desc: {
-                        raw_key_bytes: '02'+internalPubkey,
+                        raw_key_bytes: scriptPubKey,
                         key_loc: {
                             "key_family":"212",
                             "key_index":"0"
@@ -121,7 +112,7 @@ export default {
                     }
                 },
                 internal_key: {
-                    raw_key_bytes: '02'+internalPubkey,
+                    raw_key_bytes: internalPubkey,
                     key_loc: {
                         "key_family":"212",
                         "key_index":"0"
@@ -134,6 +125,7 @@ export default {
                 // @ts-ignore
                 this.$root._toast('Create receive address success', 'success')
                 this.receiveAddress = res.encoded
+                store.updateInternalKeyEncoded(res, internalPubkey)
             })
 
         },

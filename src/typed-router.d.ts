@@ -51,6 +51,7 @@ declare module 'vue-router/auto/routes' {
     '/common/networkConfiguration': RouteRecordInfo<'/common/networkConfiguration', '/common/networkConfiguration', Record<never, never>, Record<never, never>>,
     '/common/passwordConfiguration': RouteRecordInfo<'/common/passwordConfiguration', '/common/passwordConfiguration', Record<never, never>, Record<never, never>>,
     '/common/receive': RouteRecordInfo<'/common/receive', '/common/receive', Record<never, never>, Record<never, never>>,
+    '/common/receiveList': RouteRecordInfo<'/common/receiveList', '/common/receiveList', Record<never, never>, Record<never, never>>,
     '/common/send': RouteRecordInfo<'/common/send', '/common/send', Record<never, never>, Record<never, never>>,
     '/common/setting': RouteRecordInfo<'/common/setting', '/common/setting', Record<never, never>, Record<never, never>>,
     '/common/template': RouteRecordInfo<'/common/template', '/common/template', Record<never, never>, Record<never, never>>,

@@ -1,9 +1,6 @@
 body {
   width: 375px;
   margin: 0 auto;
-}
-
-body {
   border: 1px solid rgba(0, 0, 0, 0.03125) !important;
   box-shadow: 0px 0.3px 0.9px rgb(0 0 0 / 10%), 0px 1.6px 3.6px rgb(0 0 0 / 10%) !important;
 }
@@ -22,6 +19,9 @@ body {
   @apply px-4 py-2 rounded-md bg-blue-500 text-white w-full shadow-sm shadow-blue-500 flex flex-row justify-center justify-center space-x-1;
   &:hover, :focus, :focus-visible, :focus-within, :active {
     @apply bg-blue-600 shadow-sm shadow-blue-600 opacity-80;
+  }
+  &-info {
+    @apply bg-gray-400;
   }
 }
 .link {

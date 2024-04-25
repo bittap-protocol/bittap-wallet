@@ -30,7 +30,7 @@
         <div class="modal-box rounded-sm">
             <h3 class="font-bold text-lg flex flex-row justify-start items-center"> <IconMdiContentSave class="size-5"></IconMdiContentSave> Edit name</h3>
             <div class="py-4">
-                <input v-model="newAccountName" type="text" class="border rounded-sm" />
+                <input v-model="newAccountName" type="text" class="border rounded-sm" maxlength="15" />
             </div>
             
             <div class="modal-action justify-center">
@@ -159,10 +159,10 @@
     .account {
         @apply border border-gray-200 border-solid shadow-sm p-2 mb-3;
         .name,.path,.address {
-            @apply py-2 ;
+            @apply py-2;
         }
         .name {
-            @apply font-bold text-xl;
+            @apply font-bold text-base;
         }
         .button {
             @apply bg-sky-400;

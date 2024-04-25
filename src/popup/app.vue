@@ -84,21 +84,7 @@ export default {
       console.log('accounts: ', accounts, accounts.length)
       // @ts-ignore
       if(accounts.length > 0) {
-        // const nodeAccounts = await ListAccounts().catch(e => [])
-        // console.log('nodeAccounts: ', nodeAccounts)
-        // // // @ts-ignore
-        // for(var i = 0 ; i< accounts.length ; i++) {
-        //   // @ts-ignore
-        //   const acc = accounts[i]
-        //   console.log('acc: ', acc)
-        //   ImportAccount({
-        //     name: acc.name,
-        //     extended_public_key: acc.publicKey,
-        //     master_key_fingerprint: acc.privateKey,
-        //   }).then(res => {
-        //     console.log('res: ', res)
-        //   })
-        // }
+        //
       }
       
     },
@@ -128,7 +114,7 @@ export default {
     class="p-2 hd"
   >
     <div class="flex flex-row flex-nowrap justify-between items-center space-x-1">
-      <div class="back">BitTap</div>
+      <div class="back pl-4 font-bold">BitTap</div>
       <div class="title">
         <AccountList v-if="isHome && accountCount >= 1"></AccountList>
       </div>

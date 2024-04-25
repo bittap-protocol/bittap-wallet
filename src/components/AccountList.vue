@@ -1,12 +1,12 @@
 <template>
   <div class="accounts">
     
-    <a href="#" class="switchBtn" @click="showDialog">
-        <div class="join-item px-2">{{ activeAccountInfo.name || 'Account-'+(activeAccountIndex+1) }}</div>
-        <div class="join-item">
+    <button class="switchBtn" @click="showDialog">
+        <span class="pl-2 pr-0">{{ activeAccountInfo.name || 'Account-'+(activeAccountIndex+1) }}</span>
+        <span >
             <IconMdiArrowDownDrop></IconMdiArrowDownDrop>
-        </div>
-    </a>
+        </span>
+    </button>
 
     <dialog id="my_modal_select_account" class="modal rounded-sm">
         <div class="modal-box rounded-md">
@@ -17,7 +17,7 @@
             
             <div class="flex flex-col flex-nowrap justify-start items-center h-4/5 min-h-96 py-3 w-full overflow-y-auto overflow-x-hidden">
                 <div v-for="(acc, index) in accounts" :key="'acc-'+index" class="switchItem" @click="selectAccount(index,acc)">
-                    <div class="name text-xl text-black flex flex-row justify-between items-center w-full">
+                    <div class="name text-base text-black flex flex-row justify-between items-center w-full">
                         <div class="name-label">{{ acc.name || 'Account-'+(index+1) }}</div>
                         <IconMdiCheck v-if="activeAccountIndex === index" class="pl-1 icon text-sky-400"></IconMdiCheck>
                     </div>

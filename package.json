@@ -6,7 +6,6 @@
     "bignumber.js": "^9.1.2",
     "bip32": "^4.0.0",
     "bip39": "^3.1.0",
-    "bip86": "^0.0.3",
     "bitcoinjs-lib": "^6.1.5",
     "bitcore-lib": "^10.0.28",
     "browser-crypto": "^2.1.0",

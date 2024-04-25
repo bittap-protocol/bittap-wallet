@@ -48,7 +48,22 @@ export default {
     },
     methods: {
         send(){
-            this.$root._toast('Success', 'success')
+          this.$root._toast('Success', 'success')
+          chrome.runtime.sendMessage(
+            null,
+            {
+              type: 'test',
+              data: {
+                h:1
+              }
+            },
+            {
+
+            },
+            res => {
+              console.log('msg send ok, res is ', res)
+            }
+          )  
         }
     }
 }

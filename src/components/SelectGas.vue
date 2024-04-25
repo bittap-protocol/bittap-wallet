@@ -66,7 +66,7 @@ export default {
         // @ts-ignore
         this.timer = setInterval(() => {
             this.initGasPrice()
-        }, 1000*10)
+        }, 1000*30)
     },
     beforeUnmount() {
         console.log('SelectGas beforeUnmount')

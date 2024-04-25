@@ -13,32 +13,33 @@
       <SelectGas v-model:value="formData.gas" />
     </div>
 
-    <div class="w-full text-left leading-6 flex flex-col justify-center items-start border border-sky-300 border-solid shadow-sm shadow-sky-300 my-4 p-4" v-if="showInfo && showInfo.asset_id && showInfo.asset_id.length > 5">
+    <div v-if="showInfo && showInfo.asset_id && showInfo.asset_id.length > 5"
+      class="w-full text-left leading-6 flex flex-col justify-center items-start bg-white rounded-md border border-sky-300 border-solid shadow-sm shadow-sky-300 my-4 p-4 addr-info">
       <div class="id w-full break-all">
-        Asset Id: {{ showInfo.asset_id }}
+        <strong>Asset Id:</strong> {{ showInfo.asset_id }}
       </div>
-      <div class="asset_type">
-        Asset Type: {{ showInfo.asset_type }}
+      <div class="asset_type w-full break-all">
+        <strong>Asset Type:</strong> {{ showInfo.asset_type }}
       </div>
-      <div class="asset_version">
-        Version: {{ showInfo.asset_version }}
+      <div class="asset_version w-full break-all">
+        <strong>Version:</strong> {{showInfo.asset_version }}
       </div>
-      <div class="amount">
-        Amount: {{ showInfo.amount }}
+      <div class="amount w-full break-all">
+        <strong>Amount:</strong> {{ showInfo.amount }}
       </div>
-      <div class="amount">
-        Script Key: {{ showInfo.script_key }}
+      <div class="script_key w-full break-all">
+        <strong>Script Key:</strong> {{ showInfo.script_key }}
       </div>
-      <div class="amount">
-        Internal Key: {{ showInfo.internal_key }}
+      <div class="internal_key w-full break-all">
+        <strong>Internal Key:</strong> {{ showInfo.internal_key }}
       </div>
-      <div class="amount">
-        Taproot Output Key: {{ showInfo.taproot_output_key }}
+      <div class="taproot_output_key w-full break-all">
+        <strong>Taproot Output Key:</strong> {{ showInfo.taproot_output_key }}
       </div>
     </div>
 
     <label class="form-control w-full max-w-xs my-4">
-      <button class="button" @click="send">Send</button>
+      <button :disabled="formData.to.length <= 60" class="button" @click="send">Send</button>
     </label>
 
   </div>
@@ -79,6 +80,7 @@ export default {
     },
     methods: {
       showAddressInfo() {
+        console.log(' this.formData: ', this.formData)
         DecodeAssetsAddress({addr: this.formData.to}).then(res => {
           this.showInfo = res
         })
@@ -111,6 +113,11 @@ export default {
     }
     .field {
       @apply block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-400 sm:text-sm sm:leading-6;
+    }
+  }
+  .addr-info{
+    strong {
+      @apply rounded-md bg-sky-400 p-1 mr-1;
     }
   }
 }

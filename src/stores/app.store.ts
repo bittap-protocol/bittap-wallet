@@ -3,31 +3,46 @@ import { useStorage } from '@vueuse/core'
 
 import ECPairFactory, { networks } from 'ecpair';
 import * as ecc from 'tiny-secp256k1';
-import { payments, initEccLib, crypto } from 'bitcoinjs-lib'
+import { payments, initEccLib, crypto, address } from 'bitcoinjs-lib'
 
 import { mnemonicToSeedSync, generateMnemonic, validateMnemonic } from 'bip39';
 import BIP32Factory from 'bip32';
-import BIP86 from 'bip86';
+
 
 import { Buffer } from 'buffer'
 
 
 import { ListAssets, ListTransfers } from '@/popup/api/btc/blockStream'
+import { sendMessage } from '@/popup/libs/tools'
 
 export interface Account { 
-  address: unknown; 
+  address: string; 
   phrase?: string; 
   publicKey?: string; 
-  scriptPubKey?: unknown; 
+  scriptPubKey?: string; 
   internalPubkey: string, 
   output:string, 
-  path?: unknown; 
+  path?: string; 
   WIF?: string; 
-  privateKey?: unknown; 
+  privateKey?: string; 
   backup?: boolean; 
   name?: string; 
 };
 type AccountInfo = Account | null;
+
+export interface InternalKey {
+  address: string | number | symbol | undefined; 
+  rootKey: string; 
+  scriptPubKey: unknown; 
+  internalPubkey: string, 
+  output:string, 
+  path: string; 
+  privateKey: string;
+  tweakPubKey: string;
+  encoded?: string;
+  taproot_output_key?: string,
+  status?: number,
+};
 
 // @ts-ignore
 // import browserCrypto from 'browser-crypto';
@@ -63,7 +78,23 @@ export const useAppStore = defineStore('app', () => {
 
   const assetsList = useStorage('assetsList', [])
   const transferList = useStorage('transferList', [])
+  const internalKeyList = useStorage('internalKeyList', [])
 
+  const initConfig = () => {
+    if (activeAccount.value < 0) { 
+      return 
+    }
+    if (networkRpcUrl.value != '' && networkRpcToken.value != '') { 
+      sendMessage('InitConfig',{
+        activeAccount: activeAccount.value,
+        currentInfo: getActiveAccount(),
+        networkType: networkType.value,
+        networkRpcUrl: networkRpcUrl.value,
+        networkRpcToken: networkRpcToken.value
+      })
+    }
+    
+  }
   const getNetWorkType = () => {
     const nt = networkType.value || 0
     if(nt<0 || nt > 1) {
@@ -93,6 +124,7 @@ export const useAppStore = defineStore('app', () => {
     }
     // nt is 0 not supported by configuration
     networkType.value = nt
+    initConfig()
   }
 
   // chrome.storage.local.set({ key: value }).then(() => { console.log("Value is set"); });
@@ -151,6 +183,7 @@ export const useAppStore = defineStore('app', () => {
   }
   const switchActiveAccount = (index: number) => {
     activeAccount.value = index
+    initConfig()
   }
 
   const getActiveAccount = (): AccountInfo => {
@@ -178,6 +211,91 @@ export const useAppStore = defineStore('app', () => {
 
 const toXOnly = (publicKey:any) => {
   return publicKey.slice(1, 33);
+}
+
+// @ts-ignore
+const getInternalKeyList = (): InternalKey[] => {
+  const activeInfo: AccountInfo = getActiveAccount()
+  // @ts-ignore
+  return activeInfo ? internalKeyList.value.filter(k=> k.rootKey === activeInfo?.publicKey) : []
+}
+
+const generateInternalKey = (): InternalKey => {
+  // @ts-ignore
+  const { phrase, publicKey } = getActiveAccount()
+  initEccLib(ecc)
+  const seed =  mnemonicToSeedSync(phrase);
+
+  const bip32 = BIP32Factory(ecc);
+  const rootKey = bip32.fromSeed(seed);
+  // @ts-ignore get next user index from internal key list
+  const userKeys = internalKeyList.value.filter(k=> k.rootKey === publicKey).map(x => Number(x.path.split('/')[5])).sort((a,b) => b-a);
+  const userIndex = userKeys.length <= 0 ? 1: Number(userKeys[0])+2
+  const path = "m/86'/0'/0'/0/"+userIndex
+  const childNodePrimary = rootKey.derivePath(path);
+
+  const path2 = "m/86'/0'/0'/0/"+(userIndex+1)
+  const childNodePrimary2 = rootKey.derivePath(path2);
+
+  const childNodeXOnlyPubkeyPrimary2 = toXOnly(childNodePrimary2.publicKey);
+
+  const tweakedChildNodePrimary2 = childNodePrimary.tweak(
+    crypto.taggedHash('TapTweak', childNodeXOnlyPubkeyPrimary2),
+  );
+  // @ts-ignore
+  const internalKeyInfo:InternalKey = {
+    rootKey: publicKey,
+    scriptPubKey: childNodePrimary2.publicKey.toString('hex'),
+    tweakPubKey: toXOnly(tweakedChildNodePrimary2.publicKey).toString('hex'),
+    internalPubkey: childNodePrimary.publicKey.toString('hex'),
+    path,
+  }
+  console.log('generate InternalKeyInfo: ', internalKeyInfo)
+  // @ts-ignore
+  internalKeyList.value.unshift(internalKeyInfo)
+  return internalKeyInfo
+}
+
+// @ts-ignore
+const updateInternalKeyEncoded = (updateInfo, internalPubkey: string) => {
+    const myList = getInternalKeyList()
+    // @ts-ignore
+    myList.forEach(row => {
+      // console.log('my list row : ', row)
+      if(row.internalPubkey === internalPubkey) {
+        // update internal key info
+        row.encoded = updateInfo.encoded
+        row.taproot_output_key = updateInfo.taproot_output_key
+        // add encoded to queue
+        sendMessage('SubscribeReceiveEvents', row.encoded)
+      }
+    })
+}
+  
+// @ts-ignore
+const subscribeReceiveAllEncoded = () => { 
+  const myList = getInternalKeyList()
+  // @ts-ignore
+  myList.forEach(row => { 
+    sendMessage('SubscribeReceiveEvents', row.encoded)
+  })
+}
+  
+// @ts-ignore
+const updateInternalKeyStatus = (status:number, internalPubkey: string) => {
+    const myList = getInternalKeyList()
+    // @ts-ignore
+    myList.forEach(row => {
+      // console.log('my list row : ', row)
+      if(row.internalPubkey === internalPubkey) {
+        // update internal key info
+        row.status = status
+      }
+    })
+}
+
+const convertTaprootOutputKeyToBech32m = (taproot_output_key: string) => { 
+  return address.toBech32(Buffer.from(taproot_output_key, 'hex'), 1, 'bc')
 }
 
 // @ts-ignore
@@ -421,5 +539,12 @@ const createAccount = async () => {
     getAssetsList,
     updateListTransfers,
     getTransferList,
+    getInternalKeyList,
+    generateInternalKey,
+    updateInternalKeyEncoded,
+    convertTaprootOutputKeyToBech32m,
+    updateInternalKeyStatus,
+    subscribeReceiveAllEncoded,
+    initConfig
   }
 })

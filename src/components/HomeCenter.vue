@@ -129,9 +129,8 @@ export default {
       // { label: 'NFT', value: 'nft' },
       { label: 'History', value: 'history' },
     ])
-    const activeTab = ref('token')
     return {
-      account, tabs, showAddress, activeTab, store
+      account, tabs, showAddress, store
     }
   },
   data() {
@@ -143,6 +142,7 @@ export default {
       },
       assets: [],
       transfers: [],
+      activeTab: 'token',
     }
   },
   computed: {
@@ -160,6 +160,11 @@ export default {
     'activeAccountIndex': function(k, v) {
       if(k>= 0 && k!=v) {
         this.initAccount()
+      }
+    },
+    activeTab: function (k, v) { 
+      if (k != v) { 
+        this.updateCurrentData()
       }
     }
   },
@@ -190,12 +195,20 @@ export default {
       store.updateAssets().then(() => {
         return store.updateListTransfers()
       }).then(() => {
-        this.assets = store.getAssetsBalances()
-        this.transfers = store.getTransferListForCurrent()
+        this.updateCurrentData()
         // subscribe all encoded
         store.initConfig()
         store.subscribeReceiveAllEncoded()
+        this.listenReceiveAllMessage()
       })
+    },
+    async updateCurrentData() { 
+      const store = useAppStore()
+      if (store.activeAccount < 0) {
+        return
+      }
+      this.assets = store.getAssetsBalances()
+      this.transfers = store.getTransferListForCurrent()
     },
     listenReceiveAllMessage() {
       const store = useAppStore()
@@ -207,14 +220,19 @@ export default {
         console.log('Message received ==popup', message, sender, sendResponse)
         switch (message.type) {
           case 'ws.message':
-            console.log('ws.message received: ', message.data)
-            const result = message.data
+            
+            const result = message.data.result
             const { status } = result
-            // transfer asset is finished 
+            console.log('ws.message received: ', message, result, status)
+            // transfer asset is finished  "ADDR_EVENT_STATUS_COMPLETED"
             if (status === 'ADDR_EVENT_STATUS_COMPLETED') {
               self.$root._toast('Transaction completed', 'success')
-              store.updateAssets();
-              store.updateListTransfers()
+              store.updateAssets().then(() => { 
+                this.assets = store.getAssetsBalances()
+              });
+              store.updateListTransfers().then(() => { 
+                this.transfers = store.getTransferListForCurrent()
+              })
             }
             break
           default:
@@ -259,7 +277,7 @@ export default {
       .content-tab{
        
         .inputs,.outputs {
-          @apply border border-solid border-cyan-400 rounded mb-1;
+          @apply border border-solid border-pink-400 rounded mb-1;
 
           .info {
             @apply flex flex-wrap justify-between items-center;

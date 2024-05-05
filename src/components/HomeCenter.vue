@@ -40,7 +40,7 @@
               <div v-for="ass in assets" :key="ass.asset_id"
                 class="w-full my-2 flex flex-row justify-between items-center border-b border-gray-200 border-solid py-3 mb-2">
                 <div class="font-bold name pl-2">{{ ass.name }}</div>
-                <div class="balance pr-2">Balance: {{ formatToken(ass.amount) }}</div>
+                <div class="balance pr-2">Balance: {{ $root.formatToken(ass.amount) }}</div>
               </div>
             </template>
             <template v-else>
@@ -60,15 +60,14 @@
               <div v-for="tr in transfers" :key="tr.anchor_tx_hash"
                 class="w-full my-2 flex flex-col justify-between items-start rounded-md shadow-md shadow-gray-300  p-2 border border-gray-200 border-solid py-3 mb-4">
                 <div class="font-bold name break-all">Hash: {{ tr.anchor_tx_hash }}</div>
-                <div class="balance">Time: {{ new Date(tr.transfer_timestamp * 1000).toLocaleString() }}</div>
-                <div class="font-bold name">Fees: {{ tr.anchor_tx_chain_fees }}</div>
-                <div class="font-bold balance">Height: {{ tr.anchor_tx_height_hint }}</div>
+                <div class="balance flex flex-row flex-nowrap justify-between items-center">
+                  <div>Time: {{ new Date(tr.transfer_timestamp * 1000).toLocaleString() }}</div>
+                  <div class="text-right pl-2">Fees: {{ tr.anchor_tx_chain_fees }}</div>
+                </div>
                 <div class="font-bold inputs" v-for="row in tr.inputs" :key="row.anchor_point">
                   <div class="info">
-                    <div class="label">Assets name: </div>
-                    <div class="value">{{ showAssetName(row.asset_id) }}</div>
-                    <div class="label">Assets amount: </div>
-                    <div class="value">{{ formatToken(row.amount) }}</div>
+                    <div class="label">Assets: </div>
+                    <div class="value">{{ $root.formatToken(row.amount, 8, showAssetName(row.asset_id)) }}</div>
                     <div class="label">Script_key: </div>
                     <div class="value  break-all">{{ row.script_key }}</div>
                   </div>
@@ -76,7 +75,7 @@
                 <div class="font-bold outputs" v-for="row in tr.outputs" :key="row.script_key">
                   <div class="info">
                     <div class="label">Assets amount: </div>
-                    <div class="value">{{ formatToken(row.amount) }}</div>
+                    <div class="value">{{ $root.formatToken(row.amount) }}</div>
                     <div class="label">Script_key: </div>
                     <div class="value  break-all">{{ row.script_key }}</div>
                   </div>
@@ -175,10 +174,6 @@ export default {
     }, 1000)
   },
   methods: {
-    formatToken(m: string|number, t: number = 4) { 
-      const n = Number(m) || Number(0)
-      return n.toFixed(t)
-    },
     showAssetName(asset_id: string): string { 
       const tokenInfo = this.assets.find(x => x.asset_id === asset_id)
       return tokenInfo ? tokenInfo.name : 'Unknown asset'

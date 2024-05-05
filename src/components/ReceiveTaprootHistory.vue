@@ -3,8 +3,8 @@
         <div class="history-list">
             <div v-for="row in historyList" :key="row.tweakPubKey" class="item">
                 <div v-if="row.assets.amount>0" class="line"><strong>Asset:</strong>{{
-                    Number(row.assets.amount).toFixed(4)
-                    }} {{ row.assets.name }}</div>
+    $root.formatToken(row.assets.amount, 8, row.assets.name)
+                    }}</div>
                 <div v-if="row.assets.asset_id" class="line"><strong>Asset ID:</strong>{{ row.assets.asset_id }}</div>
                 <div class="line">
                     <strong>encoded:</strong> {{ row.encoded }}

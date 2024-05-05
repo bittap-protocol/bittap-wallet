@@ -72,8 +72,8 @@ export const useAppStore = defineStore('app', () => {
   const accountList = useStorage('accountList', [])
   const activeAccount = useStorage('activeAccount', -1)
 
-  const networkType = useStorage('networkType', 0)
-  const networkRpcUrl = useStorage('networkRpcUrl', '')
+  const networkType = useStorage('networkType', 1) // default network is 0 for mainnet
+  const networkRpcUrl = useStorage('networkRpcUrl', 'https://devapi.onebits.org')
   const networkRpcToken = useStorage('networkRpcToken', '')
 
   const assetsList = useStorage('assetsList', [])

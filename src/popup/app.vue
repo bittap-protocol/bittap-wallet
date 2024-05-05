@@ -88,6 +88,10 @@ export default {
       }
       
     },
+    formatToken(m: string | number, t: number = 8, symbol: string = '') {
+      const n = Number(m) || Number(0)
+      return symbol ? [n.toFixed(t), symbol].join(' ') : n.toFixed(t)
+    },
     _toast(text:string, type = 'info', delay = 3000)  {
       this.toastData.text = text
       this.toastData.type = type

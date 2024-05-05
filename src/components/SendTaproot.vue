@@ -25,7 +25,7 @@
         <strong>Version:</strong> {{showInfo.asset_version }}
       </div>
       <div class="amount w-full break-all">
-        <strong>Amount:</strong> {{ Number(showInfo.amount).toFixed(4) }} {{ showInfo.name }}
+        <strong>Amount:</strong> {{ $root.formatToken(showInfo.amount, 8, showInfo.name) }}
       </div>
       <div class="script_key w-full break-all">
         <strong>Script Key:</strong> {{ showInfo.script_key }}

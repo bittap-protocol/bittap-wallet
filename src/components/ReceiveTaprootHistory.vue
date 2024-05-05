@@ -1,15 +1,17 @@
 <template>
     <div class="w-full px-3">
         <div class="history-list">
-            <div v-for="row in historyList" :key="row.address" class="item">
+            <div v-for="row in historyList" :key="row.tweakPubKey" class="item">
+                <div v-if="row.assets.amount>0" class="line"><strong>Asset:</strong>{{
+                    Number(row.assets.amount).toFixed(4)
+                    }} {{ row.assets.name }}</div>
+                <div v-if="row.assets.asset_id" class="line"><strong>Asset ID:</strong>{{ row.assets.asset_id }}</div>
                 <div class="line">
                     <strong>encoded:</strong> {{ row.encoded }}
                 </div>
                 <div class="line"><strong>internalPubkey:</strong> {{ row.internalPubkey }}</div>
                 <div class="line"><strong>taproot_output_key:</strong> {{ row.taproot_output_key }}</div>
                 <div class="line"><strong>tweakPubKey:</strong> {{ row.tweakPubKey }}</div>
-                <div class="line"><strong>Status: </strong>{{ showStatus(row) }}
-                </div>
                 <button class="button my-2" @click="copyData(row.encoded)">Copy receive address</button>
             </div>
         </div>
@@ -18,61 +20,52 @@
 
 <script lang="ts">
 import { useAppStore } from '@/stores/app.store';
-import { AddrReceives } from '@/popup/api/btc/blockStream'
+import { DecodeAssetsAddress } from '@/popup/api/btc/blockStream'
 
 export default {
     name: 'ReceiveTaproot',
-    setup() {
-        
-        const store = useAppStore()
-        const account = computed(() => store.getActiveAccount())
-        const historyList = computed(() => store.getInternalKeyList().filter(e => e.encoded))
-        // const historyList = computed(() => store.getInternalKeyList())
-        console.log('history list: ', historyList)
-        return {
-            account,
-            historyList
-        }
-    },
     data() {
         return {
-            listStatus: {}
+            historyList: []
         }
     },
+    computed: {
+        account() { 
+            const store = useAppStore()
+            return store.getActiveAccount()
+        }
+    },
+    mounted() {
+        this.initData()
+    },
     methods: {
+        async initData() { 
+            const store = useAppStore()
+            const assets = store.getAssetsListForSelect()
+            console.log('assets: ', assets)
+            store.getInternalKeyList().filter(e => e.encoded).forEach(row => { 
+                console.log('row: ', row)
+                const { tweakPubKey, internalPubkey, encoded, taproot_output_key } = row
+                this.historyList.push({
+                    tweakPubKey, internalPubkey, encoded, taproot_output_key, assets: { name: '', amount: 0, asset_id: '' }
+                })
+                DecodeAssetsAddress({ addr: encoded }).then(res => { 
+                    const info = this.historyList.find(x => x.encoded === res.encoded)
+                    console.log('res:', res, info)
+                    if (info) { 
+                        const assetInfo = assets.find(x => x.asset_id === res.asset_id)
+                        info.assets.name = assetInfo ? assetInfo.name : 'Unknown asset'
+                        info.assets.amount = res.amount
+                        info.assets.asset_id = res.asset_id
+                    }
+                })
+            })
+        },
         async copyData(text: string){
             await navigator.clipboard.writeText(text)
             // @ts-ignore
             this.$root._toast('Copy successfully.', 'success')
         },
-        getConfirmStatus(row: any) { 
-            // const store = useAppStore()
-            // const bc1p = store.convertTaprootOutputKeyToBech32m(taproot_output_key)
-            // @ts-ignore
-            if (!this.listStatus[row.internalPubkey] || this.listStatus[row.internalPubkey] === '...') {
-                AddrReceives(row.encoded).then(res => {
-                    console.log('AddrReceives on res: ', res)
-                    // @ts-ignore
-                    if (res.events.length > 0) {
-                        this.listStatus[row.internalPubkey] = res.events[0].status
-                    } else { 
-                        this.listStatus[row.internalPubkey] = 'Unknown'
-                    }
-                }).catch(e => {
-                    console.warn('AddrReceives on error: ', e)
-                    // @ts-ignore
-                    this.listStatus[row.internalPubkey] = 'Unknown'
-                })
-            }
-            return this.statusText(row.internalPubkey)
-        },
-        statusText(internal_key: string) {
-            // @ts-ignore
-            return Object.prototype.hasOwnProperty.call(Object.prototype, this.listStatus, internal_key) ? this.listStatus[internal_key] : '...'
-        },
-        showStatus(row: any) { 
-            return this.getConfirmStatus(row)
-        }
     }
 }
 </script>

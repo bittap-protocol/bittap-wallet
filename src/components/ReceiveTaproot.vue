@@ -54,7 +54,7 @@
                     <div v-for="(acc, index) in assets" :key="'acc-'+index" class="switchItem"
                         @click="checkedToken(acc)">
                         <div class="name-label uppercase">
-                            <span class="font-bold">{{ acc.asset_genesis.name }}</span>
+                            <span class="font-bold">{{ acc.name }}</span>
                             <!-- ({{ acc.name }}) -->
                         </div>
                     </div>
@@ -134,12 +134,12 @@ export default {
             my_modal_select_asset.showModal()
             const store = useAppStore()
             store.updateAssets()
-            this.assets = store.getAssetsList()
+            this.assets = store.getAssetsListForSelect()
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         checkedToken(token: any) {
-            this.formData.name = token.asset_genesis.name
-            this.formData.assetsId = token.asset_genesis.asset_id
+            this.formData.name = token.name
+            this.formData.assetsId = token.asset_id
             this.selectAssetInfo = token
             // @ts-ignore
             my_modal_select_asset.close()

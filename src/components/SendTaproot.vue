@@ -25,7 +25,7 @@
         <strong>Version:</strong> {{showInfo.asset_version }}
       </div>
       <div class="amount w-full break-all">
-        <strong>Amount:</strong> {{ showInfo.amount }}
+        <strong>Amount:</strong> {{ Number(showInfo.amount).toFixed(4) }} {{ showInfo.name }}
       </div>
       <div class="script_key w-full break-all">
         <strong>Script Key:</strong> {{ showInfo.script_key }}
@@ -46,6 +46,7 @@
 </template>
 
 <script>
+import { useAppStore } from '@/stores/app.store';
 import { DecodeAssetsAddress, SendAssets } from '@/popup/api/btc/blockStream'
 
 export default {
@@ -68,6 +69,7 @@ export default {
               "taproot_output_key": '', // <bytes> 
               "proof_courier_addr": '', // <string> 
               "asset_version": '', // <AssetVersion> 
+                name: 'Unknown',
             }
         }
     },
@@ -80,8 +82,12 @@ export default {
     },
     methods: {
       showAddressInfo() {
+        const store = useAppStore()
+        const assets = store.getAssetsListForSelect()
         console.log(' this.formData: ', this.formData)
-        DecodeAssetsAddress({addr: this.formData.to}).then(res => {
+        DecodeAssetsAddress({ addr: this.formData.to }).then(res => {
+          const assetInfo = assets.find(x => x.asset_id === res.asset_id)
+          res.name = assetInfo ? assetInfo.name : 'Unknown asset'
           this.showInfo = res
         })
       },

@@ -92,6 +92,7 @@ export const useAppStore = defineStore('app', () => {
         networkRpcUrl: networkRpcUrl.value,
         networkRpcToken: networkRpcToken.value
       })
+      
     }
     
   }
@@ -157,6 +158,46 @@ export const useAppStore = defineStore('app', () => {
   const getAssetsList = () => {
     return  assetsList.value
   }
+
+  const getAssetsListForSelect = () => {
+    const assetsListOk  = []
+    assetsList.value.forEach(row => { 
+      const rowInfo = assetsListOk.find(x => x.asset_id === row.asset_genesis.asset_id )
+      if (rowInfo) {
+        rowInfo.amount += Number(row.amount)
+      } else { 
+        assetsListOk.push({
+          asset_id: row.asset_genesis.asset_id,
+          amount: Number(row.amount),
+          name: row.asset_genesis.name,
+          version: row.version,
+          asset_type: row.asset_genesis.asset_type
+        })
+      }
+    })
+    return assetsListOk
+  }
+
+  const getAssetsBalances = () => { 
+    const teakKeys = getInternalKeyList().map(x => x.tweakPubKey)
+    const assets = assetsList.value.filter(x => teakKeys.includes(x.script_key.substr(2)))
+     const assetsListOk  = []
+    assetsList.value.forEach(row => { 
+      const rowInfo = assetsListOk.find(x => x.asset_id === row.asset_genesis.asset_id )
+      if (rowInfo) {
+        rowInfo.amount += Number(row.amount)
+      } else { 
+        assetsListOk.push({
+          asset_id: row.asset_genesis.asset_id,
+          amount: Number(row.amount),
+          name: row.asset_genesis.name,
+          version: row.version,
+          asset_type: row.asset_genesis.asset_type
+        })
+      }
+    })
+    return  assetsListOk
+  }
   const updateListTransfers = async () => {
     return ListTransfers().then(res => {
       if(res) {
@@ -166,6 +207,16 @@ export const useAppStore = defineStore('app', () => {
   }
   const getTransferList = () => {
     return  transferList.value
+  }
+
+  const getTransferListForCurrent = () => { 
+    const teakKeys = getInternalKeyList().map(x => x.tweakPubKey)
+    return transferList.value.filter(x => { 
+      const keys = x.inputs.map(x => x.script_key.substr(2))
+      x.outputs.forEach(x => keys.push(x.script_key.substr(2)))
+      // console.log('keys: ', keys, teakKeys)
+      return teakKeys.some(o => keys.includes(o))
+    })
   }
 
   // const initConfig = async () => {
@@ -537,8 +588,11 @@ const createAccount = async () => {
     changeNetWork,
     updateAssets,
     getAssetsList,
+    getAssetsBalances,
+    getAssetsListForSelect,
     updateListTransfers,
     getTransferList,
+    getTransferListForCurrent,
     getInternalKeyList,
     generateInternalKey,
     updateInternalKeyEncoded,

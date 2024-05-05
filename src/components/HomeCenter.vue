@@ -11,10 +11,10 @@
               <IconMdiContentCopy></IconMdiContentCopy>
             </button>
           </div>
-        </div>  
+        </div>
         <div class="assets flex flex-row justify-between items-center space-x-2 w-full mt-2">
           <div class="btc">
-              {{ $root.formatAssets(accountInfo.balance) }}
+            {{ $root.formatAssets(accountInfo.balance) }}
           </div>
           <div class="usdt">
             {{ $root.formatAssets(usdtBalance, 4, 'USDT') }}
@@ -29,16 +29,18 @@
     <div class="body">
       <div class="home-tab">
         <div class="tabs-container">
-          <button v-for="tab in tabs" :key="'tab-'+tab.value" :class="['tab-btn', activeTab === tab.value ? 'active' : '']" @click.prevent="activeTab = tab.value">
+          <button v-for="tab in tabs" :key="'tab-'+tab.value"
+            :class="['tab-btn', activeTab === tab.value ? 'active' : '']" @click.prevent="activeTab = tab.value">
             {{ tab.label }}
           </button>
         </div>
         <div class="contents">
           <div v-if="activeTab === 'token'" class="content-tab">
             <template v-if="assets.length > 0">
-              <div v-for="ass in assets" :key="ass.asset_genesis.asset_id" class="w-full my-2 flex flex-row justify-between items-center border-b border-gray-200 border-solid py-3 mb-2">
-                <div class="font-bold name pl-2">{{ ass.asset_genesis.name }}</div>
-                <div class="balance pr-2">Balance: {{ ass.amount }}</div>
+              <div v-for="ass in assets" :key="ass.asset_id"
+                class="w-full my-2 flex flex-row justify-between items-center border-b border-gray-200 border-solid py-3 mb-2">
+                <div class="font-bold name pl-2">{{ ass.name }}</div>
+                <div class="balance pr-2">Balance: {{ formatToken(ass.amount) }}</div>
               </div>
             </template>
             <template v-else>
@@ -55,11 +57,30 @@
           <div v-if="activeTab === 'history'" class="content-tab">
 
             <template v-if="transfers.length > 0">
-              <div v-for="tr in transfers" :key="tr.anchor_tx_hash" class="w-full my-2 flex flex-col justify-between items-start rounded-md shadow-md shadow-gray-300  p-2 border border-gray-200 border-solid py-3 mb-4">
+              <div v-for="tr in transfers" :key="tr.anchor_tx_hash"
+                class="w-full my-2 flex flex-col justify-between items-start rounded-md shadow-md shadow-gray-300  p-2 border border-gray-200 border-solid py-3 mb-4">
                 <div class="font-bold name break-all">Hash: {{ tr.anchor_tx_hash }}</div>
                 <div class="balance">Time: {{ new Date(tr.transfer_timestamp * 1000).toLocaleString() }}</div>
                 <div class="font-bold name">Fees: {{ tr.anchor_tx_chain_fees }}</div>
                 <div class="font-bold balance">Height: {{ tr.anchor_tx_height_hint }}</div>
+                <div class="font-bold inputs" v-for="row in tr.inputs" :key="row.anchor_point">
+                  <div class="info">
+                    <div class="label">Assets name: </div>
+                    <div class="value">{{ showAssetName(row.asset_id) }}</div>
+                    <div class="label">Assets amount: </div>
+                    <div class="value">{{ formatToken(row.amount) }}</div>
+                    <div class="label">Script_key: </div>
+                    <div class="value  break-all">{{ row.script_key }}</div>
+                  </div>
+                </div>
+                <div class="font-bold outputs" v-for="row in tr.outputs" :key="row.script_key">
+                  <div class="info">
+                    <div class="label">Assets amount: </div>
+                    <div class="value">{{ formatToken(row.amount) }}</div>
+                    <div class="label">Script_key: </div>
+                    <div class="value  break-all">{{ row.script_key }}</div>
+                  </div>
+                </div>
               </div>
             </template>
             <template v-else>
@@ -149,6 +170,14 @@ export default {
     }, 1000)
   },
   methods: {
+    formatToken(m: string|number, t: number = 4) { 
+      const n = Number(m) || Number(0)
+      return n.toFixed(t)
+    },
+    showAssetName(asset_id: string): string { 
+      const tokenInfo = this.assets.find(x => x.asset_id === asset_id)
+      return tokenInfo ? tokenInfo.name : 'Unknown asset'
+    },
     initAccount() {
       const store = useAppStore()
       if(store.activeAccount < 0) {
@@ -158,14 +187,41 @@ export default {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       // this.accountInfo.balance = await getBalance(this.account.address)
       // this.btcPrice = await getBTCUSDTPrice()
-      store.updateAssets().then(()=> {
+      store.updateAssets().then(() => {
         return store.updateListTransfers()
       }).then(() => {
-        this.assets = store.getAssetsList()
-        this.transfers = store.getTransferList()
+        this.assets = store.getAssetsBalances()
+        this.transfers = store.getTransferListForCurrent()
         // subscribe all encoded
         store.initConfig()
         store.subscribeReceiveAllEncoded()
+      })
+    },
+    listenReceiveAllMessage() {
+      const store = useAppStore()
+      const self = this
+      chrome.runtime.onConnect.addListener(async () => {
+        console.log('chrome.runtime.onConnect==popup: ', new Date().toLocaleString());
+      })
+      chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        console.log('Message received ==popup', message, sender, sendResponse)
+        switch (message.type) {
+          case 'ws.message':
+            console.log('ws.message received: ', message.data)
+            const result = message.data
+            const { status } = result
+            // transfer asset is finished 
+            if (status === 'ADDR_EVENT_STATUS_COMPLETED') {
+              self.$root._toast('Transaction completed', 'success')
+              store.updateAssets();
+              store.updateListTransfers()
+            }
+            break
+          default:
+
+            break
+        }
+        sendResponse()
       })
     },
     /* eslint-disable array-callback-return */
@@ -196,9 +252,31 @@ export default {
           @apply bg-blue-500 text-white;
         }
       }
+      
     }
     .contents{
       @apply p-10 mx-4;
+      .content-tab{
+       
+        .inputs,.outputs {
+          @apply border border-solid border-cyan-400 rounded mb-1;
+
+          .info {
+            @apply flex flex-wrap justify-between items-center;
+            .label{
+              width: 40%;
+            }
+            .value {
+              width: 60%;
+              @apply text-left;
+            }
+          }
+        }
+        .inputs {
+          @apply border-sky-500;
+        }
+      }
+      
     }
 
   }

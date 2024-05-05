@@ -3,6 +3,9 @@
 // import myWasmModule from '@/assets/main.wasm?url';
 
 import { Account } from '@/stores/app.store'
+
+import { sendMessage } from '@/popup/libs/tools'
+
 interface configOpt { 
   activeAccount: number,
   currentInfo: Account,
@@ -11,10 +14,30 @@ interface configOpt {
   networkRpcToken: string
 }
 
+interface WcClient {
+  ws: WebSocket,
+  putMsg: unknown,
+  send(data: unknown) : unknown,
+  sendJSON(data: unknown): unknown,
+  subAll(): unknown,
+ }
+
+type WcClientObject = WcClient | null;
+
 const encodes: string[] = []
-const configs: configOpt = {}
+const configs: configOpt = {
+  activeAccount: 0,
+  currentInfo: {
+    address: '',
+    internalPubkey: '',
+    output: ''
+  },
+  networkType: 0,
+  networkRpcUrl: '',
+  networkRpcToken: ''
+}
 const ws = {
-  client: []
+  client: {}
 }
 
 chrome.runtime.onInstalled.addListener(async (opt) => {
@@ -92,64 +115,91 @@ function ActionSubscribeReceive() {
     return 
   }
   
-  var wc = null
-  if (!ws.client.some(x => x.id === 'ActionSubscribeReceive')) {
+  let wc:WcClientObject = null
+  if ( !Object.prototype.hasOwnProperty.call(ws.client, 'ActionSubscribeReceive') ) {
     
     const REST_HOST = networkRpcUrl.split('://')[1]
     console.log('======ws: start ws client for network: ', `wss://${REST_HOST}/v1/taproot-assets/events/asset-receive?method=POST`)
     // @ts-ignore
     wc = {
-      id: 'ActionSubscribeReceive',
-      status: 'ing',
-      ws: new WebSocket(`wss://${REST_HOST}/v1/taproot-assets/events/asset-receive?method=POST`, {
-        rejectUnauthorized: false,
-        headers: {
-          'Grpc-Metadata-Macaroon': networkRpcToken,
-        },
-      }),
+      ws: new WebSocket(`wss://${REST_HOST}/v1/taproot-assets/events/asset-receive?method=POST` ),
+      // ws: new WebSocket(`wss://${REST_HOST}/v1/taproot-assets/events/asset-receive?method=POST`,[{
+      //   rejectUnauthorized: false,
+      //   headers: {
+      //     'Grpc-Metadata-Macaroon': networkRpcToken,
+      //   },
+      // }] ),
       putMsg: [],
     }
+    // @ts-ignore
     wc.send = (data) => { 
-      if (wc.status != 'ok') {
-        wc.msg.push(data)
+      console.log('wc.send wc.status: ', wc.ws.readyState, data)
+      if (!wc.ws || wc.ws.readyState != 1) {
+        if (!wc.putMsg.includes(data)) {
+          wc.putMsg.push(data)
+        }
       } else { 
-        wc.ws.sendJSON(data)
+        wc.sendJSON(data)
       }
     }
-    wc.sendJSON = (data:any) => { 
+    // @ts-ignore
+    wc.sendJSON = (data: any) => { 
+      console.log('wc.sendJSON wc.ws.send: ', data)
        wc.ws.send(JSON.stringify(data))
     }
     wc.subAll = () => { 
-      encodes.forEach((encoded, index) => { 
-        console.log('======ws: send JSON data[%d]: ', encoded, index)
-        wc.sendJSON({
-          filter_addr: encoded,
-          start_timestamp:  new Date().getTime() * 1000
-        })
-      })
+      while (encodes.length > 0) { 
+        let enc = encodes.pop()
+        // wc.send({
+        //   filter_addr: enc,
+        //   // start_timestamp:  new Date('2024-04-20').getTime() * 1000
+        //   start_timestamp:  0
+        // })
+      }
     }
-    wc.ws.onopen(() => { 
+    console.log('======ws: wc.ws', wc)
+    wc.ws.onopen = () => { 
       console.log('======ws: ws is connected')
-      wc.status = 'ok'
-      wc.subAll()
-    })
-    wc.ws.onmessage((msg) => { 
-      console.log('======ws: ws on message: ', msg)
-    })
-    wc.ws.onclose(() => { 
+      // wc.subAll()
+      wc.send({
+          filter_addr: '',
+          // start_timestamp:  new Date('2024-04-20').getTime() * 1000
+          start_timestamp:  0
+        })
+    }
+    wc.ws.onmessage = (msg) => { 
+      const json = JSON.parse(msg.data.toString()) 
+      console.log('======ws: ws on message: ', msg, json)
+      sendMessage('ws.message', json)
+    }
+    wc.ws.onclose = () => { 
       console.log('======ws: ws on closed')
-    })
-    wc.ws.onerror((err) => { 
+      // ws.client.ActionSubscribeReceive = null
+      // delete ws.client.ActionSubscribeReceive
+      // setTimeout(() => { 
+      //   ActionSubscribeReceive()
+      // }, 1500)
+    }
+    wc.ws.onerror =(err) => { 
       console.log('======ws: ws on error: ', err)
-    })
-    ws.client.push(wc)
+      // ws.client.ActionSubscribeReceive = null
+      // delete ws.client.ActionSubscribeReceive
+      // setTimeout(() => { 
+      //   ActionSubscribeReceive()
+      // }, 1500)
+    }
+    // @ts-ignore
+    ws.client.ActionSubscribeReceive = wc
   } else { 
-    wc = ws.client.find(x => x.id === 'ActionSubscribeReceive')
+    // @ts-ignore
+    wc = ws.client.ActionSubscribeReceive
   }
   if (!wc) { 
     return 
   }
-  wc.subAll()
+  setTimeout(() => { 
+    wc.subAll()
+  }, 15000)
 }
 
 console.log('hello world from background')

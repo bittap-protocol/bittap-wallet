@@ -84,7 +84,7 @@ export const useAppStore = defineStore('app', () => {
     if (activeAccount.value < 0) { 
       return 
     }
-    if (networkRpcUrl.value != '' && networkRpcToken.value != '') { 
+    if (networkRpcUrl.value != '') { 
       sendMessage('InitConfig',{
         activeAccount: activeAccount.value,
         currentInfo: getActiveAccount(),
@@ -181,8 +181,8 @@ export const useAppStore = defineStore('app', () => {
   const getAssetsBalances = () => { 
     const teakKeys = getInternalKeyList().map(x => x.tweakPubKey)
     const assets = assetsList.value.filter(x => teakKeys.includes(x.script_key.substr(2)))
-     const assetsListOk  = []
-    assetsList.value.forEach(row => { 
+    const assetsListOk  = []
+    assets.forEach(row => { 
       const rowInfo = assetsListOk.find(x => x.asset_id === row.asset_genesis.asset_id )
       if (rowInfo) {
         rowInfo.amount += Number(row.amount)
@@ -216,7 +216,7 @@ export const useAppStore = defineStore('app', () => {
       x.outputs.forEach(x => keys.push(x.script_key.substr(2)))
       // console.log('keys: ', keys, teakKeys)
       return teakKeys.some(o => keys.includes(o))
-    })
+    }).reverse()
   }
 
   // const initConfig = async () => {

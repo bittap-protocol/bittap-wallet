@@ -17,12 +17,12 @@
               <input v-model="url" type="url" class="field" />
             </label>
           </div>
-          <div v-show="Number(networkType) == 1" class="item">
+          <!-- <div v-show="Number(networkType) == 1" class="item">
             <label class="lb">
               <span class="t">RPC Token:</span>
               <input v-model="token" type="text" class="field" />
             </label>
-          </div>
+          </div> -->
           <div class="item">
             <button class="button" @click="changeConfig">Change network configuration</button>
           </div>
@@ -97,9 +97,9 @@ export default {
             if(!TestUrl(this.url)) {
               throw 'Url invalid'
             }
-            if(this.token === '' || this.token.length < 32) {
-              throw 'Token invalid'
-            }
+            // if(this.token === '' || this.token.length < 32) {
+            //   throw 'Token invalid'
+            // }
           }
           store.changeNetWork(Number(this.networkType), this.url, this.token)
           // @ts-ignore

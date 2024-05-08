@@ -1,32 +1,38 @@
 <template>
   <div class="min-box w-full importAccount px-4">
     <div class="import-tab">
-      <div class="tabs-container">
-        <button v-for="tab in tabs" :key="'tab-'+tab.value" :class="['tab-btn', activeTab === tab.value ? 'active' : '']" @click.prevent="activeTab = tab.value">
+      <!-- <div class="tabs-container">
+        <button v-for="tab in tabs" :key="'tab-'+tab.value"
+          :class="['tab-btn', activeTab === tab.value ? 'active' : '']" @click.prevent="activeTab = tab.value">
           {{ tab.label }}
         </button>
-      </div>
+      </div> -->
       <div class="contents">
         <div v-if="activeTab === 'words'" class="content-tab">
           <div class="w-full my-2 flex flex-row flex-wrap justify-center items-center gap-4">
-            <div v-for="(word,index) in wordsForm" :key="'w-'+index" class="w-1/3 h-15 ">
-              <div class="join flex flex-row flex-nowrap justify-center items-center">
-                <div class="join-item pr-1 font-bold">{{ (index+1) }}.</div>
-                <div class="join-item">
-                  <input v-model="wordsForm[index]" type="text" class="input input-bordered w-full max-w-xs" />
-                </div>
+            <div v-for="(word,index) in wordsForm" :key="'w-'+index" class="w-[90px] overflow-x-hidden p-0.5">
+              <div class="input-box input-append">
+                <div class="text-gray-400 w-[20]">{{ (index+1) }}.</div>
+                <input v-model="wordsForm[index]" type="text" class="inline px-1  w-[70px]" />
               </div>
             </div>
           </div>
-          <div v-if="errorMessage && errorMessage.length > 0" role="alert" class="alert alert-error flex flex-row justify-start items-center my-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <div v-if="errorMessage && errorMessage.length > 0" role="alert"
+            class="alert alert-error flex flex-row justify-start items-center my-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
             <span>{{ errorMessage }}</span>
           </div>
-          <button class="button" @click="importAccountFromWords(false)">Import account</button>
+          <button class="button mt-6" @click="importAccountFromWords(false)">Import account</button>
         </div>
         <div v-if="activeTab === 'private'" class="content-tab">
           <div class="w-full my-2 flex flex-col justify-start items-center">
-            <input v-model="importPrivateKey" class="border my-5 w-full" placeholder="Private key hex format: 64 digits and letters" minlength="64" maxlength="64"  pattern="^[0-9a-f]{64}$" />
+            <input v-model="importPrivateKey" class="border my-5 w-full"
+              placeholder="Private key hex format: 64 digits and letters" minlength="64" maxlength="64"
+              pattern="^[0-9a-f]{64}$" />
             <button class="button mb-7" @click="importAccountFromWords(true)">Import account</button>
           </div>
         </div>
@@ -56,8 +62,8 @@ export default {
     return {
       activeTab: 'words',
       tabs: [
-        { label: 'Mnemonics', value: 'words' },
-        { label: 'PrivateKey', value: 'private' },
+        // { label: 'Mnemonics', value: 'words' },
+        // { label: 'PrivateKey', value: 'private' },
       ],
       wordsForm: [],
       importPrivateKey: '',
@@ -111,14 +117,14 @@ export default {
 <style scoped lang="scss">
 .importAccount {
   .import-tab{
-    @apply py-3 my-4 border-t-2 border-solid border-gray-200 w-full;
+    @apply py-3 my-4 border-t-0 border-solid border-gray-200 w-full;
     border-top-width: 1px;
     .tabs-container{
       @apply flex flex-row flex-nowrap justify-between items-center space-x-2 mb-3;
       .tab-btn{
         @apply rounded-full btn-sm w-1/2;
         &.active{
-          @apply bg-blue-500 text-white;
+          @apply bg-primary text-white;
         }
       }
     }

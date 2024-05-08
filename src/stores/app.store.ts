@@ -26,6 +26,7 @@ export interface Account {
   WIF?: string; 
   privateKey?: string; 
   backup?: boolean; 
+  import?: boolean; 
   name?: string; 
 };
 type AccountInfo = Account | null;
@@ -72,8 +73,8 @@ export const useAppStore = defineStore('app', () => {
   const accountList = useStorage('accountList', [])
   const activeAccount = useStorage('activeAccount', -1)
 
-  const networkType = useStorage('networkType', 0)
-  const networkRpcUrl = useStorage('networkRpcUrl', '')
+  const networkType = useStorage('networkType', 1) // default network is 0 for mainnet
+  const networkRpcUrl = useStorage('networkRpcUrl', 'https://devapi.onebits.org')
   const networkRpcToken = useStorage('networkRpcToken', '')
 
   const assetsList = useStorage('assetsList', [])
@@ -420,7 +421,8 @@ const createAccount = async () => {
             path,
             WIF: childNodePrimary.toWIF(),
             privateKey: childNodePrimary.privateKey?.toString('hex'),
-            backup: false,
+          backup: false,
+            import: false,
             name: 'Account-'+accountList.value.length
         }
         // console.log('account create for m86: ', accountRaw)
@@ -502,7 +504,8 @@ const createAccount = async () => {
               path,
               WIF: childNodePrimary.toWIF(),
               privateKey: childNodePrimary.privateKey?.toString('hex'),
-              backup: true,
+            backup: true,
+              import: true,
               name: 'Import-'+accountList.value.length
           }
         }
@@ -528,7 +531,8 @@ const createAccount = async () => {
               path,
               WIF: keyPair.toWIF(),
               privateKey: pk,
-              backup: true,
+            backup: true,
+              import: true,
               name: 'Import-'+accountList.value.length
           }
         }

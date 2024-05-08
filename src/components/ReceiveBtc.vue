@@ -1,17 +1,17 @@
 <template>
-  <div class="w-full flex flex-col justify-center items-center receive">
-    <div class="w-full py-4 flex flex-row justify-center items-center mt-5">
-        <VueQr :text="account.address" :size="200"></VueQr>
-    </div>
-    <div class="w-full py-4 my-1">
-        <div class="address"> 
-            {{ account.address }}
+    <div class="w-full flex flex-col justify-center items-center receive">
+        <div class="w-full py-4 flex flex-row justify-center items-center mt-5">
+            <VueQr :text="account.address" :size="200" class="bg-box"></VueQr>
+        </div>
+        <div class="w-full py-4 my-1">
+            <div class="address">
+                {{ account.address }}
+            </div>
+        </div>
+        <div class="w-full py-4">
+            <button class="button" @click="copyAddress(account.address)">Copy address</button>
         </div>
     </div>
-    <div class="w-full py-4">
-        <button class="button" @click="copyAddress(account.address)">Copy address</button>
-    </div>
-  </div>
 </template>
 
 <script lang="ts">

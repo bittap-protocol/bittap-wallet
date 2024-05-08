@@ -3,22 +3,20 @@ body {
   margin: 0 auto;
   border: 1px solid rgba(0, 0, 0, 0.03125) !important;
   box-shadow: 0px 0.3px 0.9px rgb(0 0 0 / 10%), 0px 1.6px 3.6px rgb(0 0 0 / 10%) !important;
+  background:#fff;
+}
+*{
+  font-family: Alibaba PuHuiTi 2.0;
 }
 
-// .btn{
-//   &-primary{
-//     background-color: #1990FF;
-//     border-color: #1990FF;
-//   }
-// }
 .min-box{
-  min-height: 580px;
+  min-height: 550px;
 }
 
 .button {
-  @apply px-4 py-2 rounded-md bg-blue-500 text-white w-full shadow-sm shadow-blue-500 flex flex-row justify-center justify-center space-x-1;
+  @apply px-4 py-2 rounded-md bg-primary text-white w-full shadow-sm shadow-primary flex flex-row justify-center justify-center space-x-1;
   &:hover, :focus, :focus-visible, :focus-within, :active {
-    @apply bg-blue-600 shadow-sm shadow-blue-600 opacity-80;
+    @apply bg-purple-700 shadow-sm shadow-purple-600 opacity-80;
   }
   &-info {
     @apply bg-gray-400;
@@ -34,14 +32,48 @@ body {
   @apply outline-none outline-0;
 }
 .field {
-    @apply block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-400 sm:text-sm sm:leading-6;
+    @apply block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6;
 }
 .list-box {
   @apply w-full px-2 ;
   .item {
-    @apply w-full px-2 py-3 mx-1 border border-gray-200 border-solid border-b my-1 rounded-sm;
+    @apply w-full px-2 py-3 mx-1 border border-gray-200 border-solid border-b my-2 rounded-md shadow-sm shadow-gray-200;
     &:hover, :focus, :focus-visible, :focus-within, :active { 
-      @apply bg-gray-300;
+      @apply bg-gray-200;
     }
   }
+}
+
+.bg-box {
+  @apply rounded-2xl;
+  border-width: 0px ;
+  padding: 6px ;
+  background-image: linear-gradient(179.75deg, rgba(0, 123, 255, 0.7) 0.21%, #8000FF 98.02%);
+  box-shadow: 0px 4px 6px 0px #9D73D533;
+}
+.input{
+  &-box{
+    @apply  rounded-md bg-white ring-1 ring-gray-100 shadow-md shadow-gray-100;
+  }
+  &-append{
+    @apply flex flex-row justify-between items-center w-full mb-1 bg-white pl-2;
+    input{
+      @apply bg-transparent border-0 outline-0 ring-0;
+      &:hover, &:focus, &:focus-visible, &:focus, &:focus, &:focus-within {
+        @apply bg-transparent border-0 outline-0 ring-0;
+      }
+    }
+    >.icon{
+      @apply flex flex-col justify-center items-center pr-2;
+    }
+    &:has(>input:focus), &:has(>input:hover), 
+    &:has(>input:focus-visible), &:has(>input:focus-visible), &:has(>input:active) {
+      @apply ring-1 ring-primary;
+    }
+  }
+
+}
+
+.err-tips{
+  @apply text-white flex flex-row flex-nowrap justify-start items-center px-6 py-4 w-full border-0 rounded-md my-4 bg-red-500;
 }

@@ -68,13 +68,6 @@
     <div class="w-full max-w-xs my-4">
       <SelectGas v-model:value="formData.gas" />
     </div>
-
-    <div class="form-control w-full max-w-xs my-4">
-      <div role="alert" class="alert alert-warning flex flex-row justify-start items-center text-white p-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-        <span>Warning: Invalid email address!</span>
-      </div>
-    </div>
     <label class="form-control w-full max-w-xs my-4 mb-11">
       <button class="button" @click="submit">Create assets</button>
     </label>
@@ -177,9 +170,9 @@ export default {
         padding: 1px;
       }
     }
-    .field {
-      @apply block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-400 sm:text-sm sm:leading-6;
-    }
+    // .field {
+    //   @apply block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-400 sm:text-sm sm:leading-6;
+    // }
   }
 }
 </style>

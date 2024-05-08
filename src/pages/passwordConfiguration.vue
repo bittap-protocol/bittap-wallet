@@ -1,6 +1,6 @@
 <template>
   <div class="w-full min-box pwd">
-    <div class="w-full py-20 flex flex-col justify-center items-center px-4">
+    <div class="w-full py-10 flex flex-col justify-center items-center px-4">
       <div class="item">
         <input v-model="confirmPassword" type="password" class="field" placeholder="Current password" />
       </div>

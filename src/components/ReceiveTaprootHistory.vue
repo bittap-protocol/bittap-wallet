@@ -3,8 +3,8 @@
         <div class="history-list">
             <div v-for="row in historyList" :key="row.tweakPubKey" class="item">
                 <div v-if="row.assets.amount>0" class="line"><strong>Asset:</strong>{{
-                    Number(row.assets.amount).toFixed(4)
-                    }} {{ row.assets.name }}</div>
+                    $root.formatToken(row.assets.amount, 8, row.assets.name)
+                    }}</div>
                 <div v-if="row.assets.asset_id" class="line"><strong>Asset ID:</strong>{{ row.assets.asset_id }}</div>
                 <div class="line">
                     <strong>encoded:</strong> {{ row.encoded }}
@@ -13,6 +13,14 @@
                 <div class="line"><strong>taproot_output_key:</strong> {{ row.taproot_output_key }}</div>
                 <div class="line"><strong>tweakPubKey:</strong> {{ row.tweakPubKey }}</div>
                 <button class="button my-2" @click="copyData(row.encoded)">Copy receive address</button>
+            </div>
+            <div v-if="loading" class="my-6 w-full flex flex-row justify-center items-center">
+                <div class="loading loading-spinner text-primary my-16"></div>
+            </div>
+            <div v-if="!loading && historyList.length<=0" class="no-result w-full">
+                <div class="flex flex-row justify-center items-center m-5">
+                    <img src="@/assets/notrans.png" height="110" width="120" />
+                </div>
             </div>
         </div>
     </div>
@@ -26,7 +34,8 @@ export default {
     name: 'ReceiveTaproot',
     data() {
         return {
-            historyList: []
+            historyList: [],
+            loading: true
         }
     },
     computed: {
@@ -43,7 +52,7 @@ export default {
             const store = useAppStore()
             const assets = store.getAssetsListForSelect()
             console.log('assets: ', assets)
-            store.getInternalKeyList().filter(e => e.encoded).forEach(row => { 
+            store.getInternalKeyList().filter(e => e.encoded).forEach(row => {
                 console.log('row: ', row)
                 const { tweakPubKey, internalPubkey, encoded, taproot_output_key } = row
                 this.historyList.push({
@@ -60,6 +69,9 @@ export default {
                     }
                 })
             })
+            setTimeout(() => { 
+                this.loading = false
+            }, 1000)
         },
         async copyData(text: string){
             await navigator.clipboard.writeText(text)

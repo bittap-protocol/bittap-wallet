@@ -70,15 +70,18 @@ export default {
   .home-tab{
     @apply py-3 my-4 border-t-2 border-solid border-gray-200 w-full;
     border-top-width: 1px;
-    .tabs-container{
-      @apply flex flex-row flex-nowrap justify-between items-center space-x-2 mb-3;
-      .tab-btn{
-        @apply rounded-full btn-sm w-1/2;
-        &.active{
-          @apply bg-blue-500 text-white;
+    .tabs-container {
+        @apply flex flex-row flex-nowrap justify-between items-center space-x-2 mb-3 border-b border-solid border-gray-200;
+    
+        .tab-btn {
+          @apply btn-sm w-1/2 border-b-2 border-solid rounded-none border-transparent;
+    
+          &.active {
+            @apply text-primary border-primary;
+          }
         }
+    
       }
-    }
     .contents{
       @apply p-10 mx-4;
     }

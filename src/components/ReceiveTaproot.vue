@@ -6,9 +6,10 @@
                     <span class="label-text">Receive asset
                     </span>
                 </div>
-                <div class="join">
-                    <input v-model="formData.name" type="text" readonly placeholder="Please select" class="join-item" />
-                    <button class="btn btn-primary join-item rounded-r-full" @click="selectAsset">Select asset</button>
+                <div class="join-input">
+                    <input v-model="formData.name" type="text" readonly placeholder="Please select"
+                        class="item item-l" />
+                    <button class="item-r" @click="selectAsset">Select asset</button>
                 </div>
             </label>
 
@@ -21,7 +22,7 @@
             </label>
 
             <label class="form-control w-full max-w-xs my-4">
-                <button class="button" @click="createReceive">Create receive</button>
+                <button class="button" @click="createReceive">Create Invoice</button>
             </label>
         </div>
         <div v-if="receiveAddress.length >= 1" class="show w-full py-4">
@@ -38,8 +39,7 @@
         </div>
 
         <div class="w-full flex flex-col justify-center">
-            <router-link to="/common/receiveList" class="btn btn-neutral">History
-                receive</router-link>
+            <router-link to="/common/receiveList" class="btn btn-link no-underline">Invoice History</router-link>
         </div>
 
         <dialog id="my_modal_select_asset" class="modal">
@@ -168,13 +168,30 @@ export default {
         }
         }
         .field {
-            @apply block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-400 sm:text-sm sm:leading-6;
+            @apply w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6;
+        }
+        .join-input{
+            @apply w-full flex flex-row justify-between items-center flex-nowrap bg-purple-600 rounded-md border-2 border-gray-300;
+            &:has(.item-l:focus), &:has(.item-l:hover),
+                &:has(.item-l:active){
+                @apply border-primary bg-primary;
+            }
+            .item{
+                &-l{
+                    @apply ring-0 outline-none border-none rounded-l;
+                    flex: 1;
+                }
+                &-r{
+                    @apply text-white ;
+                    flex: 1;
+                }
+            }
         }
     }
     .switchItem{
-    @apply text-left w-full my-1 p-3 rounded-md shadow-sm border border-gray-200 border-solid bg-gray-200 transition duration-200 ease-out hover:ease-in;
-        &:hover, :focus, :active{
-            @apply border-sky-400 bg-sky-400 cursor-pointer shadow-sm shadow-sky-500;
+        @apply text-left w-full my-1 p-3 rounded-md shadow-sm border border-gray-200 border-solid bg-gray-200 transition duration-200 ease-out hover:ease-in;
+        &:hover, :focus, :active {
+            @apply border-primary bg-primary cursor-pointer shadow-sm shadow-primary ring-primary;
             .font-bold{
                 @apply text-white;
             }

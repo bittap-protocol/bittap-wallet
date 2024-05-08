@@ -9,6 +9,9 @@ declare module 'vue' {
   export interface GlobalComponents {
     AccountList: typeof import('./components/AccountList.vue')['default']
     Changelog: typeof import('./components/Changelog.vue')['default']
+    copy: typeof import('./components/svgIcon/EyeOpen copy.vue')['default']
+    EyeClose: typeof import('./components/svgIcon/EyeClose.vue')['default']
+    EyeOpen: typeof import('./components/svgIcon/EyeOpen.vue')['default']
     HomeCenter: typeof import('./components/HomeCenter.vue')['default']
     ReceiveBtc: typeof import('./components/ReceiveBtc.vue')['default']
     ReceiveTaproot: typeof import('./components/ReceiveTaproot.vue')['default']

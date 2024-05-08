@@ -25,7 +25,7 @@
         <strong>Version:</strong> {{showInfo.asset_version }}
       </div>
       <div class="amount w-full break-all">
-        <strong>Amount:</strong> {{ Number(showInfo.amount).toFixed(4) }} {{ showInfo.name }}
+        <strong>Amount:</strong> {{ $root.formatToken(showInfo.amount, 8, showInfo.name) }}
       </div>
       <div class="script_key w-full break-all">
         <strong>Script Key:</strong> {{ showInfo.script_key }}
@@ -118,12 +118,12 @@ export default {
       }
     }
     .field {
-      @apply block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-400 sm:text-sm sm:leading-6;
+      @apply block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6;
     }
   }
   .addr-info{
     strong {
-      @apply rounded-md bg-sky-400 p-1 mr-1;
+      @apply rounded-md bg-primary p-1 mr-1;
     }
   }
 }

@@ -1,12 +1,11 @@
 <template>
-    <div class="w-full py-2">
-        <div class="w-full flex flex-row justify-start items-center">
-            <div class="label pr-10">
-                Gas: 
+    <div class="select-gas">
+        <div class="box">
+            <div class="label">
+                Gas:
             </div>
-            <div class="flex flex-row justify-center items-center my-2">
-                <div v-for="(item, index) in categories" :key="index" class="flex flex-col justify-between items-center  px-2 text-center rounded border border-gray-300 mx-1 border-solid hover:border-sky-400 hover:cursor-pointer" 
-                    @click="value = item.gas">
+            <div class="choose">
+                <div v-for="(item, index) in categories" :key="index" class="item" @click="value = item.gas">
                     <div>{{ item.name }}</div>
                     <div>{{ item.gas }} sat</div>
                 </div>
@@ -15,17 +14,17 @@
 
             </div>
         </div>
-        <div class="join w-full">
-            <label class="join-item input input-bordered flex items-center gap-2 border-0 outline-0 focus:border-0 focus:outline-0">
-                <input :value="value" class="grow border-0 outline-0 focus:border-0 focus:outline-0 focus-within: border-0 focus-within: outline-0 focus-visible:border-0 focus-visible:outline-0" type="number" min="1" placeholder="Custom gas fee" @input="$emit('update:value', $event.target.value)" />
-                <span class="badge badge-info">Sats</span>
-            </label>
-            <div class="join-item  flex flex-row justify-center items-center">
-                0.22 USD
+        <div class="sb">
+            <input :value="value" class="input" type="number" min="1" placeholder="Custom gas fee"
+                @input="$emit('update:value', $event.target.value)" />
+            <div class="badge badge-primary sat">Sats</div>
+            <div class="fee">
+
+                <span>≈$0.00</span>
             </div>
         </div>
     </div>
-    
+
 </template>
 
 <script lang="ts">
@@ -98,4 +97,40 @@ export default {
         },
     }
 }
-  </script>
+</script>
+<style lang="scss" scoped>
+.select-gas{
+    @apply w-full py-2;
+    .box{
+        @apply w-full flex flex-row justify-start items-center;
+        .label {
+            @apply pr-10;
+        }
+        .choose {
+            @apply flex flex-row justify-center items-center my-2;
+            .item {
+                @apply flex flex-col justify-between items-center px-2 text-center rounded border border-gray-300 mx-1 border-solid hover:border-primary;
+                &:hover {
+                    @apply cursor-pointer bg-primary text-white;
+                }
+            }
+        }
+        
+    }
+    .sb{
+        @apply w-full flex flex-row flex-nowrap justify-between items-center rounded-sm bg-white border border-solid border-gray-100 px-2;
+        .input{
+            @apply w-2/5 rounded-md border-0 py-1.5 text-gray-900 outline-none ring-0 rating-hidden bg-transparent shadow-none placeholder:text-gray-400;
+            &:hover, &:focus, &:focus-within {
+                @apply ring-0 outline-none;
+            }
+        }
+        .sat{
+            @apply text-white;
+        }
+        .fee{
+            @apply w-2/5 text-right;
+        }
+    }
+}
+</style>

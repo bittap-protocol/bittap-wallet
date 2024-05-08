@@ -1,5 +1,7 @@
 <script setup lang="ts">
 
+// @ts-ignore
+import IconMdiInformationSlabCircleOutline from '~icons/mdi/information-slab-circle-outline';
 
 import { useAppStore } from '@/stores/app.store'
 import { useRouter } from 'vue-router'
@@ -27,33 +29,17 @@ const activeAccount = computed(() => store.getActiveAccount())
 <template>
   <div class="text-center m-2 flex flex-col gap-y-2">
     <div class="min-box">
-      <div v-if="count > 0 && activeAccount" class="flex flex-col gap-x-2 justify-center space-y-5 ">
-        <RouterLink
-          v-if="!activeAccount.backup"
-          class="underline mb-2"
-          to="/common/backupKey"
-        >
-        Backup Account
+      <div v-if="count > 0 && activeAccount && !activeAccount.backup"
+        class="flex flex-row justify-between items-center m-2 bg-red-100 rounded-md p-2 text-red-600">
+        <div class="tips flex flex-row items-start justify-start">
+          <IconMdiInformationSlabCircleOutline></IconMdiInformationSlabCircleOutline>
+          <div class="pl-1">Current Wallet is not backed up</div>
+        </div>
+        <RouterLink class="no-underline bg-red-500 text-white rounded-full px-4 py-1" to="/common/backupKey">
+          Go
         </RouterLink>
       </div>
-      <HomeCenter v-if="count>0"></HomeCenter>
-    </div>
-
-    
-
-    <div class="join flex justify-center items-center">
-      <RouterLink
-        class="underline join-item pr-1 hidden"
-        to="/common/importAssets"
-      >
-      Import Assets
-      </RouterLink>
-      <RouterLink
-        class="underline join-item pl-1 "
-        to="/common/createAssets"
-      >
-      Create Assets
-      </RouterLink>
+      <HomeCenter v-if=" count > 0 "></HomeCenter>
     </div>
   </div>
 </template>

@@ -33,7 +33,7 @@
                 <input v-model="newAccountName" type="text" class="border rounded-sm" maxlength="15" />
             </div>
             
-            <div class="modal-action justify-center">
+            <div class="modal-action justify-start">
                 <form method="dialog">
                     <!-- if there is a button in form, it will close the modal -->
                     <button class="btn">Close</button>
@@ -54,10 +54,10 @@
                     Please take good care of your private key, please do not place it in any place that can be synchronized with the network, it is recommended to keep it offline
                 </div>
             </div>
-            <div class="modal-action justify-center">
+            <div class="modal-action justify-start">
                 <form method="dialog">
                     <!-- if there is a button in form, it will close the modal -->
-                    <button class="btn">Close</button>
+                    <button class="btn btn-primary">Close</button>
                 </form>
             </div>
         </div>
@@ -109,10 +109,9 @@
       this.initData()
     },
     methods: {
-        showAddress(address:string)  {
-            return address ? [address.substring(0, 16), address.substring(address.length-16)].join('...') : ''
-        },
-
+      showAddress(address:string)  {
+          return address ? [address.substring(0, 16), address.substring(address.length-16)].join('...') : ''
+      },
       initData() {
         // @ts-ignore
         this.$root.setTitle('Account mange')
@@ -165,7 +164,7 @@
             @apply font-bold text-base;
         }
         .button {
-            @apply bg-sky-400;
+            // @apply ;
         }
         .actions {
             @apply w-full flex flex-row justify-between items-center space-x-3;

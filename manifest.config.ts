@@ -17,6 +17,13 @@ export default defineManifest(async (env) => ({
   // semver is OK in "version_name"
   version_name: version,
   manifest_version: 3,
+  icons: {
+    "16": "icon_16X16.png",
+    "32": "icon_32X32.png",
+    "48": "icon_48X48.png",
+    "128": "icon_128X128.png",
+    // "256": "icon_256X256.png",
+  },
   // key: 'ekgmcbpgglflmgcfajnglpbcbdccnnje',
   action: {
     default_popup: 'src/popup/index.html',

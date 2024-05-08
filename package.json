@@ -23,7 +23,7 @@
     "vue-qr": "^4.0.9",
     "vue-router": "^4.2.5"
   },
-  "description": "BitTap of chrome extensions",
+  "description": "BitTap wallet",
   "devDependencies": {
     "@crxjs/vite-plugin": "2.0.0-beta.22",
     "@iconify-json/carbon": "^1.1.31",
@@ -64,7 +64,7 @@
     "webext-bridge": "^6.0.1"
   },
   "displayName": "BitTap",
-  "name": "bit-tap",
+  "name": "bittap-wallet",
   "repository": {
     "type": "git",
     "url": "https://github.com/bittap-protocol/bittap-wallet.git"

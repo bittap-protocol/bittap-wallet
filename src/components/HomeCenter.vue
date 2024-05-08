@@ -1,29 +1,73 @@
 <template>
   <div class="home">
     <div class="top">
-      <div class="w-full border-0 rounded-md bg-gray-200 flex flex-col justify-between items-center py-2 px-2">
-        <div class="address flex flex-row justify-between items-center space-x-2 w-full">
+      <div class="account">
+        <div class="assets">
+          <div class="btc">
+            {{ $root.formatAssets(accountInfo.balance, 8, 'BTC') }}
+          </div>
+          <div class="usdt">
+            ≈${{ $root.formatAssets(usdtBalance, 4, '') }}
+          </div>
+        </div>
+        <div class="address">
+
           <div class="label">
             {{ showAddress(account.address) }}
           </div>
           <div class="copy">
             <button class="link" @click="copyAddress(account.address)">
-              <IconMdiContentCopy></IconMdiContentCopy>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M5.40077 2.60309C5.25832 2.60309 5.14284 2.71858 5.14284 2.86103V4.32741C5.14284 4.67807 4.85857 4.96233 4.50792 4.96233C4.15726 4.96233 3.873 4.67807 3.873 4.32741V2.86103C3.873 2.01726 4.55701 1.33325 5.40077 1.33325H13.1389C13.9826 1.33325 14.6666 2.01726 14.6666 2.86103V10.5991C14.6666 11.4429 13.9826 12.1269 13.1389 12.1269H11.6559C11.3053 12.1269 11.021 11.8426 11.021 11.492C11.021 11.1413 11.3053 10.8571 11.6559 10.8571H13.1389C13.2813 10.8571 13.3968 10.7416 13.3968 10.5991V2.86103C13.3968 2.71858 13.2813 2.60309 13.1389 2.60309H5.40077Z"
+                  fill="white" />
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M1.33331 5.40071C1.33331 4.55694 2.01732 3.87293 2.86109 3.87293H10.5992C11.443 3.87293 12.127 4.55694 12.127 5.40071V13.1388C12.127 13.9826 11.443 14.6666 10.5992 14.6666H2.86109C2.01732 14.6666 1.33331 13.9826 1.33331 13.1388V5.40071ZM2.86109 5.14278C2.71864 5.14278 2.60315 5.25826 2.60315 5.40071V13.1388C2.60315 13.2813 2.71864 13.3967 2.86109 13.3967H10.5992C10.7416 13.3967 10.8571 13.2813 10.8571 13.1388V5.40071C10.8571 5.25826 10.7416 5.14278 10.5992 5.14278H2.86109Z"
+                  fill="white" />
+              </svg>
+
             </button>
           </div>
         </div>
-        <div class="assets flex flex-row justify-between items-center space-x-2 w-full mt-2">
-          <div class="btc">
-            {{ $root.formatAssets(accountInfo.balance) }}
-          </div>
-          <div class="usdt">
-            {{ $root.formatAssets(usdtBalance, 4, 'USDT') }}
-          </div>
-        </div>
+
       </div>
-      <div class="w-full my-3 flex flex-row justify-between items-center space-x-2">
-        <router-link to="/common/send" class="button">Send</router-link>
-        <router-link to="/common/receive" class="button">Receive</router-link>
+      <div class="actions">
+        <router-link to="/common/send" class="send">
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="28" cy="28" r="28" fill="white" />
+            <circle cx="28" cy="28" r="24" fill="url(#paint0_linear_25_6324)" />
+            <path d="M28 19V37" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M22 25L28 19L34 25" stroke="white" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
+            <defs>
+              <linearGradient id="paint0_linear_25_6324" x1="28" y1="4" x2="28.2022" y2="51.1467"
+                gradientUnits="userSpaceOnUse">
+                <stop stop-color="#007BFF" stop-opacity="0.7" />
+                <stop offset="1" stop-color="#8000FF" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div>Send</div>
+        </router-link>
+        <router-link to="/common/receive" class="receive">
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="28" cy="28" r="28" fill="white" />
+            <circle cx="28" cy="28" r="24" fill="url(#paint0_linear_25_6316)" />
+            <path d="M28 37V19" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M34 31L28 37L22 31" stroke="white" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
+            <defs>
+              <linearGradient id="paint0_linear_25_6316" x1="28" y1="4" x2="28.2022" y2="51.1467"
+                gradientUnits="userSpaceOnUse">
+                <stop stop-color="#007BFF" stop-opacity="0.7" />
+                <stop offset="1" stop-color="#8000FF" />
+              </linearGradient>
+            </defs>
+          </svg>
+
+
+          <div>Receive</div>
+        </router-link>
       </div>
     </div>
     <div class="body">
@@ -34,20 +78,36 @@
             {{ tab.label }}
           </button>
         </div>
+        <div v-if="loading" class="loading loading-spinner text-primary my-16"></div>
         <div class="contents">
           <div v-if="activeTab === 'token'" class="content-tab">
-            <template v-if="assets.length > 0">
-              <div v-for="ass in assets" :key="ass.asset_id"
-                class="w-full my-2 flex flex-row justify-between items-center border-b border-gray-200 border-solid py-3 mb-2">
-                <div class="font-bold name pl-2">{{ ass.name }}</div>
-                <div class="balance pr-2">Balance: {{ $root.formatToken(ass.amount) }}</div>
+            <template v-if="assets.length > 0 && !loading">
+              <div v-for="ass in assets" :key="ass.asset_id" class="token-item">
+                <div class="iconName">
+                  <div class="icon">
+                    <div class="icon-img" v-if="ass.asset_id === 'Base'">
+                      <IconMdiBitcoin class="icon-img text-orange-400"></IconMdiBitcoin>
+                    </div>
+                    <div v-else>
+                      <IconMdiBitcoin class="icon-img text-gray-300"></IconMdiBitcoin>
+                    </div>
+                  </div>
+                  <div class="names">
+                    <div class="name">{{ ass.name }}</div>
+                    <div class="des">{{ ass.des || ass.name }}</div>
+                  </div>
+
+
+                </div>
+                <div class="balance pr-2">
+                  <div class="b">{{ $root.formatToken(ass.amount) }}</div>
+                  <div class="u">≈${{ $root.formatToken(showUsdtBalance(ass.amount)) }}</div>
+                </div>
               </div>
             </template>
             <template v-else>
-              <div class="flex flex-col h-20 p-20">
-                <div class="alert text-center">
-                  No data
-                </div>
+              <div v-if="!loading" class="flex flex-row justify-center items-center m-5">
+                <img src="@/assets/noassets.png" height="110" width="120" />
               </div>
             </template>
           </div>
@@ -56,7 +116,7 @@
           </div> -->
           <div v-if="activeTab === 'history'" class="content-tab">
 
-            <template v-if="transfers.length > 0">
+            <template v-if="transfers.length > 0 && !loading">
               <div v-for="tr in transfers" :key="tr.anchor_tx_hash"
                 class="w-full my-2 flex flex-col justify-between items-start rounded-md shadow-md shadow-gray-300  p-2 border border-gray-200 border-solid py-3 mb-4">
                 <div class="font-bold name break-all">Hash: {{ tr.anchor_tx_hash }}</div>
@@ -83,23 +143,37 @@
               </div>
             </template>
             <template v-else>
-              <div class="flex flex-col h-20 p-20">
-                <div class="alert text-center">
-                  No data
-                </div>
+              <div v-if="!loading" class="flex flex-row justify-center items-center m-5">
+                <img src="@/assets/notrans.png" height="110" width="120" />
               </div>
             </template>
+
           </div>
         </div>
       </div>
+
+
+      <div class="join flex justify-center items-center">
+        <RouterLink class="no-underline join-item pr-1 hidden text-primary" to="/common/importAssets">
+          Import Assets
+        </RouterLink>
+        <RouterLink class="no-underline join-item pl-1 flex flex-row justify-center items-center text-primary"
+          to="/common/createAssets">
+          <IconMdiAdd></IconMdiAdd>
+          Create Assets
+        </RouterLink>
+      </div>
+
     </div>
   </div>
 </template>
 
 <script lang="ts">
 // @ts-ignore
-import IconMdiContentCopy from '~icons/mdi/content-copy';
-
+// import IconMdiContentCopy from '~icons/mdi/content-copy';
+import IconMdiBitcoin from '~icons/mdi/bitcoin';
+// @ts-ignore
+import IconMdiAdd from '~icons/mdi/add';
 
 import { useAppStore } from '@/stores/app.store'
 // @ts-ignore
@@ -111,9 +185,7 @@ import { useAppStore } from '@/stores/app.store'
 
 
 export default {
-  components: {
-    IconMdiContentCopy
-  },
+  components: { IconMdiBitcoin, IconMdiAdd },
   setup: function() {
     const store = useAppStore()
     // @ts-ignore
@@ -124,7 +196,7 @@ export default {
         return address?[address.substring(0, 12), address.substring(address.length-12)].join('...') : ''
     }
     const tabs = reactive([
-      { label: 'Token', value: 'token' },
+      { label: 'Assets', value: 'token' },
       // { label: 'NFT', value: 'nft' },
       { label: 'History', value: 'history' },
     ])
@@ -142,6 +214,8 @@ export default {
       assets: [],
       transfers: [],
       activeTab: 'token',
+      loading: true,
+      lastTime: 0
     }
   },
   computed: {
@@ -162,8 +236,9 @@ export default {
       }
     },
     activeTab: function (k, v) { 
-      if (k != v) { 
-        this.updateCurrentData()
+      if (k != v && this.lastTime + 5000 >= Date.now()) { 
+        this.updateAssetsBalances()
+        this.lastTime = Date.now()
       }
     }
   },
@@ -178,6 +253,9 @@ export default {
       const tokenInfo = this.assets.find(x => x.asset_id === asset_id)
       return tokenInfo ? tokenInfo.name : 'Unknown asset'
     },
+    showUsdtBalance(n: number) {
+      return Number(this.btcPrice * Number(n))
+    },
     initAccount() {
       const store = useAppStore()
       if(store.activeAccount < 0) {
@@ -190,20 +268,37 @@ export default {
       store.updateAssets().then(() => {
         return store.updateListTransfers()
       }).then(() => {
-        this.updateCurrentData()
+        this.updateAssetsBalances()
         // subscribe all encoded
         store.initConfig()
         store.subscribeReceiveAllEncoded()
         this.listenReceiveAllMessage()
       })
     },
-    async updateCurrentData() { 
+    async updateAssetsBalances() {
       const store = useAppStore()
       if (store.activeAccount < 0) {
+        this.loading = false
         return
       }
-      this.assets = store.getAssetsBalances()
-      this.transfers = store.getTransferListForCurrent()
+      this.loading = true
+      await store.updateListTransfers().then(() => {
+        this.transfers = store.getTransferListForCurrent()
+      })
+      await store.updateAssets().then(() => {
+        // @ts-ignore
+        this.assets = store.getAssetsBalances()
+        // add balance for BTC
+        // @ts-ignore
+        this.assets.unshift({
+          asset_id: 'Base',
+          amount: 0,
+          name: 'BTC',
+          version: 'One',
+          asset_type: 'base'
+        })
+      });
+      this.loading = false
     },
     listenReceiveAllMessage() {
       const store = useAppStore()
@@ -222,12 +317,7 @@ export default {
             // transfer asset is finished  "ADDR_EVENT_STATUS_COMPLETED"
             if (status === 'ADDR_EVENT_STATUS_COMPLETED') {
               self.$root._toast('Transaction completed', 'success')
-              store.updateAssets().then(() => { 
-                this.assets = store.getAssetsBalances()
-              });
-              store.updateListTransfers().then(() => { 
-                this.transfers = store.getTransferListForCurrent()
-              })
+              self.updateAssetsBalances()
             }
             break
           default:
@@ -254,15 +344,47 @@ export default {
 <style lang="scss" scoped>
 .home{
   @apply border-0 px-3;
+  .top {
+    .account {
+      @apply w-full border-0 rounded-2xl flex flex-col justify-between items-center py-2 px-3 pb-10;
+      background: radial-gradient(47.17% 129.97% at 51.3% 44.54%, rgba(0, 123, 255, 0.85) 0%, #8000FF 100%);
+      .assets{
+        @apply text-left w-full py-2;
+        .btc{
+          @apply text-white text-2xl leading-9;
+        }
+        .usdt{
+          @apply text-white opacity-60 text-base;
+        }
+      }
+      .address {
+        @apply flex flex-row justify-between items-center space-x-2 w-full text-white rounded-xl px-2 text-xs;
+        background: rgba(255,255,255,.3);
+      }
+    }
+    .actions {
+      @apply w-full my-3 flex flex-row justify-around items-center space-x-2;
+      margin-top:  -30px;
+    }
+  }
   .home-tab{
-    @apply py-3 my-4 border-t-2 border-solid border-gray-200 w-full;
-    border-top-width: 1px;
+    @apply pb-3 pt-1 mb-2 w-full;
     .tabs-container{
-      @apply flex flex-row flex-nowrap justify-between items-center space-x-2 mb-3;
+      @apply flex flex-row flex-nowrap justify-between items-center space-x-2 mb-3 border-b border-solid border-gray-200;
       .tab-btn{
-        @apply rounded-full btn-sm w-1/2;
+        @apply btn-sm w-1/2 border-b-0 border-none rounded-none;
+        border-bottom-width: 2px;
+        border-image-source: radial-gradient(47.17% 129.97% at 51.3% 44.54%, rgba(0, 123, 255, 0.0) 49%, #8000FF00 51%);
+        border-image-slice: 30%;
+        border-image-repeat: space;
+        border-image-width: 0px 0px 2px 0px;
+        transition: all 0.2s ease-in-out;
         &.active{
-          @apply bg-blue-500 text-white;
+          // @apply text-primary border-primary;
+          @apply text-primary;
+          border-image-source: radial-gradient(47.17% 129.97% at 51.3% 44.54%, rgba(0, 123, 255, 0.85) 0%, #8000FF 100%);
+          border-image-slice: 10%;
+          transition: all 0.5s;
         }
       }
       
@@ -270,7 +392,7 @@ export default {
     .contents{
       @apply p-10 mx-4;
       .content-tab{
-       
+        min-height: 25vh;
         .inputs,.outputs {
           @apply border border-solid border-pink-400 rounded mb-1;
 
@@ -287,6 +409,32 @@ export default {
         }
         .inputs {
           @apply border-sky-500;
+        }
+        .token-item {
+          @apply w-full my-2 flex flex-row justify-between items-center border-b border-gray-200 border-solid py-1 mb-1;
+          .b{
+            @apply text-base font-semibold;
+          }
+          .u{
+            @apply text-gray-400 text-sm;
+          }
+          .iconName{
+            @apply flex flex-nowrap flex-row justify-start items-center;
+            .icon{
+              @apply flex flex-nowrap flex-row justify-center items-center p-1;
+              .icon-img{
+                @apply size-10 rounded-full;
+              }
+            }
+            .names{
+              .name{
+                @apply text-base;
+              }
+              .des{
+                @apply text-sm text-gray-400;
+              }
+            }
+          }
         }
       }
       

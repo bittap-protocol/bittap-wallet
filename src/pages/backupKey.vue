@@ -71,9 +71,9 @@ export default {
     const isOk = ref(false)
 
     // TODO is dev auto input words
-    words.value.forEach((word: string, index: number) => {
-      wordsForm.value[index] = word
-    })
+    // words.value.forEach((word: string, index: number) => {
+    //   wordsForm.value[index] = word
+    // })
 
 
     const verificationWords = () => {

@@ -23,8 +23,10 @@ export default {
     const showPassword = ref(false);
     const disabledVisible = ref(true);
     const formData = reactive({
-      password: 'Abc123456##',
-      passwordConfirm: 'Abc123456##',
+      // password: 'Abc123456##',
+      // passwordConfirm: 'Abc123456##',
+      password: '',
+      passwordConfirm: '',
       agree: false,
     })
 

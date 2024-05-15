@@ -350,6 +350,83 @@ const convertTaprootOutputKeyToBech32m = (taproot_output_key: string) => {
   return address.toBech32(Buffer.from(taproot_output_key, 'hex'), 1, 'bc')
 }
 
+const createNewUserTest = async (): Promise<unknown> => { 
+  return new Promise<unknown>((_resolve, _reject) => {
+    try {
+      initEccLib(ecc)
+      const ECPair = ECPairFactory(ecc);
+
+      // const phraseResult = createMnemonicPhrase();
+      // const phrase = phraseResult.phrase;
+      const phrase = 'lift pull fancy sport collect picture column multiply swift hawk task puppy';
+
+      const seed =  mnemonicToSeedSync(phrase);
+
+      const bip32 = BIP32Factory(ecc);
+
+      // console.log({seed, phrase, phraseResult}, bip32)
+      
+      const rootKey = bip32.fromSeed(seed, networks.bitcoin);
+
+      // xpub 
+      
+      
+      const path = "m/84'/0'"
+      const childNodePrimary = rootKey.derivePath(path);
+      console.log('rootKey publicKey, %o \nseed, %o \nphrase: %s \nPath: %s \nrootKey.neutered().toBase58(): %s',
+        rootKey.publicKey.toString('hex'), seed.toString('hex'), phrase, path, rootKey.neutered().toBase58(), rootKey.toBase58())
+      const rootPublicKey = bip32.fromPublicKey(rootKey.publicKey, rootKey.chainCode)
+      
+      console.log('rootPublicKey: %s\nneutered().toBase58：%s', rootPublicKey.toBase58(), rootPublicKey.neutered().toBase58())
+
+      const childNodeXOnlyPubkeyPrimary = toXOnly(childNodePrimary.publicKey);
+
+      console.log('childNodePrimary.publicKey: %s\nprivateKey: %s \ntoBase58: %s', childNodePrimary.publicKey.toString('hex'), childNodePrimary.privateKey?.toString('hex'), childNodePrimary.toBase58())
+      console.log('child neutered().toBase58(): ', childNodePrimary.neutered().toBase58())
+      console.log('child neutered().toBase58() for zpub: ', childNodePrimary.neutered().toBase58().replace('xpub', 'zpub'))
+      const p2trPrimary = payments.p2tr({
+          internalPubkey: childNodeXOnlyPubkeyPrimary,
+          network: networks.bitcoin
+      });
+      console.log('p2trPrimary: ', p2trPrimary)
+      if (!p2trPrimary.address || !p2trPrimary.output) {
+        throw "error creating p2tr"
+      }
+
+      const scriptHash = crypto.sha256(p2trPrimary.output);
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const tweakedChildNodePrimary = childNodePrimary.tweak(
+        crypto.taggedHash('TapTweak', childNodeXOnlyPubkeyPrimary),
+      );
+      const wif = childNodePrimary.toWIF();
+      const keypair = ECPair.fromWIF(wif);
+
+      if (childNodePrimary.publicKey.toString('hex') !== keypair.publicKey.toString('hex')) {
+          throw 'createKeyPair error child node not match sanity check'
+      }
+      const result = {
+        phrase,
+        address: p2trPrimary.address,
+        scriptPubKey: scriptHash.toString('hex'),
+        output: p2trPrimary.output.toString('hex'),
+        publicKey: childNodePrimary.publicKey.toString('hex'),
+        internalPubkey: childNodeXOnlyPubkeyPrimary.toString('hex'),
+        path,
+        WIF: childNodePrimary.toWIF(),
+        privateKey: childNodePrimary.privateKey?.toString('hex'),
+        backup: false,
+        import: false,
+        name: 'Account-'+accountList.value.length
+      }
+      console.log('result: ', result)
+      _resolve(result)
+    } catch (err) {
+      _reject(err)
+    }
+  })
+}
+  
 // @ts-ignore
 const createAccount = async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -421,7 +498,7 @@ const createAccount = async () => {
             path,
             WIF: childNodePrimary.toWIF(),
             privateKey: childNodePrimary.privateKey?.toString('hex'),
-          backup: false,
+            backup: false,
             import: false,
             name: 'Account-'+accountList.value.length
         }
@@ -603,6 +680,7 @@ const createAccount = async () => {
     convertTaprootOutputKeyToBech32m,
     updateInternalKeyStatus,
     subscribeReceiveAllEncoded,
-    initConfig
+    initConfig,
+    createNewUserTest
   }
 })

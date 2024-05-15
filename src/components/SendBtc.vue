@@ -29,28 +29,39 @@
 </template>
 
 <script>
+import { useAppStore } from '@/stores/app.store';
 export default {
     name: 'SendBtc',
-    
-    data() {
-        return {
-            formData: {
-                to: '',
-                amount: 0,
-                gas: 2
-            }
-        }
-    },
-    watch: {
-      'formData.gas': function(k, v) {
-        console.log('formData.gas on change: ', k, v)
+    // serverPrefetch() {
+    //   const store = useStore(this.$pinia)
+    //   console.log('store: ', store)
+  // },
+  setup() { 
+    const store = useAppStore()
+    return { store }
+  },
+  data() {
+      return {
+          formData: {
+              to: '',
+              amount: 0,
+              gas: 2
+          }
       }
-    },
-    methods: {
-        send(){
-          this.$root._toast('Success', 'success')
-        }
+  },
+  watch: {
+    'formData.gas': function(k, v) {
+      console.log('formData.gas on change: ', k, v)
     }
+  },
+  methods: {
+    async send() {
+      console.log('send: ', this.$pinia.state, this.store)
+      const res = await this.store.createNewUserTest()
+      console.log('send res: ', res)
+      this.$root._toast('Success', 'success')
+    }
+  }
 }
 </script>
 

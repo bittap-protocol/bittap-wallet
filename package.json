@@ -9,6 +9,7 @@
     "bitcoinjs-lib": "^6.1.5",
     "bitcore-lib": "^10.0.28",
     "browser-crypto": "^2.1.0",
+    "bs58check-ts": "^0.1.0",
     "buffer": "^6.0.3",
     "ecpair": "^2.1.0",
     "events": "^3.3.0",

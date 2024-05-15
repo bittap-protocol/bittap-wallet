@@ -13,7 +13,7 @@ import { Buffer } from 'buffer'
 
 
 import { ListAssets, ListTransfers } from '@/popup/api/btc/blockStream'
-import { sendMessage } from '@/popup/libs/tools'
+import { sendMessage, convertXpubToOther } from '@/popup/libs/tools'
 
 export interface Account { 
   address: string; 
@@ -358,7 +358,7 @@ const createNewUserTest = async (): Promise<unknown> => {
 
       // const phraseResult = createMnemonicPhrase();
       // const phrase = phraseResult.phrase;
-      const phrase = 'lift pull fancy sport collect picture column multiply swift hawk task puppy';
+      const phrase = 'vague clog raise involve sting domain fossil grab valve village fiction catch';
 
       const seed =  mnemonicToSeedSync(phrase);
 
@@ -368,26 +368,36 @@ const createNewUserTest = async (): Promise<unknown> => {
       
       const rootKey = bip32.fromSeed(seed, networks.bitcoin);
 
-      // xpub 
+      console.log('phrase: %s', phrase)
       
       
-      const path = "m/84'/0'"
+      const path = "m/84'/0'/0'"
       const childNodePrimary = rootKey.derivePath(path);
-      console.log('rootKey publicKey, %o \nseed, %o \nphrase: %s \nPath: %s \nrootKey.neutered().toBase58(): %s',
-        rootKey.publicKey.toString('hex'), seed.toString('hex'), phrase, path, rootKey.neutered().toBase58(), rootKey.toBase58())
-      const rootPublicKey = bip32.fromPublicKey(rootKey.publicKey, rootKey.chainCode)
+      // console.log('rootKey publicKey, %o \nseed, %o \nphrase: %s \nPath: %s \nrootKey.neutered().toBase58(): %s',
+      //   rootKey.publicKey.toString('hex'), seed.toString('hex'), phrase, path, rootKey.neutered().toBase58(), rootKey.toBase58())
+      // const rootPublicKey = bip32.fromPublicKey(rootKey.publicKey, rootKey.chainCode)
       
-      console.log('rootPublicKey: %s\nneutered().toBase58：%s', rootPublicKey.toBase58(), rootPublicKey.neutered().toBase58())
+      // console.log('rootPublicKey: %s\nneutered().toBase58：%s', rootPublicKey.toBase58(), rootPublicKey.neutered().toBase58())
 
       const childNodeXOnlyPubkeyPrimary = toXOnly(childNodePrimary.publicKey);
 
-      console.log('childNodePrimary.publicKey: %s\nprivateKey: %s \ntoBase58: %s', childNodePrimary.publicKey.toString('hex'), childNodePrimary.privateKey?.toString('hex'), childNodePrimary.toBase58())
-      console.log('child neutered().toBase58(): ', childNodePrimary.neutered().toBase58())
+      // console.log('childNodePrimary.publicKey: %s\nprivateKey: %s \ntoBase58: %s', childNodePrimary.publicKey.toString('hex'), childNodePrimary.privateKey?.toString('hex'), childNodePrimary.toBase58())
+      console.log('Path: %s\nchild neutered().toBase58(): ', path, childNodePrimary.neutered().toBase58())
       console.log('child neutered().toBase58() for zpub: ', childNodePrimary.neutered().toBase58().replace('xpub', 'zpub'))
+      console.log('vpub: ', convertXpubToOther(childNodePrimary.neutered().toBase58(), 'vpub'))
       const p2trPrimary = payments.p2tr({
           internalPubkey: childNodeXOnlyPubkeyPrimary,
           network: networks.bitcoin
       });
+
+      const path2 = "m/1017'/0'/212'"
+      const childNodeScript = rootKey.derivePath(path2);
+
+
+      console.log('Path: %s\nchild neutered().toBase58(): ', path2, childNodeScript.neutered().toBase58())
+      console.log('child neutered().toBase58() for zpub: ', childNodeScript.neutered().toBase58().replace('xpub', 'zpub'))
+      console.log('vpub: ', convertXpubToOther(childNodeScript.neutered().toBase58(), 'vpub'))
+
       console.log('p2trPrimary: ', p2trPrimary)
       if (!p2trPrimary.address || !p2trPrimary.output) {
         throw "error creating p2tr"

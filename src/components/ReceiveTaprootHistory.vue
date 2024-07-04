@@ -1,23 +1,35 @@
 <template>
     <div class="w-full px-3">
         <div class="history-list">
-            <div v-for="row in historyList" :key="row.tweakPubKey" class="item">
-                <div v-if="row.assets.amount>0" class="line"><strong>Asset:</strong>{{
-                    $root.formatToken(row.assets.amount, 8, row.assets.name)
-                    }}</div>
-                <div v-if="row.assets.asset_id" class="line"><strong>Asset ID:</strong>{{ row.assets.asset_id }}</div>
-                <div class="line">
-                    <strong>encoded:</strong> {{ row.encoded }}
+            <div v-for="row in store.receiveAddressList" :key="row.taproot_output_key" class="item">
+                <div v-if="row.asset_id" class="line">{{ row.asset_id }}</div>
+
+                <div class="info">
+                    <div class="it asset">
+                        <div class="key">
+                            {{ row.asset_name }}
+                        </div>
+                        <div class="value">
+                            Asset
+                        </div>
+                    </div>
+                    <div class="it amount">
+                        <div class="key">
+                            {{ Number(row.amount).toFixed(2) }}
+                        </div>
+                        <div class="value">
+                            ≈$0
+                        </div>
+                    </div>
+                    <div class="it c">
+                        <button class="button my-2" @click="copyData(row.encoded)">Copy addr</button>
+                    </div>
                 </div>
-                <div class="line"><strong>internalPubkey:</strong> {{ row.internalPubkey }}</div>
-                <div class="line"><strong>taproot_output_key:</strong> {{ row.taproot_output_key }}</div>
-                <div class="line"><strong>tweakPubKey:</strong> {{ row.tweakPubKey }}</div>
-                <button class="button my-2" @click="copyData(row.encoded)">Copy receive address</button>
             </div>
             <div v-if="loading" class="my-6 w-full flex flex-row justify-center items-center">
                 <div class="loading loading-spinner text-primary my-16"></div>
             </div>
-            <div v-if="!loading && historyList.length<=0" class="no-result w-full">
+            <div v-if="!loading && store.receiveAddressList.length<=0" class="no-result w-full">
                 <div class="flex flex-row justify-center items-center m-5">
                     <img src="@/assets/notrans.png" height="110" width="120" />
                 </div>
@@ -28,10 +40,14 @@
 
 <script lang="ts">
 import { useAppStore } from '@/stores/app.store';
-import { DecodeAssetsAddress } from '@/popup/api/btc/blockStream'
+// import { DecodeAssetsAddress } from '@/popup/api/btc/blockStream'
 
 export default {
     name: 'ReceiveTaproot',
+    setup() {
+        const store = useAppStore()
+        return { store }  
+    },
     data() {
         return {
             historyList: [],
@@ -49,29 +65,12 @@ export default {
     },
     methods: {
         async initData() { 
-            const store = useAppStore()
-            const assets = store.getAssetsListForSelect()
-            console.log('assets: ', assets)
-            store.getInternalKeyList().filter(e => e.encoded).forEach(row => {
-                console.log('row: ', row)
-                const { tweakPubKey, internalPubkey, encoded, taproot_output_key } = row
-                this.historyList.push({
-                    tweakPubKey, internalPubkey, encoded, taproot_output_key, assets: { name: '', amount: 0, asset_id: '' }
-                })
-                DecodeAssetsAddress({ addr: encoded }).then(res => { 
-                    const info = this.historyList.find(x => x.encoded === res.encoded)
-                    console.log('res:', res, info)
-                    if (info) { 
-                        const assetInfo = assets.find(x => x.asset_id === res.asset_id)
-                        info.assets.name = assetInfo ? assetInfo.name : 'Unknown asset'
-                        info.assets.amount = res.amount
-                        info.assets.asset_id = res.asset_id
-                    }
-                })
-            })
-            setTimeout(() => { 
+            this.loading = true
+            await this.store.getReceiveAddress().then(res => { 
+                console.log('res: ', res)
                 this.loading = false
-            }, 1000)
+                return res
+            })
         },
         async copyData(text: string){
             await navigator.clipboard.writeText(text)
@@ -85,7 +84,7 @@ export default {
 <style lang="scss" scoped>
 .history-list {
     .item {
-        @apply flex flex-col justify-center items-center border border-gray-200 border-solid rounded-md my-3 p-2 bg-gray-200;
+        @apply flex flex-col justify-center items-center rounded-md my-3 p-2 shadow-lg ring-1 ring-gray-50;
         .line{
             @apply break-words leading-5 pt-1  w-full;
             // width: 95%;
@@ -94,8 +93,17 @@ export default {
             &:first-child {
                 border-top: none;;
             }
-            strong {
-                @apply rounded-md bg-sky-400 p-1 mr-1;
+            
+        }
+        .info{
+            @apply w-full flex flex-row flex-nowrap justify-between items-center;
+            .it{
+                .key{
+                    @apply uppercase;
+                }
+                .value{
+                    @apply text-gray-500;
+                }
             }
         }
     }

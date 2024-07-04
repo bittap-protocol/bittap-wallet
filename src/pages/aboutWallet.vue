@@ -30,9 +30,9 @@ export default {
 <style lang="scss" scoped>
 .about-wallet {
     min-height: 480px;
-    @apply w-full p-4 flex flex-col justify-center items-center;
+    @apply w-full p-4 flex flex-col justify-start items-start;
     .title{
-        @apply font-bold text-xl my-10;
+        @apply font-bold text-xl my-2;
     }
     .des{
         @apply my-5;

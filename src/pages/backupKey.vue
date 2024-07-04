@@ -48,8 +48,12 @@ import IconMdiWarningOctagonOutline from '~icons/mdi/warning-octagon-outline';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app.store'
+import { sendMessage } from '@/popup/libs/tools'
 
 export default {
+  components: {
+    IconMdiWarningOctagonOutline
+  },
   setup() {
 
     const store = useAppStore()
@@ -63,17 +67,26 @@ export default {
     const activeAccount = store.getActiveAccount()
 
     // @ts-ignore
-    const wordSplits = activeAccount.phrase.split(' ')
-    console.log('activeAccount: ', activeAccount, wordSplits)
-    const words = ref(wordSplits)
+    // const wordSplits = activeAccount.phrase.split(' ')
+    // console.log('activeAccount: ', activeAccount, wordSplits)
+    console.log('phrases:', store.phrases, activeAccount.phraseIndex)
+    const activeUserPhrase = store.phrases[activeAccount.phraseIndex].phrase
+    console.log('activeUserPhrase: ', activeUserPhrase)
+
+    const words = ref(new Array(12))
     const wordsForm = ref(new Array(words.value.length))
     const errors = ref('')
     const isOk = ref(false)
+    // @ts-ignore
+    sendMessage('decryptMnemonic', activeUserPhrase).then(res => { 
+      console.log('phrase: ', res)
+      words.value = res.split(' ')
+    })
 
     // TODO is dev auto input words
-    words.value.forEach((word: string, index: number) => {
-      wordsForm.value[index] = word
-    })
+    // words.value.forEach((word: string, index: number) => {
+    //   wordsForm.value[index] = word
+    // })
 
 
     const verificationWords = () => {
@@ -99,7 +112,7 @@ export default {
 
     }
     return {
-       activeAccount, wordSplits, verificationWords, wordsForm, words, isOk, errors
+       activeAccount, verificationWords, wordsForm, words, isOk, errors
     }
   },
   data() {

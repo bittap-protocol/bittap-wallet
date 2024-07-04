@@ -8,12 +8,12 @@
             </label>
             <label class="pl-4">
               <input v-model="networkType" type="radio" name="networkType" value="1" />
-              Custom
+              Testnet
             </label>
           </div>
           <div v-show="Number(networkType) == 1" class="item">
             <label class="lb">
-              <span class="t">RPC Url:</span>
+              <span class="t">Custom RPC Url:</span>
               <input v-model="url" type="url" class="field" />
             </label>
           </div>
@@ -90,9 +90,15 @@ export default {
       },
       changeConfig(){
         try {
-          if(this.networkType === 0) {
+          // @ts-ignore
+          if (this.networkType === 0) {
+            // @ts-ignore
             this.url = ''
+            // @ts-ignore
             this.token = ''
+            // @ts-ignore
+            this.$root._toast('Currently, the mainnet is not supported', 'error')
+            return 
           }else {
             if(!TestUrl(this.url)) {
               throw 'Url invalid'

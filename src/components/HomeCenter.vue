@@ -13,10 +13,10 @@
         <div class="address">
 
           <div class="label">
-            {{ showAddress(account.address) }}
+            {{ showAddress(account.btcAddress) }}
           </div>
           <div class="copy">
-            <button class="link" @click="copyAddress(account.address)">
+            <button class="link" @click="copyAddress(account.btcAddress)">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd"
                   d="M5.40077 2.60309C5.25832 2.60309 5.14284 2.71858 5.14284 2.86103V4.32741C5.14284 4.67807 4.85857 4.96233 4.50792 4.96233C4.15726 4.96233 3.873 4.67807 3.873 4.32741V2.86103C3.873 2.01726 4.55701 1.33325 5.40077 1.33325H13.1389C13.9826 1.33325 14.6666 2.01726 14.6666 2.86103V10.5991C14.6666 11.4429 13.9826 12.1269 13.1389 12.1269H11.6559C11.3053 12.1269 11.021 11.8426 11.021 11.492C11.021 11.1413 11.3053 10.8571 11.6559 10.8571H13.1389C13.2813 10.8571 13.3968 10.7416 13.3968 10.5991V2.86103C13.3968 2.71858 13.2813 2.60309 13.1389 2.60309H5.40077Z"
@@ -154,7 +154,8 @@
 
 
       <div class="join flex justify-center items-center">
-        <RouterLink class="no-underline join-item pr-1 hidden text-primary" to="/common/importAssets">
+        <RouterLink class="no-underline join-item flex flex-row pr-1 text-primary" to="/common/importAssets">
+        <Import class="mr-1"></Import>
           Import Assets
         </RouterLink>
         <RouterLink class="no-underline join-item pl-1 flex flex-row justify-center items-center text-primary"
@@ -166,6 +167,9 @@
 
     </div>
   </div>
+  <div :class="['refreshIcon']">
+    <button @click="refreshData"><Refresh :class="['icc', refresh? 'refreshing': '']"></Refresh></button>
+  </div>
 </template>
 
 <script lang="ts">
@@ -175,12 +179,15 @@ import IconMdiBitcoin from '~icons/mdi/bitcoin';
 // @ts-ignore
 import IconMdiAdd from '~icons/mdi/add';
 
+
 import { useAppStore } from '@/stores/app.store'
+// import { sendMessage } from '@/popup/libs/tools';
 // @ts-ignore
 // import { getBalance, getBTCUSDTPrice } from '@/popup/api/btc/blockStream'
 
 
-// import { ListAccounts, ImportAccount } from '@/popup/api/btc/blockStream'
+import { QueryBtcBalance } from '@/popup/api/btc/blockStream'
+import Import from './svgIcon/Import.vue';
 
 
 
@@ -215,7 +222,8 @@ export default {
       transfers: [],
       activeTab: 'token',
       loading: true,
-      lastTime: 0
+      lastTime: 0,
+      refresh: false,
     }
   },
   computed: {
@@ -242,11 +250,17 @@ export default {
       }
     }
   },
+  created() {
+    this.accountInfo.balance = this.store.currentBtcBalance
+  },
   mounted(){
     // this.store = useAppStore()
-    setTimeout(() => {
-      this.initAccount()
-    }, 1000)
+    // setTimeout(() => {
+      
+    this.listenReceiveAllMessage()
+    this.initAccount().then(() => { 
+      this.store.subscribeReceiveAllEncoded()
+    })
   },
   methods: {
     showAssetName(asset_id: string): string { 
@@ -256,75 +270,90 @@ export default {
     showUsdtBalance(n: number) {
       return Number(this.btcPrice * Number(n))
     },
-    initAccount() {
-      const store = useAppStore()
-      if(store.activeAccount < 0) {
+    async refreshData() { 
+      this.refresh = true
+      this.initAccount().then(() => { 
+        this.refresh = false
+      }).catch(e => { 
+        this.refresh = false
+      })
+    },
+    async initAccount() {
+      if(this.store.activeAccount < 0) {
         return 
       }
+      
       // @ts-ignore
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       // this.accountInfo.balance = await getBalance(this.account.address)
       // this.btcPrice = await getBTCUSDTPrice()
-      store.updateAssets().then(() => {
-        return store.updateListTransfers()
+      return this.store.updateAssets().then(() => {
+        // return this.store.updateListTransfers()
       }).then(() => {
-        this.updateAssetsBalances()
-        // subscribe all encoded
-        store.initConfig()
-        store.subscribeReceiveAllEncoded()
-        this.listenReceiveAllMessage()
+         // subscribe all encoded
+        this.store.initConfig()
+        return this.updateAssetsBalances()
       })
     },
     async updateAssetsBalances() {
-      const store = useAppStore()
-      if (store.activeAccount < 0) {
+      if (this.store.activeAccount < 0) {
         this.loading = false
         return
       }
       this.loading = true
-      await store.updateListTransfers().then(() => {
-        this.transfers = store.getTransferListForCurrent()
-      })
-      await store.updateAssets().then(() => {
+      // await this.store.updateListTransfers().then(() => {
+      //   this.transfers = this.store.getTransferListForCurrent()
+      // })
+      const { wallet_id, btcAddress } = this.store.getActiveAccount()
+      const btcBalance = await QueryBtcBalance({ wallet_id, btc_addr: btcAddress })
+      this.store.setCurrentBtcBalance(btcBalance)
+      this.accountInfo.balance = btcBalance
+      await this.store.updateAssets().then(async () => {
         // @ts-ignore
-        this.assets = store.getAssetsBalances()
+        this.assets = await this.store.getAssetsBalances()
+        console.log('this.assets: ', this.assets)
         // add balance for BTC
         // @ts-ignore
         this.assets.unshift({
           asset_id: 'Base',
-          amount: 0,
+          amount: btcBalance,
           name: 'BTC',
-          version: 'One',
           asset_type: 'base'
         })
       });
       this.loading = false
     },
     listenReceiveAllMessage() {
-      const store = useAppStore()
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this
-      chrome.runtime.onConnect.addListener(async () => {
-        console.log('chrome.runtime.onConnect==popup: ', new Date().toLocaleString());
-      })
+      
       chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log('Message received ==popup', message, sender, sendResponse)
         switch (message.type) {
           case 'ws.message':
-            
-            const result = message.data.result
-            const { status } = result
-            console.log('ws.message received: ', message, result, status)
+            // eslint-disable-next-line no-case-declarations
+            const { status } = message.data.result
+            console.log('ws.message received: ', message, message.data.result, status)
             // transfer asset is finished  "ADDR_EVENT_STATUS_COMPLETED"
             if (status === 'ADDR_EVENT_STATUS_COMPLETED') {
+              // @ts-ignore
               self.$root._toast('Transaction completed', 'success')
               self.updateAssetsBalances()
             }
             break
-          default:
-
+          case 'isUnlocked': 
+            if (!message.data.status) {
+              this.$router.push('/common/unlock')
+            }
             break
+          default: break
         }
         sendResponse()
+      })
+      chrome.runtime.onConnect.addListener(async (response, ctx) => {
+        console.log('chrome.runtime.onConnect==popup: ', new Date().toLocaleString(), response, ctx);
+        this.$root._checkUnlock()
+        response.post
       })
     },
     /* eslint-disable array-callback-return */
@@ -428,7 +457,7 @@ export default {
             }
             .names{
               .name{
-                @apply text-base;
+                @apply text-base font-bold uppercase;
               }
               .des{
                 @apply text-sm text-gray-400;
@@ -440,6 +469,19 @@ export default {
       
     }
 
+  }
+}
+.refreshIcon{
+  position: fixed;
+  z-index: 1;
+  right: 10px;
+  bottom: 10px;
+  @apply p-2 shadow-lg rounded-full flex flex-row justify-center items-center;
+  .icc{
+    @apply animate-none;
+    &.refreshing{
+      @apply animate-spin;
+    }
   }
 }
 </style>

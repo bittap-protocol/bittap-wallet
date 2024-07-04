@@ -15,8 +15,14 @@
           </router-link>
         </div>
         <div class="item">
-          <router-link to="/common/passwordConfiguration" class="flex flex-row justify-start items-center">
+          <a href="###" @click="lockWallet" class="flex flex-row justify-start items-center">
             <IconMdiPasswordOutline class="mr-2"></IconMdiPasswordOutline>
+            Lock wallet
+          </a>
+        </div>
+        <div class="item">
+          <router-link to="/common/passwordConfiguration" class="flex flex-row justify-start items-center">
+            <IconMdiPasswordReset class="mr-2"></IconMdiPasswordReset>
             Password configuration
           </router-link>
         </div>
@@ -33,10 +39,18 @@
 
 
 <script lang="ts">
+// @ts-ignore
 import IconMdiAccount from '~icons/mdi/account';
+// @ts-ignore
 import IconMdiAboutCircleOutline from '~icons/mdi/about-circle-outline';
+// @ts-ignore
 import IconMdiPasswordOutline from '~icons/mdi/password-outline';
+// @ts-ignore
 import IconMdiWideAreaNetwork from '~icons/mdi/wide-area-network';
+// @ts-ignore
+import IconMdiPasswordReset from '~icons/mdi/password-reset';
+
+import { sendMessage } from '@/popup/libs/tools';
 
 // import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app.store'
@@ -46,6 +60,7 @@ export default {
     IconMdiAboutCircleOutline,
     IconMdiPasswordOutline,
     IconMdiWideAreaNetwork,
+    IconMdiPasswordReset
   },
   setup(){
     const store = useAppStore()
@@ -53,11 +68,23 @@ export default {
 
     store.setGoBackUrl('/')
     store.isGoBack()
-
+    return { 
+      store
+    }
   },
-  created(){
+  created() {
+    // @ts-ignore
     this.$root.setTitle('Settings')
   },
+  methods: {
+    async lockWallet() { 
+      // @ts-ignore
+      await sendMessage('clearPassword', {}).then(() => { 
+        // @ts-ignore
+        this.$root._checkUnlock()
+      })
+    }
+  }
 }
 </script>
 

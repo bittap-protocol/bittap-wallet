@@ -1,14 +1,18 @@
+/* eslint-disable no-case-declarations */
 // import '@/assets/wasm_exec.js'
 // // @ts-ignore
 // import myWasmModule from '@/assets/main.wasm?url';
 
-import { Account } from '@/stores/app.store'
+import { AccountRow } from '@/stores/app.store'
 
-import { sendMessage } from '@/popup/libs/tools'
+import { sendMessage, encryptData, decryptData } from '@/popup/libs/tools'
+
+
+let sessionPassword: string|null = null;
 
 interface configOpt { 
   activeAccount: number,
-  currentInfo: Account,
+  currentInfo: AccountRow,
   networkType: 0 | 1,
   networkRpcUrl: string,
   networkRpcToken: string
@@ -40,9 +44,15 @@ const ws = {
   client: {}
 }
 
+const clearPassword = () => {
+  sessionPassword = null;
+  console.log('cleared password.')
+}
+
 chrome.runtime.onInstalled.addListener(async (opt) => {
   // Check if reason is install or update. Eg: opt.reason === 'install' // If extension is installed.
   // opt.reason === 'update' // If extension is updated.
+  clearPassword()
   console.log('chrome runtime: ', opt.reason)
   if (opt.reason === 'install') {
     await chrome.storage.local.clear()
@@ -62,6 +72,11 @@ chrome.runtime.onInstalled.addListener(async (opt) => {
     })
   }
   
+  // 清除密码，当扩展关闭或重新加载时
+chrome.runtime.onStartup.addListener(() => {
+  clearPassword()
+});
+
   // // @ts-ignore
   // const go = new Go(); // 假设你已经有了 Go 的实例化对象
 
@@ -72,7 +87,10 @@ chrome.runtime.onInstalled.addListener(async (opt) => {
 
 })
 chrome.runtime.onConnect.addListener(async () => { 
-  console.log('chrome.runtime.onConnect: ',  new Date().toLocaleString());
+  console.log('chrome.runtime.onConnect: ', new Date().toLocaleString());
+  if (sessionPassword === null) { 
+    sendMessage('isUnlocked', { status: false })
+  }
 })
 chrome.runtime.onMessage.addListener((message,sender,sendResponse) => { 
   console.log('Message received', message, sender, sendResponse)
@@ -83,6 +101,28 @@ chrome.runtime.onMessage.addListener((message,sender,sendResponse) => {
     case 'InitConfig':
       InitConfig(message.data)
       break
+    case 'isUnlocked':
+      return sendResponse({ type: 'isUnlocked', data: {status: sessionPassword ? true : false} })
+    case 'getPassword':
+      return sendResponse({type: 'getPassword', data: sessionPassword})
+    case 'setPassword':
+      sessionPassword = message.data
+      return sendResponse({type: 'setPassword'})
+    case 'clearPassword':
+      clearPassword()
+      return sendResponse({ type: 'setPassword' })
+    case 'checkPassword':
+      // console.log('Checking password: ', message.data.check, message.data.pwd)
+      const decrypted: string = decryptData(message.data.check, message.data.pwd);
+      console.log('decrypted: ', decrypted)
+      const data = decrypted ? 'Ok': "No"
+      return sendResponse({type: 'checkPassword', data})
+    case 'encryptMnemonic': 
+      const encryptedMnemonic:string = encryptData(message.data, sessionPassword);
+      return sendResponse({ type: 'encryptMnemonic', data: encryptedMnemonic });
+    case 'decryptMnemonic': 
+      const decryptedMnemonic:string = decryptData(message.data, sessionPassword);
+      return sendResponse({ type: 'decryptMnemonic', data: decryptedMnemonic });
     default: 
       
       break
@@ -105,6 +145,9 @@ function InitConfig(data: configOpt) {
   Object.keys(data).forEach(key => {
     configs[key] = data[key]
   })
+  if (sessionPassword === null) { 
+    sendMessage('isUnlocked', { status: false })
+  }
   console.log('Config is updated', configs)
   ActionSubscribeReceive()
 }

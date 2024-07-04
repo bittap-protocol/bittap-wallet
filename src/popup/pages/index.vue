@@ -39,7 +39,7 @@ const activeAccount = computed(() => store.getActiveAccount())
           Go
         </RouterLink>
       </div>
-      <HomeCenter v-if=" count > 0 "></HomeCenter>
+      <HomeCenter v-if="count>0"></HomeCenter>
     </div>
   </div>
 </template>

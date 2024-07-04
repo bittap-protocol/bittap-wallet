@@ -8,7 +8,7 @@
                 </div>
                 <div class="join-input">
                     <input v-model="formData.name" type="text" readonly placeholder="Please select"
-                        class="item item-l" />
+                        class="item item-l token-name" />
                     <button class="item-r" @click="selectAsset">Select asset</button>
                 </div>
             </label>
@@ -18,7 +18,7 @@
                     <span class="label-text">Receive quantity
                     </span>
                 </div>
-                <input v-model="formData.amount" type="number" min="1" placeholder="Please enter" class="field" />
+                <input v-model="formData.amount" type="number" min="1" step="1" placeholder="Please enter" class="field" />
             </label>
 
             <label class="form-control w-full max-w-xs my-4">
@@ -66,7 +66,8 @@
 
 <script lang="ts">
 import { useAppStore } from '@/stores/app.store';
-import { NewAddressAssets } from '@/popup/api/btc/blockStream'
+import { NewAssetAddress } from '@/popup/api/btc/blockStream'
+import { payments, initEccLib, crypto, address } from 'bitcoinjs-lib'
 
 export default {
     name: 'ReceiveTaproot',
@@ -76,7 +77,8 @@ export default {
         const historyList = computed(() => store.getInternalKeyList().filter(e => e.encoded))
         return {
             account,
-            historyList
+            historyList,
+            store
         }
     },
     data() {
@@ -91,50 +93,71 @@ export default {
             selectAssetInfo: null
         }
     },
+    watch: { 
+        'formData.amount': function(k, v) {
+            if (k != v && this.formData.amount) { 
+                this.formData.amount = Number.parseInt(this.formData.amount)+''
+            }
+         }
+    },
     methods: {
         async createReceive() {
             const store = useAppStore()
+            const self = this
 
-            const { scriptPubKey, internalPubkey, tweakPubKey  } = store.generateInternalKey()
+            // const { scriptPubKey, internalPubkey, tweakPubKey  } = store.generateInternalKey()
 
-            const sendData = {
-                asset_id: this.formData.assetsId,
-                amt: this.formData.amount,
-                script_key: {
-                    // pub_key: scriptPubKey,
-                    pub_key: tweakPubKey,
-                    key_desc: {
-                        raw_key_bytes: scriptPubKey,
-                        key_loc: {
-                            "key_family":"212",
-                            "key_index":"0"
-                        }
-                    }
-                },
-                internal_key: {
-                    raw_key_bytes: internalPubkey,
-                    key_loc: {
-                        "key_family":"212",
-                        "key_index":"0"
-                    }
-                },
-            }
-            console.log('NewAddressAssets sendData: ',sendData )
-            await NewAddressAssets(sendData).then(res => {
-                console.log('NewAddressAssets: ', res)
+            // const sendData = {
+            //     asset_id: this.formData.assetsId,
+            //     amt: this.formData.amount,
+            //     script_key: {
+            //         // pub_key: scriptPubKey,
+            //         pub_key: tweakPubKey,
+            //         key_desc: {
+            //             raw_key_bytes: scriptPubKey,
+            //             key_loc: {
+            //                 "key_family":"212",
+            //                 "key_index":"0"
+            //             }
+            //         }
+            //     },
+            //     internal_key: {
+            //         raw_key_bytes: internalPubkey,
+            //         key_loc: {
+            //             "key_family":"212",
+            //             "key_index":"0"
+            //         }
+            //     },
+            // }
+            // console.log('NewAddressAssets sendData: ',sendData )
+            // await NewAddressAssets(sendData).then(res => {
+            //     console.log('NewAddressAssets: ', res)
+            //     // @ts-ignore
+            //     this.$root._toast('Create receive address success', 'success')
+            //     this.receiveAddress = res.encoded
+            //     store.updateInternalKeyEncoded(res, internalPubkey)
+            // })
+            const activeAccount = store.getActiveAccount()
+            console.log('activeAccount: ', activeAccount)
+            NewAssetAddress(activeAccount.wallet_id, this.formData.assetsId, this.formData.amount).then(res => { 
+                const addInfo = Object.assign(this.formData, {
+                    address: res.data.address
+                })
+                console.log('addInfo:', addInfo)
                 // @ts-ignore
-                this.$root._toast('Create receive address success', 'success')
-                this.receiveAddress = res.encoded
-                store.updateInternalKeyEncoded(res, internalPubkey)
+                self.$root._toast('Create receive address success', 'success')
+                self.receiveAddress = res.data.address
+                // store.updateInternalKeyEncoded(addInfo, activeAccount?.address)
             })
 
         },
         selectAsset(){
             // @ts-ignore
             my_modal_select_asset.showModal()
-            const store = useAppStore()
-            store.updateAssets()
-            this.assets = store.getAssetsListForSelect()
+            // const store = useAppStore()
+            this.store.updateAssets()
+            // @ts-ignore
+            this.assets = this.store.getAssetsListForSelect()
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         checkedToken(token: any) {
@@ -184,6 +207,9 @@ export default {
                 &-r{
                     @apply text-white ;
                     flex: 1;
+                }
+                &.token-name{
+                    @apply uppercase;
                 }
             }
         }

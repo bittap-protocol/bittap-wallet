@@ -49,7 +49,7 @@ export default {
       // @ts-ignore
       this.$root.setTitle('Password configuration')
     },
-    changePassword(){
+    async changePassword(){
       if(!TestPassword(this.password)) {
         // @ts-ignore
         return this.$root._toast('Current password format is invalid','error')
@@ -64,7 +64,7 @@ export default {
       }
       // Authentication password
       const store = useAppStore()
-      if(store.AuthenticationPassword(this.password)) {
+      if(await store.AuthenticationPassword(this.password)) {
         // @ts-ignore
         return this.$root._toast('Current password is invalid','error')
       }

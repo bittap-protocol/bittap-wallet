@@ -12,7 +12,7 @@ import IconEyeClose from '@/components/svgIcon/EyeClose.vue'
 import { useAppStore } from '@/stores/app.store'
 import { ref, reactive } from 'vue';
 import {  useRouter } from 'vue-router';
-import { TestPassword } from '@/popup/libs/tools'
+import { TestPassword, sendMessage, postToast } from '@/popup/libs/tools'
 
 export default {
   components: {
@@ -23,10 +23,10 @@ export default {
     const showPassword = ref(false);
     const disabledVisible = ref(true);
     const formData = reactive({
-      // password: 'Abc123456##',
-      // passwordConfirm: 'Abc123456##',
-      password: '',
-      passwordConfirm: '',
+      password: 'Abc123456##',
+      passwordConfirm: 'Abc123456##',
+      // password: '',
+      // passwordConfirm: '',
       agree: false,
     })
 
@@ -77,24 +77,34 @@ export default {
       validateForm();
       if (!formErrors.value.passwordError && !formErrors.value.passwordConfirmError && !formErrors.value.termsError) {
         try {
-          await store.savePassword(formData.password)
-          await store.createAccount().then(() => {
-            store.setGoBackUrl('')
-            router.push('/common/backupKey')
-          })
+          // console.log('formData: ', formData)
+          await sendMessage('setPassword', formData.password)
+          // const pwd = await sendMessage('getPassword')
+          // console.log('pwd: ', pwd)
 
-
+          // const phrase = 'vague clog raise involve sting domain fossil grab valve village fiction catch';
+          // const dePhrase = await sendMessage('encryptMnemonic', phrase)
+          // const newPhrase = await sendMessage('decryptMnemonic', dePhrase)
+          // console.log('dePhrase: %s newPhrase: %s', dePhrase, newPhrase)
+          await store.createNewUser()
+          postToast('Success', 'success')
+          router.push('/common/backupKey')
         } catch (error) {
           console.error('Submission error:', error);
-          alert('error: ' + error)
+          postToast('error: ' + error)
         }
       }
     };
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      console.log('Message received ==password', message, sender, sendResponse)
+      sendResponse()
+    })
     return {
       togglePasswordVisibility, formErrors, formData, showPassword, submitForm, disabledVisible
     }
   },
   created() {
+    // @ts-ignore
     this.$root.setTitle('Set password')
   },
 }

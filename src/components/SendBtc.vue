@@ -8,6 +8,9 @@
       </div>
       <input v-model="formData.recv_addr" type="text" placeholder="Please enter" class="field" />
     </label>
+    <div v-if="formData.recv_addr.length > 0 && !isBtcAddressOk()" class="err-tips">
+      The Btc receive address is incorrect, it should be a 44-character length address starting with bcrt1q
+    </div>
 
     <label class="form-control w-full max-w-xs">
       <div class="label">
@@ -22,13 +25,14 @@
         <button class="arrow" @click="formData.amount=store.currentBtcBalance">Max</button>
       </div>
     </label>
+    
 
     <div class="form-control w-full max-w-xs">
       <SelectGas v-model="formData.fee_rate" />
     </div>
 
     <label class="form-control w-full max-w-xs my-4">
-      <button :disabled="Number(formData.amount) <= 0 || formData.recv_addr.length != 44 || isSubmitting" class="button" @click="send">Send</button>
+      <button :disabled="Number(formData.amount) <= 0 || formData.recv_addr.length != 44 || isSubmitting || !isBtcAddressOk()" class="button" @click="send">Send</button>
     </label>
 
   </div>
@@ -36,7 +40,7 @@
 
 <script>
 import { PublishTransferBtc, TransferBtc } from '@/popup/api/btc/blockStream';
-import { postToast } from '@/popup/libs/tools';
+import { postToast, isValidBitcoinAddress } from '@/popup/libs/tools';
 import { useAppStore } from '@/stores/app.store';
 import { Psbt } from 'bitcoinjs-lib';
 export default {
@@ -72,8 +76,8 @@ export default {
     }
   },
   mounted() { 
-    this.formData.recv_addr = 'bcrt1qtqxmmcda462t5dez4t4nnezxzfa3r862h9qyrm'
-    this.formData.amount = 0.01
+    // this.formData.recv_addr = 'bcrt1qtqxmmcda462t5dez4t4nnezxzfa3r862h9qyrm'
+    // this.formData.amount = 0.01
   },
   methods: {
     async sendConfirm() { 
@@ -87,6 +91,9 @@ export default {
         }, 
       ])
     },
+    isBtcAddressOk() { 
+      return isValidBitcoinAddress(this.formData.recv_addr)
+    },
     async send() {
       this.isSubmitting = true
       this.$root._showLoading('In process...')
@@ -96,15 +103,10 @@ export default {
       const sendData = Object.assign({}, this.formData)
       sendData.amount = Number(sendData.amount) * 10 ** 8
       sendData.fee_rate = Number(sendData.fee_rate) * 10 ** 3
-      // const funded_psbt = "cHNidP8BAHECAAAAAYm+wkRZ+OMYEdjXX3vr4/tNL3Tdb/uH6OYh2glgYFIQAQAAAAD/////AkBCDwAAAAAAFgAUkVU5H44jHDOGesmnEZH5Ms1Fx7XlHr4dAAAAABYAFD++8w5LgWfRECzde32szKm1lkhzAAAAAAABAN4CAAAAAAEBWL2PtS6ACzvzxxsCuyys69Lwxehorvexe4qhk7kFcUIAAAAAAP3///8C/Ig1dwAAAAAWABSGNY6I/3CAB3JRH60YFQHmwqJp0QBlzR0AAAAAFgAUP77zDkuBZ9EQLN17fazMqbWWSHMCRzBEAiBa8jZhbS5RkTe02Rb/0+WJJlbvGzEWUFWr5fxxv/W0PQIgXdlrgeD9h0C/hTDPg+6GbdghzT2R5MDDNMwphvUTd5wBIQLf/bGAj+t0IeDTiAD8q9NMVme1yUsBAVyXSrRld4yzNQAAAAABAR8AZc0dAAAAABYAFD++8w5LgWfRECzde32szKm1lkhzAQMEAQAAACIGAgtQA5qyvBsf6OoBaVsCDU2FE8aAdDaSaVZ7z1W3jRZEGAAAAABUAACAAAAAgAAAAIAAAAAAAAAAAAAAAA=="
-      // const psbt = Psbt.fromBase64(funded_psbt)
-      // console.log('psbt: ', psbt)
-      // const finPsbt = await this.store.signAnchorPsbt(psbt)
-      // console.log('finPsbt: ', finPsbt.toBase64())
       await TransferBtc(sendData).then(res => res.data.funded_psbt).then(async funded_psbt => { 
-        console.log('funded_psbt: ', funded_psbt)
+        // console.log('funded_psbt: ', funded_psbt)
         const final_psbt = await this.store.signAnchorPsbt(Psbt.fromBase64(funded_psbt))
-        console.log('final_psbt: ', final_psbt)
+        // console.log('final_psbt: ', final_psbt)
         const tx = final_psbt.extractTransaction()
         return PublishTransferBtc({
           wallet_id,
@@ -134,32 +136,6 @@ export default {
 
 <style lang="scss" scoped>
 .send{
-  .form-control{
-    .label{
-      .faq{
-        height: 16px;
-        width: 16px;
-        line-height: 16px;
-        border: 1px solid #333;
-        border-radius: 50px;
-        background-color: transparent;
-        padding: 1px;
-      }
-    }
-    .field {
-      @apply block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6;
-    }
-    .input-field{
-      .arrow{
-        position: absolute;
-        margin-top: -25px;
-        right: 10%;
-        @apply text-primary font-bold;
-        &:hover {
-          @apply opacity-80;
-        }
-      }
-    }
-  }
+  
 }
 </style>

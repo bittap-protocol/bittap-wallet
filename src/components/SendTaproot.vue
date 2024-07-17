@@ -180,32 +180,6 @@ export default {
 
 <style lang="scss" scoped>
 .send{
-  .form-control{
-    .label{
-      .faq{
-        height: 16px;
-        width: 16px;
-        line-height: 16px;
-        border: 1px solid #333;
-        border-radius: 50px;
-        background-color: transparent;
-        padding: 1px;
-      }
-    }
-    .field {
-      @apply block w-full rounded-md border-0 py-0 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6;
-    }
-    .encode {
-      @extend .field;
-      @apply p-1;
-      .textarea{
-        @apply w-full ring-0 ring-inset border-0 bg-white outline-none shadow-none resize-none;
-        &:hover,&:active, &:focus {
-          @apply ring-inset border-0 ring-0 ;
-        }
-      }
-    }
-  }
   .addr-info{
     @apply text-left m-2 leading-6 flex flex-col justify-center items-start bg-gray-100 rounded-md my-4 p-4 ;
     .item{

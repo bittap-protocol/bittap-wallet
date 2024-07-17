@@ -25,7 +25,6 @@
                   d="M1.33331 5.40071C1.33331 4.55694 2.01732 3.87293 2.86109 3.87293H10.5992C11.443 3.87293 12.127 4.55694 12.127 5.40071V13.1388C12.127 13.9826 11.443 14.6666 10.5992 14.6666H2.86109C2.01732 14.6666 1.33331 13.9826 1.33331 13.1388V5.40071ZM2.86109 5.14278C2.71864 5.14278 2.60315 5.25826 2.60315 5.40071V13.1388C2.60315 13.2813 2.71864 13.3967 2.86109 13.3967H10.5992C10.7416 13.3967 10.8571 13.2813 10.8571 13.1388V5.40071C10.8571 5.25826 10.7416 5.14278 10.5992 5.14278H2.86109Z"
                   fill="white" />
               </svg>
-
             </button>
           </div>
         </div>
@@ -153,12 +152,12 @@
       </div>
 
 
-      <div class="join flex justify-center items-center">
+      <div class="join flex justify-center items-center fixed z-10 w-full bottom-0 left-0 h-10">
         <RouterLink class="no-underline join-item flex flex-row pr-1 text-primary" to="/common/importAssets">
         <Import class="mr-1"></Import>
           Import Assets
         </RouterLink>
-        <RouterLink class="no-underline join-item pl-1 flex flex-row justify-center items-center text-primary"
+        <RouterLink class="no-underline hidden join-item pl-1 flex flex-row justify-center items-center text-primary"
           to="/common/createAssets">
           <IconMdiAdd></IconMdiAdd>
           Create Assets
@@ -473,7 +472,7 @@ export default {
 }
 .refreshIcon{
   position: fixed;
-  z-index: 1;
+  z-index: 11;
   right: 10px;
   bottom: 10px;
   @apply p-2 shadow-lg rounded-full flex flex-row justify-center items-center;

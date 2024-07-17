@@ -5,6 +5,8 @@ import IconMdiSettings from '~icons/mdi/settings-outline';
 import IconMdiInformationSlabCircleOutline from '~icons/mdi/information-slab-circle-outline';
 // @ts-ignore
 import IconMdiSuccessCircle from '~icons/mdi/success-circle';
+// @ts-ignore
+import IconBack from '@/components/svgIcon/IconBack.vue'
 
 import { useAppStore } from '@/stores/app.store'
 
@@ -22,7 +24,7 @@ interface ConfirmOptions {
 
 export default {
   components: {
-    IconMdiSettings, IconMdiInformationSlabCircleOutline, IconMdiSuccessCircle
+    IconMdiSettings, IconMdiInformationSlabCircleOutline, IconMdiSuccessCircle, IconBack
   },
   setup: function(){
     const store = useAppStore()
@@ -188,7 +190,8 @@ export default {
 
 <template>
   <header v-if="!goBack" aria-label="Header" class="hd">
-    <div v-if="isHome && accountCount >= 1"
+    <div
+v-if="isHome && accountCount >= 1"
       class="flex flex-row flex-nowrap justify-between items-center space-x-1 hds">
       <div class="title">
         <AccountList></AccountList>
@@ -207,14 +210,10 @@ export default {
     <div class="flex flex-row flex-nowrap justify-between items-center space-x-1">
       <div class="back">
         <a href="#" @click="goToPrevious">
-          <svg t="1711458825492" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
-            p-id="1461" width="20" height="20">
-            <path d="M263.232 576L640 931.84 554.24 1024 0 515.392 549.952 0 640 98.88 270.4 448H1024v128H263.232z"
-              fill="#262626" p-id="1462"></path>
-          </svg>
+          <IconBack />
         </a>
       </div>
-      <div class="title">
+      <div class="title font-medium text-lg">
         <div v-if="!isHome && title">{{ title }}</div>
       </div>
       <div class="setting">
@@ -232,7 +231,7 @@ export default {
       </div>
     </div>
   </div>
-  <div class="loading-box" v-if="loading">
+  <div v-if="loading" class="loading-box">
     <div class="mask"></div>
     <div class="loading-main">
       <div class="loading loading-dots loading-lg"></div>
@@ -248,7 +247,7 @@ export default {
         <h3 v-if="_confirm.title" class="font-bold text-lg text-center">{{ _confirm.title }}</h3>
         <div class="message" v-html="_confirm.message"></div>
         <div v-if="_confirm.actions.length > 0" :class="['dialog-actions', _confirm.actionCls && _confirm.actionCls.length > 0 ? '' : 'flex-row space-x-2'].concat(_confirm.actionCls)">
-          <button :class="['btn', action.cls? '' : 'btn-outline btn-primary'].concat(action.cls)" v-for="action in _confirm.actions" @click="actionClick(action)">{{ action.name }}</button>
+          <button v-for="action in _confirm.actions" :class="['btn', action.cls? '' : 'btn-outline btn-primary'].concat(action.cls)" @click="actionClick(action)">{{ action.name }}</button>
         </div>
       </div>
   </dialog>
@@ -257,7 +256,7 @@ export default {
 <style scoped lang="scss">
 .hd{
   // @apply pt-4 px-4 pb-2;
-  height: 55px;
+  height: 66px;
   .hds{
     @apply w-full pt-4 px-4 pb-2 bg-white;
     

@@ -1,7 +1,7 @@
 
 <script lang="ts">
 // @ts-ignore
-import IconMdiWarningOctagonOutline from '~icons/mdi/warning-octagon-outline';
+// import IconMdiWarningOctagonOutline from '~icons/mdi/warning-octagon-outline';
 
 // @ts-ignore
 import IconEyeOpen from '@/components/svgIcon/EyeOpen.vue'
@@ -12,19 +12,21 @@ import IconEyeClose from '@/components/svgIcon/EyeClose.vue'
 import { useAppStore } from '@/stores/app.store'
 import { ref, reactive } from 'vue';
 import {  useRouter } from 'vue-router';
-import { TestPassword, sendMessage, postToast } from '@/popup/libs/tools'
+import { TestPassword, sendMessage, postToast, getQuery } from '@/popup/libs/tools'
 
 export default {
   components: {
-    IconMdiWarningOctagonOutline, IconEyeOpen, IconEyeClose
+   IconEyeOpen, IconEyeClose
   },
-  setup() { 
-
+  setup() {
+    const importWords = getQuery('w')
+    const isImported = ref(importWords?importWords.split('|'):[])
+    console.log('setup params: ', location.href, isImported.value)
     const showPassword = ref(false);
     const disabledVisible = ref(true);
     const formData = reactive({
-      password: 'Abc123456##',
-      passwordConfirm: 'Abc123456##',
+      password: 'Abc123456',
+      passwordConfirm: 'Abc123456',
       // password: '',
       // passwordConfirm: '',
       agree: false,
@@ -86,7 +88,7 @@ export default {
           // const dePhrase = await sendMessage('encryptMnemonic', phrase)
           // const newPhrase = await sendMessage('decryptMnemonic', dePhrase)
           // console.log('dePhrase: %s newPhrase: %s', dePhrase, newPhrase)
-          await store.createNewUser()
+          await store.createNewUser(isImported.value.length === 12 ? isImported.value.join(' ') : '')
           postToast('Success', 'success')
           router.push('/common/backupKey')
         } catch (error) {
@@ -100,21 +102,22 @@ export default {
       sendResponse()
     })
     return {
-      togglePasswordVisibility, formErrors, formData, showPassword, submitForm, disabledVisible
+      togglePasswordVisibility, formErrors, formData, showPassword, submitForm, disabledVisible, isImported
     }
   },
   created() {
     // @ts-ignore
     this.$root.setTitle('Set password')
+    console.log('created params: ', this.$route.params, location.href, this.isImported)
   },
 }
 
 </script>
 
 <template>
-  <div class="min-box px-4 text-gray-700">
+  <div class="min-box px-4 text-gray-700 cp">
     <div class="w-full max-w-xs mt-6">
-      <div class="text-sm mb-5">Remember this password to unlock the wallet.</div>
+      <div class="text-sm mb-5 font-medium">Remember this password to unlock the wallet.</div>
 
       <label class="input-box input-append">
         <input v-model="formData.password" :type="showPassword ? 'text' : 'password'"
@@ -125,7 +128,7 @@ export default {
         </div>
       </label>
 
-      <label class="input-box input-append">
+      <label :class="['input-box input-append mt-4', formErrors.passwordError || formErrors.passwordConfirmError ? 'error': '']">
         <input v-model="formData.passwordConfirm" :type="showPassword ? 'text' : 'password'"
           placeholder="Confirm password" />
         <div class="icon">
@@ -135,27 +138,30 @@ export default {
       </label>
 
       <div v-if="formErrors.passwordError || formErrors.passwordConfirmError || formErrors.termsError" class="err-tips">
-        <span class="text-xl">
-          <IconMdiWarningOctagonOutline />
-        </span>
+        
         <span class="font-medium">
           {{ formErrors.passwordError || formErrors.passwordConfirmError || formErrors.termsError }}
         </span>
       </div>
 
-      <div class="cursor-pointer my-4 text-left">
-        <input v-model="formData.agree" type="checkbox" class="checkbox checkbox-primary" />
-        <span class="label-text pl-2">Click to agree to our
-          <RouterLink to="/common/termsService" class="no-underline text-primary pl-1 ">Terms of Service</RouterLink>
+      <div class="cursor-pointer my-5 text-left">
+        <input v-model="formData.agree" type="checkbox" class="checkbox checkbox-sm checkbox-primary rounded-full" />
+        <span class="label-text pl-2 text-gray-700">Click to agree to our
+          <a target="_blank" href="https://www.baidu.com" class="no-underline text-primary pl-1 ">Terms of Service</a>
         </span>
       </div>
-      <button :disabled="disabledVisible" class="btn btn-primary w-full" @click.prevent="submitForm">Next</button>
+      <button :disabled="disabledVisible" class="btn btn-primary btn-md w-full" @click.prevent="submitForm">Next</button>
     </div>
   </div>
 </template>
   
 
-  <style scoped>
-  
-  </style>
-  
+<style lang="scss" scoped>
+// .cp{
+//   .checkbox{
+//     &:checked{
+//       background-image: url('data:image/svg+xml,%3csvg width="8" height="6" viewBox="0 0 8 6" fill="none" xmlns="http://www.w3.org/2000/svg"%3e%3cpath d="M1.33325 2.99967L3.33325 4.99967L6.99992 1.33301" stroke="white" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/%3e%3c/svg%3e')
+//     }
+//   }
+// }
+</style>

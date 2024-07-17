@@ -211,7 +211,7 @@ export default {
         }
     }
     .checkBtn{
-        @apply w-full flex flex-row flex-nowrap justify-between items-center rounded-md border-0 p-4 mb-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6;
+        @apply w-full flex flex-row flex-nowrap justify-between items-center rounded-2xl border-0 p-4 mb-4 text-gray-900 shadow-sm ring-[1px] ring-inset ring-gray-100 placeholder:text-gray-400 focus:ring-[1px] focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6;
         .show{
             @apply font-normal;
         }

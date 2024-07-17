@@ -4,7 +4,7 @@
       <IconLogo />
       <!-- <img src="@/assets/logo.svg" /> -->
     </div>
-    <div class="tips text-center text-lg mt-20">Enter your password</div>
+    <div class="tips text-center text-lg mt-20">Verify the unlock password for assets safe.</div>
     <div class="mt-4">
       <label class="input-box input-append">
         <input
@@ -12,7 +12,7 @@ v-model="password" :type="showPassword ? 'text' : 'password'"
           placeholder="password" />
         <div class="icon">
           <IconEyeOpen v-if="showPassword" @click="togglePasswordVisibility" />
-          <IconEyeClose v-else @click="togglePasswordVisibility" />
+          <IconEyeClose v-if="!showPassword" @click="togglePasswordVisibility" />
         </div>
       </label>
     </div>
@@ -59,7 +59,7 @@ export default {
     window.addEventListener('keydown', this.onKeyDownFunction, true)
     console.log('import.meta.env.MODE:', import.meta.env.DEV)
     if(import.meta.env.DEV) { 
-      this.password = 'Abc123456##';
+      this.password = 'Abc123456';
     }
   },
   methods: {
@@ -106,7 +106,7 @@ export default {
 <style lang="scss" scoped>
 .unlock {
   background: linear-gradient(180deg, #D4E0FF 0%, rgba(212, 224, 255, 0) 22.5%,rgba(212, 224, 255, 0) 82.5%, #D4E0FF 100%);
-  margin-top: -55px;
+  margin-top: -66px;
   
 }
 </style>

@@ -27,10 +27,10 @@ const activeAccount = computed(() => store.getActiveAccount())
 </script>
 
 <template>
-  <div class="text-center m-2 flex flex-col gap-y-2">
+  <div class="text-center mx-2 flex flex-col gap-y-2">
     <div class="min-box">
       <div v-if="count > 0 && activeAccount && !activeAccount.backup"
-        class="flex flex-row justify-between items-center m-2 bg-red-100 rounded-md p-2 text-red-600">
+        class="flex flex-row justify-between items-center m-2 mt-0 bg-red-100 rounded-md p-2 text-red-600">
         <div class="tips flex flex-row items-start justify-start">
           <IconMdiInformationSlabCircleOutline></IconMdiInformationSlabCircleOutline>
           <div class="pl-1">Current Wallet is not backed up</div>

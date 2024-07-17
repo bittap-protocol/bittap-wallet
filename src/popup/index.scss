@@ -6,21 +6,28 @@ body {
   background:#fff;
 }
 *{
-  font-family: Alibaba PuHuiTi 2.0;
+  font-family: "Alibaba PuHuiTi 2.0";
 }
 
 .min-box{
-  min-height: 550px;
+  min-height: 530px;
 }
 
 .button {
-  @apply px-4 py-2 rounded-md bg-primary text-white w-full shadow-sm shadow-primary flex flex-row justify-center justify-center space-x-1;
+  @apply p-4 bg-primary text-white w-full shadow-sm shadow-primary flex flex-row justify-center space-x-1;
   &:hover, :focus, :focus-visible, :focus-within, :active {
     @apply bg-purple-700 shadow-sm shadow-purple-600 opacity-80;
   }
   &-info {
     @apply bg-gray-400;
   }
+}
+.btn, .button{
+  @apply rounded-2xl;
+}
+.btn[disabled],.btn:disabled, .button[disabled], .button:disabled{
+  background: #8000FF;
+  @apply text-white;
 }
 .link {
   @apply border-0 bg-transparent shadow-none;
@@ -32,7 +39,7 @@ body {
   @apply outline-none outline-0;
 }
 .field {
-    @apply block w-full rounded-xl border-0 py-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6;
+    @apply block w-full rounded-xl border-0 py-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6;
 }
 .list-box {
   @apply w-full px-2 ;
@@ -49,11 +56,15 @@ body {
   border-width: 0px ;
   padding: 6px ;
   background-image: linear-gradient(179.75deg, rgba(0, 123, 255, 0.7) 0.21%, #8000FF 98.02%);
-  box-shadow: 0px 4px 6px 0px #9D73D533;
+  box-shadow: 0px 4px 7px 0px #9D73D533;
+}
+.br{
+  @apply rounded-2xl bg-white ring-0 ring-gray-100 shadow-gray-100 mb-4;
+  box-shadow: 0px 0px 5px #e9eaed;
 }
 .input{
   &-box{
-    @apply  rounded-md bg-white ring-1 ring-gray-100 shadow-md shadow-gray-100;
+    @extend .br;
   }
   &-append{
     @apply flex flex-row justify-between items-center w-full mb-1 bg-white pl-2;
@@ -62,18 +73,94 @@ body {
       &:hover, &:focus, &:focus-visible, &:focus, &:focus, &:focus-within {
         @apply bg-transparent border-0 outline-0 ring-0;
       }
+      &[type=password]::-ms-reveal{
+        display: none;
+      }
+      
     }
     >.icon{
       @apply flex flex-col justify-center items-center pr-2;
     }
     &:has(>input:focus), &:has(>input:hover), 
     &:has(>input:focus-visible), &:has(>input:focus-visible), &:has(>input:active) {
-      @apply ring-1 ring-primary;
+      @apply ring-[1px] ring-primary;
+      &.error {
+        @apply ring-red-500;
+      }
     }
   }
 
 }
 
+
+.form-control {
+  .label {
+    .faq {
+      height: 16px;
+      width: 16px;
+      line-height: 16px;
+      border: 1px solid #333;
+      border-radius: 50px;
+      background-color: transparent;
+      padding: 1px;
+    }
+  }
+  
+
+  .field {
+    @apply block w-full rounded-2xl bg-white ring-0 ring-gray-100 shadow-gray-100 mb-2 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6;
+    box-shadow: 0px 0px 5px #e9eaed;
+    &:hover,
+    &:focus,
+    &:focus-visible,
+    &:focus,
+    &:focus,
+    &:focus-within {
+      @apply bg-transparent border-0 outline-0 ring-[1px];
+    }
+    
+    &[type=password]::-ms-reveal {
+      display: none;
+    }
+  }
+  .encode {
+    @extend .field;
+    @apply p-1;
+    .textarea {
+      @apply w-full ring-0 ring-inset border-0 bg-white outline-none shadow-none resize-none;
+
+      &:hover,
+      &:active,
+      &:focus {
+        @apply ring-inset border-0 ring-0;
+      }
+    }
+    &:has(>textarea:focus),
+    &:has(>textarea:hover),
+    &:has(>textarea:focus-visible),
+    &:has(>textarea:focus-visible),
+    &:has(>textarea:active) {
+      @apply ring-[1px] ring-primary;
+
+      &.error {
+        @apply ring-red-500;
+      }
+    }
+  }
+  
+  .input-field {
+    .arrow {
+      position: absolute;
+      margin-top: -50px;
+      right: 10%;
+      @apply text-primary font-bold;
+      &:hover {
+        @apply opacity-80;
+      }
+    }
+  }
+}
+
 .err-tips{
-  @apply text-white flex flex-row flex-nowrap justify-start items-center px-6 py-4 w-full border-0 rounded-md my-4 bg-red-500;
+  @apply text-red-500 px-2 py-1 w-full border-0 rounded-md my-0 bg-transparent;
 }

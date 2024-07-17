@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    @font-face {
+        font-family: 'Alibaba PuHuiTi 2.0';
+        font-style: normal;
+        font-weight: 500;
+        font-display: swap;
+        src: url(./fonts/AlibabaPuHuiTi-2-65-Medium.otf) format('otf');
+    }
+    html, body {
+        font-family: 'Alibaba PuHuiTi 2.0', system-ui, sans-serif;
+    }
+}

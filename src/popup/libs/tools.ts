@@ -4,7 +4,7 @@ import AES from 'crypto-js/aes'
 import EncUtf8 from 'crypto-js/enc-utf8'
 
 export function TestPassword(pwd: string) {
-  return /^(?=.*?[A-Z])(?=(.*[a-z]){1,})(?=(.*[\d]){1,})(?=(.*[\W]){1,})(?!.*\s).{8,}$/.test(
+  return /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z\!\@\#\$\%\^\&\*\(\)\_\-+]{8,16}$/.test(
     pwd
   )
 }
@@ -39,6 +39,34 @@ export function sendMessage(
       .then((r) => (r && r.data) || '')
   )
 }
+export function isValidBitcoinAddress(address: string): boolean {
+  const regex = /^bcrt1q[a-zA-HJ-NP-Z0-9]{38}$/
+  return regex.test(address)
+}
+
+export function getQuery(key: string): string {
+  if (decodeURI(window.location.href).split('?').length <= 1) {
+    return ''
+  }
+  const vRow = decodeURI(window.location.href)
+    .split('?')[1]
+    .split('&')
+    .map((xo) => {
+      // @ts-ignore
+      const x = xo.split('=')
+      const vk = x[0]
+      // @ts-ignore
+      x.shift()
+      return {
+        k: vk,
+        // @ts-ignore
+        v: x.join(''),
+      }
+    })
+    .find((x) => x.k === key)
+  return vRow ? vRow.v : ''
+}
+
 export function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * max) + min
 }

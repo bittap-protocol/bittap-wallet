@@ -2,7 +2,7 @@
   <div class="w-full min-box pwd">
     <div class="w-full py-10 flex flex-col justify-center items-center px-4">
       <div class="item">
-        <input v-model="confirmPassword" type="password" class="field" placeholder="Current password" />
+        <input v-model="password" type="password" class="field" placeholder="Current password" />
       </div>
       <div class="item">
         <input v-model="newPassword" type="password" class="field" placeholder="New password" />
@@ -30,7 +30,7 @@ export default {
     store.setGoBackUrl('')
     store.isGoBack()
     return {
-
+      store
     }
   },
   data() {
@@ -63,14 +63,13 @@ export default {
         return this.$root._toast('The new password is different from the confirmed password','error')
       }
       // Authentication password
-      const store = useAppStore()
-      if(await store.AuthenticationPassword(this.password)) {
+      if(await this.store.AuthenticationPassword(this.password)) {
         // @ts-ignore
         return this.$root._toast('Current password is invalid','error')
       }
       
       // Change password
-      store.savePassword(this.newPassword)
+      this.store.resetPassword(this.newPassword)
       // @ts-ignore
       this.$root._toast('Password changed','success')
 

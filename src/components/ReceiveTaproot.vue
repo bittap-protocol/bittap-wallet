@@ -21,15 +21,11 @@
                 <input v-model="formData.amount" type="number" min="1" step="1" placeholder="Please enter" class="field" />
             </label>
 
-            <label class="form-control w-full max-w-xs my-4">
+            <label class="form-control w-full max-w-xs mt-2">
                 <button class="button" @click="createReceive">Create Invoice</button>
             </label>
         </div>
         <div v-if="receiveAddress.length >= 1" class="show w-full py-4">
-            <div class="text-left my-4 text-red-500">
-                Please note that the collection address is for one-time use. Please do not send multiple transactions to
-                these addresses
-            </div>
             <div class="text-left receiveAddress w-full px-2">
                 {{ receiveAddress }}
             </div>
@@ -103,40 +99,6 @@ export default {
     methods: {
         async createReceive() {
             const store = useAppStore()
-            const self = this
-
-            // const { scriptPubKey, internalPubkey, tweakPubKey  } = store.generateInternalKey()
-
-            // const sendData = {
-            //     asset_id: this.formData.assetsId,
-            //     amt: this.formData.amount,
-            //     script_key: {
-            //         // pub_key: scriptPubKey,
-            //         pub_key: tweakPubKey,
-            //         key_desc: {
-            //             raw_key_bytes: scriptPubKey,
-            //             key_loc: {
-            //                 "key_family":"212",
-            //                 "key_index":"0"
-            //             }
-            //         }
-            //     },
-            //     internal_key: {
-            //         raw_key_bytes: internalPubkey,
-            //         key_loc: {
-            //             "key_family":"212",
-            //             "key_index":"0"
-            //         }
-            //     },
-            // }
-            // console.log('NewAddressAssets sendData: ',sendData )
-            // await NewAddressAssets(sendData).then(res => {
-            //     console.log('NewAddressAssets: ', res)
-            //     // @ts-ignore
-            //     this.$root._toast('Create receive address success', 'success')
-            //     this.receiveAddress = res.encoded
-            //     store.updateInternalKeyEncoded(res, internalPubkey)
-            // })
             const activeAccount = store.getActiveAccount()
             console.log('activeAccount: ', activeAccount)
             NewAssetAddress(activeAccount.wallet_id, this.formData.assetsId, this.formData.amount).then(res => { 
@@ -145,9 +107,8 @@ export default {
                 })
                 console.log('addInfo:', addInfo)
                 // @ts-ignore
-                self.$root._toast('Create receive address success', 'success')
-                self.receiveAddress = res.data.address
-                // store.updateInternalKeyEncoded(addInfo, activeAccount?.address)
+                this.$root._toast('Create receive address success', 'success')
+                this.receiveAddress = res.data.address
             })
 
         },
@@ -179,39 +140,29 @@ export default {
 <style lang="scss" scoped>
 .receiveTaproot{
     .form-control{
-        .label{
-        .faq{
-            height: 16px;
-            width: 16px;
-            line-height: 16px;
-            border: 1px solid #333;
-            border-radius: 50px;
-            background-color: transparent;
-            padding: 1px;
+        
+    .join-input{
+        @apply w-full flex flex-row justify-between items-center flex-nowrap bg-primary rounded-2xl border-[1px] border-gray-300;
+        &:has(.item-l:focus), &:has(.item-l:hover),
+            &:has(.item-l:active){
+            @apply border-primary bg-primary;
         }
-        }
-        .field {
-            @apply w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6;
-        }
-        .join-input{
-            @apply w-full flex flex-row justify-between items-center flex-nowrap bg-purple-600 rounded-md border-2 border-gray-300;
-            &:has(.item-l:focus), &:has(.item-l:hover),
-                &:has(.item-l:active){
-                @apply border-primary bg-primary;
+        .item{
+            &-l{
+                @apply ring-0 outline-none border-none rounded-l-[15px];
+                flex: 1;
             }
-            .item{
-                &-l{
-                    @apply ring-0 outline-none border-none rounded-l;
-                    flex: 1;
-                }
-                &-r{
-                    @apply text-white ;
-                    flex: 1;
-                }
-                &.token-name{
-                    @apply uppercase;
+            &-r{
+                @apply text-white ;
+                flex: 1;
+            }
+            &.token-name{
+                @apply uppercase;
+                &::placeholder{
+                    @apply normal-case;
                 }
             }
+        }
         }
     }
     .switchItem{

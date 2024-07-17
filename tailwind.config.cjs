@@ -16,6 +16,9 @@ module.exports = {
         warning: '#e86b00',
         error: '#d10029',
       },
+      fontFamily: {
+        sans: ['Alibaba PuHuiTi 2.0', 'Helvetica', 'Arial', 'sans-serif'],
+      },
       animation: {
         'fade-in':
           'fadein 1s cubic-bezier(0.19, 1, 0.22, 1) 0 1 normal forwards infinite ',
@@ -69,6 +72,9 @@ module.exports = {
           },
           '.btn-neutral': {
             color: '#ffffff',
+          },
+          fontFamily: {
+            sans: ['Alibaba PuHuiTi 2.0', 'Helvetica', 'Arial', 'sans-serif'],
           },
         },
       },

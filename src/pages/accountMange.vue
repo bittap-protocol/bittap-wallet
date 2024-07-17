@@ -19,7 +19,7 @@
             </div>
             <div class="address">{{ acc.path }}</div>
             <div class="path flex flex-row justify-start items-center">{{ showAddress(acc.btcAddress) }} 
-              <button class="text-primary fill-primary" @click="copyAddress(acc.btcAddress)">
+              <button class="text-primary fill-primary ml-2" @click="copyAddress(acc.btcAddress)">
                 <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                   <path fill-rule="evenodd" clip-rule="evenodd"
                     d="M5.40077 2.60309C5.25832 2.60309 5.14284 2.71858 5.14284 2.86103V4.32741C5.14284 4.67807 4.85857 4.96233 4.50792 4.96233C4.15726 4.96233 3.873 4.67807 3.873 4.32741V2.86103C3.873 2.01726 4.55701 1.33325 5.40077 1.33325H13.1389C13.9826 1.33325 14.6666 2.01726 14.6666 2.86103V10.5991C14.6666 11.4429 13.9826 12.1269 13.1389 12.1269H11.6559C11.3053 12.1269 11.021 11.8426 11.021 11.492C11.021 11.1413 11.3053 10.8571 11.6559 10.8571H13.1389C13.2813 10.8571 13.3968 10.7416 13.3968 10.5991V2.86103C13.3968 2.71858 13.2813 2.60309 13.1389 2.60309H5.40077Z"
@@ -39,41 +39,26 @@
       </div>
 
       <dialog id="modal_save" class="modal">
-        <div class="modal-box rounded-sm">
-            <h3 class="font-bold text-lg flex flex-row justify-start items-center"> <IconMdiContentSave class="size-5"></IconMdiContentSave> Edit name</h3>
+        <div class="modal-box rounded-2xl">
+            <h3 class="font-bold text-lg flex flex-row justify-start items-center"> <IconMdiContentSave class="size-5 mr-1"></IconMdiContentSave> Edit name</h3>
             <div class="py-4">
-                <input v-model="newAccountName" type="text" class="border rounded-sm" maxlength="15" />
+                <div class="input-box input-append">
+                  <input v-model="newAccountName" type="text"  maxlength="15" />
+                </div>
             </div>
             
-            <div class="modal-action justify-start">
-                <form method="dialog">
+            <div class="modal-action justify-between">
+                <form method="dialog" class="w-[40%]">
                     <!-- if there is a button in form, it will close the modal -->
-                    <button class="btn">Close</button>
+                    <button class="btn btn-ghost w-full">Close</button>
                 </form>
-                <button class="btn btn-primary" @click="saveName">
+                <button class="btn btn-primary w-[40%]" @click="saveName">
                     Save
                 </button>
             </div>
         </div>
     </dialog>
 
-      <dialog id="modal_backup" class="modal">
-        <div class="modal-box rounded-sm">
-            <h3 class="font-bold text-lg">Backup private key(hex)</h3>
-            <div class="w-full py-4">
-                <input v-model="privateKey" type="text" class="border rounded-sm w-full" readonly />
-                <div class="text-sm text-red-500 my-4 py-4">
-                    Please take good care of your private key, please do not place it in any place that can be synchronized with the network, it is recommended to keep it offline
-                </div>
-            </div>
-            <div class="modal-action justify-start">
-                <form method="dialog">
-                    <!-- if there is a button in form, it will close the modal -->
-                    <button class="btn btn-primary">Close</button>
-                </form>
-            </div>
-        </div>
-      </dialog>
     </div>
 </template>
   

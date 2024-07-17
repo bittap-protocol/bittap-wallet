@@ -82,14 +82,14 @@ export default {
 
 <style lang="scss" scoped>
 .importAsset{
-  @apply w-full p-4;
+  @apply w-full px-4;
   .form{
     .form-control {
-      @apply mt-4;
+      @apply mt-0;
     }
   }
   .actions{
-    @apply my-4 w-full;
+    @apply my-2 w-full;
     .btn{
       @apply w-full rounded-xl;
     }

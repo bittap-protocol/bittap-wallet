@@ -283,10 +283,26 @@ export const useAppStore = defineStore('app', () => {
   }
 
   const AuthenticationPassword = async (pwd: string): Promise<boolean> => {
+    if (phrases.value.length <= 0) {
+      return Promise.resolve(false)
+    }
     return await sendMessage('checkPassword', {
       check: phrases.value[0].phrase,
       pwd,
-    }).then((res: string) => res === 'Ok')
+    }).then((res: unknown) => res === 'Ok')
+  }
+  const resetPassword = async (newPassword: string): Promise<boolean> => {
+    return new Promise((resolve, reject) => {
+      //
+      sendMessage('resetPassword', newPassword).then((res) => {
+        // @ts-ignore
+        if (res && res.status) {
+          resolve(true)
+        } else {
+          reject(false)
+        }
+      })
+    })
   }
 
   const createMnemonicPhrase = () => {
@@ -396,12 +412,12 @@ export const useAppStore = defineStore('app', () => {
   }
 
   const createNewUser = async (
-    _importMnemonic: string = null
+    _importMnemonic: string = ''
   ): Promise<AccountRow> => {
     let phrase: string = ''
     let dePhrase: string = ''
     let phraseIndex = -1
-    if (!_importMnemonic) {
+    if (!_importMnemonic || _importMnemonic === '') {
       const phraseResult = createMnemonicPhrase()
       phrase = phraseResult.phrase
       // @ts-ignore
@@ -489,8 +505,8 @@ export const useAppStore = defineStore('app', () => {
               backup: _importMnemonic ? true : false,
               import: _importMnemonic ? true : false,
               name: _importMnemonic
-                ? 'Import-' + accountList.value.length
-                : 'Account-' + accountList.value.length,
+                ? 'Import-' + (accountList.value.length + 1)
+                : 'Account-' + (accountList.value.length + 1),
               wallet_id: res.data.wallet_id,
               btcAddress: res.data.address,
             }
@@ -662,220 +678,6 @@ export const useAppStore = defineStore('app', () => {
     return keypair
   }
 
-  // @ts-ignore
-  const createAccount = async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    // return chrome.storage.local.set({ password: pwd }).then(() => {
-    //   password.value = pwd
-    // });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-    return new Promise<any>((_resolve, _reject) => {
-      try {
-        initEccLib(ecc)
-        const ECPair = ECPairFactory(ecc)
-
-        const phraseResult = createMnemonicPhrase()
-        const phrase = phraseResult.phrase
-
-        const seed = mnemonicToSeedSync(phrase)
-
-        const bip32 = BIP32Factory(ecc)
-
-        // console.log({seed, phrase, phraseResult}, bip32)
-
-        const rootKey = bip32.fromSeed(seed)
-        const path = "m/86'/0'/0'/0/0"
-        const childNodePrimary = rootKey.derivePath(path)
-
-        const childNodeXOnlyPubkeyPrimary = toXOnly(childNodePrimary.publicKey)
-        const p2trPrimary = payments.p2tr({
-          internalPubkey: childNodeXOnlyPubkeyPrimary,
-          network: networks.bitcoin,
-        })
-        console.log('p2trPrimary: ', p2trPrimary)
-
-        // { "name":"p2tr",
-        //   "network":{"messagePrefix":"\\u0018Bitcoin Signed Message:\\n","bech32":"bc","bip32":{"public":76067358,"private":76066276},"pubKeyHash":0,"scriptHash":5,"wif":128},
-        //   "address":"bc1pmjas4wsx6jxcw75jf0fc4cj70gzrje8sk7lcnqm455nysfdy8rasy9f2k6",
-        //   "hash":null,
-        //   "output":{"type":"Buffer","data":[81,32,220,187,10,186,6,212,141,135,122,146,75,211,138,226,94,122,4,57,100,240,183,191,137,131,117,165,38,72,37,164,56,251]},
-        //   "redeemVersion":192,
-        //   "pubkey":{"type":"Buffer","data":[220,187,10,186,6,212,141,135,122,146,75,211,138,226,94,122,4,57,100,240,183,191,137,131,117,165,38,72,37,164,56,251]},
-        //   "internalPubkey":{"type":"Buffer","data":[95,23,218,210,16,67,108,151,191,128,173,239,249,246,67,219,253,242,175,12,7,104,41,89,61,151,118,245,133,252,20,149]}
-        // }
-
-        if (!p2trPrimary.address || !p2trPrimary.output) {
-          throw 'error creating p2tr'
-        }
-
-        const scriptHash = crypto.sha256(p2trPrimary.output)
-
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const tweakedChildNodePrimary = childNodePrimary.tweak(
-          crypto.taggedHash('TapTweak', childNodeXOnlyPubkeyPrimary)
-        )
-        // console.log('tweakedChildNodePrimary: ', tweakedChildNodePrimary)
-
-        // Do a sanity check with the WIF serialized and then verify childNodePrimary is the same
-        const wif = childNodePrimary.toWIF()
-        const keypair = ECPair.fromWIF(wif)
-
-        if (
-          childNodePrimary.publicKey.toString('hex') !==
-          keypair.publicKey.toString('hex')
-        ) {
-          throw 'createKeyPair error child node not match sanity check'
-        }
-        const accountRaw = {
-          phrase,
-          address: p2trPrimary.address,
-          scriptPubKey: scriptHash.toString('hex'),
-          output: p2trPrimary.output.toString('hex'),
-          publicKey: childNodePrimary.publicKey.toString('hex'),
-          internalPubkey: childNodeXOnlyPubkeyPrimary.toString('hex'),
-          path,
-          WIF: childNodePrimary.toWIF(),
-          privateKey: childNodePrimary.privateKey?.toString('hex'),
-          backup: false,
-          import: false,
-          name: 'Account-' + accountList.value.length,
-        }
-        // console.log('account create for m86: ', accountRaw)
-        // @ts-ignore
-        accountList.value.push(accountRaw)
-        switchActiveAccount(accountList.value.length - 1)
-        updateAccountCount()
-        // console.log('account current: ', activeAccount)
-        _resolve(accountRaw)
-      } catch (err) {
-        _reject(err)
-      }
-    })
-  }
-
-  // @ts-ignore
-  const importAccountFromWords = (words, pk) => {
-    console.log('importAccountFromWords initalization', words, pk)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-    return new Promise<any>((_resolve, _reject) => {
-      console.log('importAccountFromWords initalization 2')
-      let phrase = ''
-      let p2trPrimary = null
-      const path = "m/86'/0'/0'/0/0"
-      // @ts-ignore
-      let accountRaw: Account | null = null
-      try {
-        console.log('importAccountFromWords initalization 3')
-        initEccLib(ecc)
-        const ECPair = ECPairFactory(ecc)
-        console.log('importAccountFromWords initalization 4')
-        if (!words && !pk) {
-          throw 'Parameter error'
-        }
-
-        if (words && words.length >= 12) {
-          console.log('word import: ', words)
-          phrase = words.join(' ')
-
-          const seed = mnemonicToSeedSync(phrase)
-
-          const bip32 = BIP32Factory(ecc)
-
-          // console.log({seed, phrase, phraseResult}, bip32)
-
-          const rootKey = bip32.fromSeed(seed)
-
-          const childNodePrimary = rootKey.derivePath(path)
-
-          const childNodeXOnlyPubkeyPrimary = toXOnly(
-            childNodePrimary.publicKey
-          )
-          p2trPrimary = payments.p2tr({
-            internalPubkey: childNodeXOnlyPubkeyPrimary,
-            network: networks.bitcoin,
-          })
-          if (!p2trPrimary.address || !p2trPrimary.output) {
-            throw 'error creating p2tr'
-          }
-
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const tweakedChildNodePrimary = childNodePrimary.tweak(
-            crypto.taggedHash('TapTweak', childNodeXOnlyPubkeyPrimary)
-          )
-
-          // Do a sanity check with the WIF serialized and then verify childNodePrimary is the same
-          const wif = childNodePrimary.toWIF()
-          const keyPair = ECPair.fromWIF(wif)
-
-          if (
-            childNodePrimary.publicKey.toString('hex') !==
-            keyPair.publicKey.toString('hex')
-          ) {
-            throw 'createKeyPair error child node not match sanity check'
-          }
-          const scriptHash = crypto.sha256(p2trPrimary.output)
-          accountRaw = {
-            phrase,
-            address: p2trPrimary.address,
-            publicKey: childNodePrimary.publicKey.toString('hex'),
-            output: p2trPrimary.output.toString('hex'),
-            scriptPubKey: scriptHash.toString('hex'),
-            internalPubkey: internalPubkey.toString('hex'),
-            path,
-            WIF: childNodePrimary.toWIF(),
-            privateKey: childNodePrimary.privateKey?.toString('hex'),
-            backup: true,
-            import: true,
-            name: 'Import-' + accountList.value.length,
-          }
-        }
-        if (pk) {
-          console.log('privateKeyHex import: ', pk)
-          const keyPair = ECPair.fromPrivateKey(Buffer.from(pk, 'hex'), {
-            network: networks.bitcoin,
-          })
-          console.log('importAccountFromWords initalization 5')
-          const internalPubkey = toXOnly(keyPair.publicKey)
-          console.log('importAccountFromWords initalization 6')
-          p2trPrimary = payments.p2tr({
-            internalPubkey: internalPubkey,
-            network: networks.bitcoin,
-          })
-          const scriptHash = crypto.sha256(p2trPrimary.output)
-          console.log('importAccountFromWords initalization 7')
-          accountRaw = {
-            phrase,
-            address: p2trPrimary.address,
-            output: p2trPrimary.output.toString('hex'),
-            scriptPubKey: scriptHash.toString('hex'),
-            internalPubkey: internalPubkey.toString('hex'),
-            publicKey: keyPair.publicKey.toString('hex'),
-            path,
-            WIF: keyPair.toWIF(),
-            privateKey: pk,
-            backup: true,
-            import: true,
-            name: 'Import-' + accountList.value.length,
-          }
-        }
-        // @ts-ignore
-        if (accountList.value.some((x) => x.address === accountRaw.address)) {
-          throw 'Account already exists'
-        }
-
-        // @ts-ignore
-        accountList.value.push(accountRaw)
-        switchActiveAccount(accountList.value.length - 1)
-        updateAccountCount()
-        // console.log('account current: ', activeAccount)
-        _resolve(accountRaw)
-      } catch (err) {
-        console.error('on error: ', err)
-        _reject(err)
-      }
-    })
-  }
-
   const updateCurrentAccountBackupState = () => {
     // @ts-ignore
     accountList.value[activeAccount.value].backup = true
@@ -937,7 +739,7 @@ export const useAppStore = defineStore('app', () => {
 
     changeAccountName,
     AuthenticationPassword,
-    createAccount,
+    resetPassword,
     updateAccountCount,
     switchActiveAccount,
     isGoBack,
@@ -946,7 +748,6 @@ export const useAppStore = defineStore('app', () => {
     getActiveAccount,
     getActiveAccountForIndex,
     updateCurrentAccountBackupState,
-    importAccountFromWords,
     getNetWorkConfig,
     changeNetWork,
     updateAssets,

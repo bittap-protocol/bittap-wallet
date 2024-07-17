@@ -13,7 +13,7 @@
             <div v-for="(word,index) in wordsForm" :key="'w-'+index" class="w-[90px] overflow-x-hidden p-0.5">
               <div class="input-box input-append">
                 <div class="text-gray-400 w-[20]">{{ (index+1) }}.</div>
-                <input v-model="wordsForm[index]" type="text" class="inline px-1  w-[70px]" />
+                <input v-model="wordsForm[index]" type="text" @paste="handlePaste" class="inline px-1  w-[70px]" />
               </div>
             </div>
           </div>
@@ -28,14 +28,7 @@
           </div>
           <button class="button mt-6" @click="importAccountFromWords(false)">Import account</button>
         </div>
-        <div v-if="activeTab === 'private'" class="content-tab">
-          <div class="w-full my-2 flex flex-col justify-start items-center">
-            <input v-model="importPrivateKey" class="border my-5 w-full"
-              placeholder="Private key hex format: 64 digits and letters" minlength="64" maxlength="64"
-              pattern="^[0-9a-f]{64}$" />
-            <button class="button mb-7" @click="importAccountFromWords(true)">Import account</button>
-          </div>
-        </div>
+        
       </div>
     </div>
   </div>
@@ -44,19 +37,21 @@
 <script lang="ts">
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app.store'
+import { sendMessage } from '@/popup/libs/tools';
 export default {
   setup(){
     const store = useAppStore()
 
     const router = useRouter()
-    const password = computed(() => store.password)
+    const accountList = computed(() => store.accountList)
     store.setGoBackUrl('/')
     store.isGoBack()
 
-    if(!password.value) {
+    if(accountList.length <= 0) {
       store.setGoBackUrl('/common/importAccount')
       router.push('/common/createPassword')
     }
+    return {store}
   },
   data() {
     return {
@@ -79,27 +74,39 @@ export default {
     }
   },
   methods: {
-    async importAccountFromWords(isPrivateKey = false){
+    handlePaste(event) {
+      const clipboardData = event.clipboardData || window.clipboardData;
+      const pastedData = clipboardData.getData('Text');
+      if (pastedData.split(' ').length === 12) { 
+        const words = pastedData.split(' ')
+        for (var i = 0; i < 12; i++) { 
+          this.wordsForm[i] = words[i] 
+        }
+        event.preventDefault();
+      }
+
+    },
+    async importAccountFromWords(){
       
       try {
-        const store = useAppStore()
-        if(isPrivateKey) {
-          console.log('this.importPrivateKey', this.importPrivateKey)
-          if(!/^[0-9a-f]{64}$/.test(this.importPrivateKey)){
-            // @ts-ignore
-            return this.$root._toast('The private key format is incorrect', 'error')
+        console.log('this.wordsForm: ', this.wordsForm)
+        
+        for(let i = 0; i < this.wordsForm.length; i++) {
+          // @ts-ignore
+          if(!this.wordsForm[i] || this.wordsForm[i].length <= 1)  {
+            throw 'Mnemonic word '+(i+1)+' is incorrect'
           }
-          await store.importAccountFromWords(null, this.importPrivateKey)
-        }else{
-          console.log('this.wordsForm: ', this.wordsForm)
-          for(let i = 0; i < this.wordsForm.length; i++) {
-            // @ts-ignore
-            if(!this.wordsForm[i] || this.wordsForm[i].length <= 1)  {
-              throw 'Mnemonic word '+(i+1)+' is incorrect'
-            }
-          }
-          await store.importAccountFromWords(this.wordsForm, null)
         }
+        const password = await sendMessage('getPassword', {})
+        if (!password) { 
+          // not set password , go to create new password
+          this.$router.push('/common/createPassword?w=' + this.wordsForm.join('|'))
+          return 
+        }
+        this.$root._showLoading('In process...')
+        await this.store.createNewUser(this.wordsForm.join(' ')).finally(() => { 
+          this.$root._hideLoading()
+        })
         // @ts-ignore
         this.$root._toast('import account successfully', 'success')
         setTimeout(() => {
@@ -107,6 +114,7 @@ export default {
         }, 200)
       }catch (e) {
         this.errorMessage = e + ''
+        // @ts-ignore
         this.$root._toast('Error:'+e, 'error')
       }
     }
@@ -118,7 +126,6 @@ export default {
 .importAccount {
   .import-tab{
     @apply py-3 my-4 border-t-0 border-solid border-gray-200 w-full;
-    border-top-width: 1px;
     .tabs-container{
       @apply flex flex-row flex-nowrap justify-between items-center space-x-2 mb-3;
       .tab-btn{

@@ -68,7 +68,7 @@ export default {
 .send{
   @apply px-3;
   .home-tab{
-    @apply py-3 my-4 border-t-2 border-solid border-gray-200 w-full;
+    @apply py-2 my-2 w-full border-none;
     border-top-width: 1px;
     .tabs-container {
         @apply flex flex-row flex-nowrap justify-between items-center space-x-2 mb-3 border-b border-solid border-gray-200;

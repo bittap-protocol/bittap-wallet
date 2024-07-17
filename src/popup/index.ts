@@ -1,29 +1,9 @@
 import '@/assets/base.scss'
-
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires, prefer-const
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-// global.Buffer = window.Buffer = Buffer
-
-// import util from "node:util/types";
-// import { EventEmitter } from "events";
-// import { Stream } from "stream";
-
-
-// @ts-ignore
-// window.util = util;
-// @ts-ignore
-// window.EventEmitter = EventEmitter;
-// @ts-ignore
-// window.Stream = Stream;
-
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router/auto'
 import App from './app.vue'
 import './index.scss'
-
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),

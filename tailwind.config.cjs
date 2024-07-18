@@ -18,6 +18,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Alibaba PuHuiTi 2.0', 'Helvetica', 'Arial', 'sans-serif'],
+        serif: ['Alibaba PuHuiTi 2.0', 'Helvetica', 'Arial', 'sans-serif'],
       },
       animation: {
         'fade-in':
@@ -75,6 +76,7 @@ module.exports = {
           },
           fontFamily: {
             sans: ['Alibaba PuHuiTi 2.0', 'Helvetica', 'Arial', 'sans-serif'],
+            serif: ['Alibaba PuHuiTi 2.0', 'Helvetica', 'Arial', 'sans-serif'],
           },
         },
       },

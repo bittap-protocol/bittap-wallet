@@ -275,6 +275,7 @@ export const useAppStore = defineStore('app', () => {
     return getActiveAccountForIndex(activeAccount.value)
   }
   const getActiveAccountForIndex = (index: number): AccountRow => {
+    // @ts-ignore
     return accountList.value.length <= 0 ||
       index <= -1 ||
       index > accountList.value.length - 1
@@ -287,6 +288,7 @@ export const useAppStore = defineStore('app', () => {
       return Promise.resolve(false)
     }
     return await sendMessage('checkPassword', {
+      // @ts-ignore
       check: phrases.value[0].phrase,
       pwd,
     }).then((res: unknown) => res === 'Ok')
@@ -294,9 +296,15 @@ export const useAppStore = defineStore('app', () => {
   const resetPassword = async (newPassword: string): Promise<boolean> => {
     return new Promise((resolve, reject) => {
       //
-      sendMessage('resetPassword', newPassword).then((res) => {
+      sendMessage('resetPassword', {
+        newPassword,
+        phrases: JSON.parse(JSON.stringify(phrases.value)),
+      }).then((res) => {
         // @ts-ignore
         if (res && res.status) {
+          // @ts-ignore
+          phrases.value = res.phrases
+          // reset password finish
           resolve(true)
         } else {
           reject(false)
@@ -315,6 +323,18 @@ export const useAppStore = defineStore('app', () => {
     return {
       phrase: mnemonic,
     }
+  }
+
+  const validateMnemonicWords = (mnemonic: string) => {
+    if (!validateMnemonic(mnemonic)) {
+      throw new Error('Invalid mnemonic generated!')
+    }
+    try {
+      mnemonicToSeedSync(mnemonic)
+    } catch (e) {
+      throw new Error('Invalid mnemonic generated!')
+    }
+    return true
   }
 
   const toXOnly = (publicKey: any) => {
@@ -425,6 +445,7 @@ export const useAppStore = defineStore('app', () => {
     } else {
       // from to active user's mnemonic phrase
       phrase = _importMnemonic
+      validateMnemonic(phrase)
       // @ts-ignore
       dePhrase = await sendMessage('encryptMnemonic', phrase)
     }
@@ -650,34 +671,6 @@ export const useAppStore = defineStore('app', () => {
     )
   }
 
-  const getTestScriptKeyPair = (isTweak: boolean = false) => {
-    const bip32 = BIP32Factory(ecc)
-    const keypair = bip32.fromBase58(
-      'xprvA449goEeU9okyiF1LmKiDaTgeXvmh87DVyRd35VPbsSop8n8uALpbtrUhUXByPFKK7C2yuqrB1FrhiDkEMC4RGmA5KTwsE1aB5jRu9zHsuQ'
-    )
-    // keypair.privateKey
-    console.log(
-      'keypair.derive(0): ',
-      keypair.publicKey.toString('hex'),
-      keypair.privateKey?.toString('hex'),
-      keypair.derive(0).privateKey?.toString('hex'),
-      keypair.derive(0).publicKey.toString('hex')
-    )
-    if (isTweak) {
-      console.log(
-        'tweak key: ',
-        crypto.taggedHash('TapTweak', toXOnly(keypair.publicKey)),
-        crypto
-          .taggedHash('TapTweak', toXOnly(keypair.publicKey))
-          .toString('hex')
-      )
-      return keypair.tweak(
-        crypto.taggedHash('TapTweak', toXOnly(keypair.publicKey))
-      )
-    }
-    return keypair
-  }
-
   const updateCurrentAccountBackupState = () => {
     // @ts-ignore
     accountList.value[activeAccount.value].backup = true
@@ -726,6 +719,21 @@ export const useAppStore = defineStore('app', () => {
     currentBtcBalance.value = btcBalance
   }
 
+  const clearAllData = () => {
+    count.value = 0
+
+    accountList.value = []
+    activeAccount.value = -1
+
+    phrases.value = []
+    currentBtcBalance.value = 0
+
+    assetsList.value = []
+    transferList.value = []
+    internalKeyList.value = []
+    receiveAddressList.value = []
+  }
+
   return {
     count,
     name,
@@ -737,6 +745,7 @@ export const useAppStore = defineStore('app', () => {
     receiveAddressList,
     currentBtcBalance,
 
+    validateMnemonicWords,
     changeAccountName,
     AuthenticationPassword,
     resetPassword,
@@ -766,7 +775,7 @@ export const useAppStore = defineStore('app', () => {
     initConfig,
     getCurrentAccountKeyPair,
     createNewUser,
-    getTestScriptKeyPair,
+    clearAllData,
     getReceiveAddress,
     getNetwork,
     signTapprootAssetTransfer,

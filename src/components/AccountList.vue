@@ -26,7 +26,7 @@
                         {{ acc.path}}
                     </div> -->
                         <div class="address text-ellipsis text-wrap  w-full">
-                            {{ showAddress(acc.address) }}
+                            {{ showAddress(acc.btcAddress) }}
                         </div>
                     </div>
                 </div>

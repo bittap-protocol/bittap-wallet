@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col min-box px-4">
+  <div v-if="!isAuth" class="flex flex-col min-box px-4">
     <div class="w-full">
       <div v-if="checkIng == false" class="py-4">Please confirm the safety of your surrounding environment.
         Mnemonic words are the most crucial information in your account, so please be careful when storing them.</div>
@@ -7,8 +7,8 @@
 
     </div>
     <div v-if="!isOk" class="w-full my-2 flex flex-row flex-wrap justify-center items-center gap-2">
-      <div v-for="(word,index) in words" :key="'w-'+index" class="w-[100px] h-15 overflow-x-hidden p-0.5">
-        <div class="input-box input-append">
+      <div v-for="(word,index) in words" :key="'w-'+index" :class="['w-[100px] h-15 overflow-x-hidden p-0.5',checkIng && !verificationWordsIndex[index] ? 'hidden':'']">
+        <div :class="['input-box input-append', verificationWordsResult[index]? '':'error']">
           <div class="text-gray-400 w-[20]">{{ (index+1) }}.</div>
           <input v-if="!checkIng" :value="word" type="text" readonly class="inline px-1 w-[70px]" />
           <input v-if="checkIng" v-model="wordsForm[index]" type="text" class="inline px-1  w-[70px]" />
@@ -19,121 +19,172 @@
       <button class="btn btn-primary btn-block" @click="checkIng = true">I Remember</button>
       <router-link to="/" class="text-primary no-underline block w-full text-center mt-4">Skip</router-link>
     </div>
-    <div v-else class="w-full py-4 my-2 ">
-      <div v-if="errors && errors.length > 0"
-        class="text-white flex flex-row flex-nowrap justify-around items-center px-6 py-4 w-full border-0 rounded relative mb-4 bg-sky-500">
-        <span class="text-xl inline-block mr-5 align-middle">
-          <IconMdiWarningOctagonOutline />
-        </span>
-        <span class="inline-block text-red-500 font-medium text-left">
-          {{ errors }}
-        </span>
+    <div v-else class="w-full my-1 ">
+      <div
+v-if="errors && errors.length > 0"
+        class="err-tips">
+        {{ errors }}
       </div>
-      <div v-if="isOk" role="alert" class="alert alert-success my-2 text-white flex flex-row">
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
+      <div v-if="isOk"  class="err-tips">
         <span>Mnemonic word verification is successful</span>
       </div>
-      <button v-if="!isOk" class="button" @click="verificationWords">Verify</button>
+      <button v-if="!isOk" class="button mt-4" @click="verificationWords">Verify</button>
+      <router-link to="/" class="text-primary no-underline block w-full text-center mt-4">Skip</router-link>
+    </div>
+  </div>
+  <div v-else class="flex flex-col min-box px-4">
+    <div class="form w-full  my-4">
+      <div class="form-control">
+         <div class="label">
+              <span class="label-text">Enter your password to verify identity.</span>
+          </div>
+      </div>
+      <label class="input-box input-append mt-4">
+        <input
+v-model="pwd" :type="showPassword ? 'text' : 'password'"
+          placeholder="Enter password" />
+        <div class="icon">
+          <IconEyeOpen v-if="showPassword" @click="togglePasswordVisibility" />
+          <IconEyeClose v-if="!showPassword" @click="togglePasswordVisibility" />
+        </div>
+      </label>
+      <div class="actions mt-4">
+        <button class="button" @click="verifyPassword">Next</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-// @ts-ignore
-import IconMdiWarningOctagonOutline from '~icons/mdi/warning-octagon-outline';
 
-import { ref } from 'vue';
-import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app.store'
-import { sendMessage } from '@/popup/libs/tools'
+import { postToast, randomInt, sendMessage, getQuery } from '@/popup/libs/tools'
+// @ts-ignore
+import IconEyeOpen from '@/components/svgIcon/EyeOpen.vue'
+// @ts-ignore
+import IconEyeClose from '@/components/svgIcon/EyeClose.vue'
 
 export default {
   components: {
-    IconMdiWarningOctagonOutline
+    IconEyeOpen, IconEyeClose
   },
   setup() {
 
     const store = useAppStore()
 
-    const router = useRouter()
+    // const router = useRouter()
 
     store.setGoBackUrl('')
     store.isGoBack()
-
-    // @ts-ignore
-    const activeAccount = store.getActiveAccount()
-
-    // @ts-ignore
-    // const wordSplits = activeAccount.phrase.split(' ')
-    // console.log('activeAccount: ', activeAccount, wordSplits)
-    console.log('phrases:', store.phrases, activeAccount.phraseIndex)
-    const activeUserPhrase = store.phrases[activeAccount.phraseIndex].phrase
-    console.log('activeUserPhrase: ', activeUserPhrase)
-
-    const words = ref(new Array(12))
-    const wordsForm = ref(new Array(words.value.length))
-    const errors = ref('')
-    const isOk = ref(false)
-    // @ts-ignore
-    sendMessage('decryptMnemonic', activeUserPhrase).then(res => { 
-      console.log('phrase: ', res)
-      words.value = res.split(' ')
-    })
-
-    // TODO is dev auto input words
-    // words.value.forEach((word: string, index: number) => {
-    //   wordsForm.value[index] = word
-    // })
-
-
-    const verificationWords = () => {
-      try {
-        for (let i = 0; i < words.value.length; i++) {
-          if (!wordsForm.value[i] || words.value[i] !== wordsForm.value[i]) {
-            throw 'Mnemonic word ' + (i + 1) + ' is incorrect'
-          }
-        }
-        errors.value = ''
-        // update current account backup state
-        store.updateCurrentAccountBackupState()
-        isOk.value = true
-        // alert('Mnemonic word verification is successful')
-        setTimeout(() => {
-          router.push('/')
-        }, 1500)
-      } catch (e) {
-        // @ts-ignore
-        errors.value = e + ''
-        console.error(e)
-      }
-
-    }
+    
     return {
-       activeAccount, verificationWords, wordsForm, words, isOk, errors
+       store
     }
   },
   data() {
     return {
       checkIng: false,
+      isOk: false,
+      showPassword: false,
+      errors: '',
+      verificationWordsIndex: new Array(12),
+      verificationWordsResult: new Array(12),
+      wordsForm: new Array(12),
+      words: new Array(12),
+      isAuth: false,
+      pwd: ''
     }
   },
   watch: {
     'checkIng': function (k, v) { 
       if (k != v) { 
         if (this.checkIng) {
+          this.createRandomIndex()
+          // @ts-ignore
           this.$root.setTitle('Backup Mnemonic')
         } else { 
+          // @ts-ignore
           this.$root.setTitle('Verify Mnemonic')
         }
       }
     }
   },
   mounted() {
-    this.$root.setTitle('Backup Mnemonic')
+    
+
+    this.isAuth = getQuery('auth') === 'yes'
+    if (this.isAuth) {
+      // @ts-ignore
+      this.$root.setTitle('Verify Identity')
+    } else { 
+      // @ts-ignore
+      this.$root.setTitle('Backup Mnemonic')
+    }
+
+    this.createRandomIndex()
+    this.verificationWordsResult.fill(true)
+
+    const activeAccount = this.store.getActiveAccount()
+    // @ts-ignore
+    const activeUserPhrase = this.store.phrases[activeAccount.phraseIndex].phrase
+    
+    // @ts-ignore
+    sendMessage('decryptMnemonic', activeUserPhrase).then(res => { 
+      // @ts-ignore
+      this.words = res.split(' ')
+    })
+    
+    
   },
+  methods: {
+    togglePasswordVisibility() { 
+      this.showPassword = !this.showPassword
+    },
+    verificationWords() { 
+      try {
+        for (let i = 0; i < this.words.length; i++) {
+          if (this.verificationWordsIndex[i]) {
+            if (!this.wordsForm[i] || this.words[i] !== this.wordsForm[i]) {
+              this.verificationWordsResult[i] = false
+              throw 'Mnemonic word ' + (i + 1) + ' is incorrect'
+            }
+          }
+        }
+        this.errors = ''
+        // update current account backup state
+        this.store.updateCurrentAccountBackupState()
+        this.isOk = true
+        setTimeout(() => {
+          this.$router.push('/')
+        }, 1500)
+      } catch (e) {
+        // @ts-ignore
+        this.errors = e + ''
+        console.error(e)
+        postToast(this.errors)
+      }
+    },
+    createRandomIndex() { 
+      this.verificationWordsIndex.fill(false)
+      let c= 0
+      do {
+        const index = randomInt(0, 12)
+        if (!this.verificationWordsIndex[index]) {
+          this.verificationWordsIndex[index] = true
+          c++
+        }
+      }while(c<=2)
+    },
+    async verifyPassword() {
+      const checkStatus = await this.store.AuthenticationPassword(this.pwd)
+      if (!checkStatus) {
+        // @ts-ignore
+        return this.$root._toast('Current password is invalid','error')
+      } else {
+        this.isAuth = false
+      }
+    },
+  }
 }
 </script>
 

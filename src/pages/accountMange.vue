@@ -12,7 +12,7 @@
             </button>
         </div>
       <div class="accounts list-box">
-        <div v-for="(acc, index) in accounts" :key="acc.address" class="account">
+        <div v-for="(acc, index) in accounts" :key="acc.btcAddress" class="account">
             <div class="name flex flex-row justify-between items-center">
                 <div>{{ acc.name || 'Account-'+ (index+1) }}</div>
                 <button class="link flex flex-row justify-between items-center" @click="editName(index, acc.name || 'Account-'+ (index+1))"><IconMdiAccountBoxEditOutline class="size-5"></IconMdiAccountBoxEditOutline>Edit</button>
@@ -50,7 +50,7 @@
             <div class="modal-action justify-between">
                 <form method="dialog" class="w-[40%]">
                     <!-- if there is a button in form, it will close the modal -->
-                    <button class="btn btn-ghost w-full">Close</button>
+                    <button class="btn btn-ghost w-full btn-outline">Close</button>
                 </form>
                 <button class="btn btn-primary w-[40%]" @click="saveName">
                     Save
@@ -128,7 +128,7 @@
       backupWords(index) {
         const store = useAppStore()
         store.switchActiveAccount(index)
-        this.$router.push('/common/backupKey')
+        this.$router.push('/common/backupKey?auth=yes')
       },
       backupPrivate(account, index) {
         this.privateKey = account.privateKey

@@ -152,7 +152,7 @@
       </div>
 
 
-      <div class="join flex justify-center items-center fixed z-10 w-full bottom-0 left-0 h-10">
+      <div class="join flex justify-center items-center fixed z-10 w-full bottom-2 left-0 h-10">
         <RouterLink class="no-underline join-item flex flex-row pr-1 text-primary" to="/common/importAssets">
         <Import class="mr-1"></Import>
           Import Assets

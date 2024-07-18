@@ -8,9 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AccountList: typeof import('./components/AccountList.vue')['default']
-    Back: typeof import('./components/svgIcon/Back.vue')['default']
     Changelog: typeof import('./components/Changelog.vue')['default']
-    copy: typeof import('./components/svgIcon/CreateWallet copy.vue')['default']
     CreateWallet: typeof import('./components/svgIcon/CreateWallet.vue')['default']
     EyeClose: typeof import('./components/svgIcon/EyeClose.vue')['default']
     EyeOpen: typeof import('./components/svgIcon/EyeOpen.vue')['default']

@@ -186,7 +186,8 @@ import { useAppStore } from '@/stores/app.store'
 
 
 import { QueryBtcBalance } from '@/popup/api/btc/blockStream'
-import Import from './svgIcon/Import.vue';
+// import { postToast } from '@/popup/libs/tools';
+// import Import from './svgIcon/Import.vue';
 
 
 
@@ -251,6 +252,7 @@ export default {
   },
   created() {
     this.accountInfo.balance = this.store.currentBtcBalance
+    
   },
   mounted(){
     // this.store = useAppStore()

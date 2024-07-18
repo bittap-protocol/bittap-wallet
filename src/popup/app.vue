@@ -223,7 +223,7 @@ v-if="isHome && accountCount >= 1"
   </header>
 
   <div v-if="toastData.text" :class="['toast toast-top toast-center', toastData.text? 'show': 'hide']">
-    <div :class="['alert', 'alert-'+toastData.type, 'text-white', 'font-bold', 'rounded-md', 'shadow-md']">
+    <div role="alert" :class="['alert', 'alert-'+toastData.type, 'text-white', 'font-bold', 'rounded-2xl', 'shadow-2xl']">
       <div class="break-all w-72 whitespace-normal">
         <IconMdiInformationSlabCircleOutline v-if="toastData.type === 'info'" class="mr-1" />
         <IconMdiSuccessCircle v-if="toastData.type === 'success'" class="mr-1" />
@@ -251,6 +251,7 @@ v-if="isHome && accountCount >= 1"
         </div>
       </div>
   </dialog>
+  <div role="alert" class="alert alert-info alert-success alert-warning alert-error hidden"></div>
 </template>
 
 <style scoped lang="scss">

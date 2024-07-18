@@ -42,7 +42,7 @@ export default {
             await navigator.clipboard.writeText(address)
             // @ts-ignore
             this.$root._toast('Copy successfully.', 'success')
-        }
+        },
     }
 }
 </script>

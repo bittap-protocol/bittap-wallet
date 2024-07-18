@@ -1,16 +1,41 @@
 <template>
   <div class="w-full min-box pwd">
-    <div class="w-full py-10 flex flex-col justify-center items-center px-4">
-      <div class="item">
-        <input v-model="password" type="password" class="field" placeholder="Current password" />
+    <div class="w-full py-10 flex flex-col justify-center items-center px-4 ">
+      <div class="item form-control">
+        <label class="input-box input-append">
+          <input
+  v-model="password" :type="showPassword ? 'text' : 'password'"
+            placeholder="Current password" />
+          <div class="icon">
+            <IconEyeOpen v-if="showPassword" @click="togglePasswordVisibility" />
+            <IconEyeClose v-if="!showPassword" @click="togglePasswordVisibility" />
+          </div>
+        </label>
       </div>
-      <div class="item">
-        <input v-model="newPassword" type="password" class="field" placeholder="New password" />
+      <div class="item form-control">
+        <label class="input-box input-append">
+          <input
+  v-model="newPassword" :type="showPassword ? 'text' : 'password'"
+            placeholder="New password" />
+          <div class="icon">
+            <IconEyeOpen v-if="showPassword" @click="togglePasswordVisibility" />
+            <IconEyeClose v-if="!showPassword" @click="togglePasswordVisibility" />
+          </div>
+        </label>
       </div>
-      <div class="item">
-        <input v-model="confirmPassword" type="password" class="field" placeholder="Confirm password" />
+      <div class="item form-control">
+        <label class="input-box input-append">
+          <input
+  v-model="confirmPassword" :type="showPassword ? 'text' : 'password'"
+            placeholder="Confirm password" />
+          <div class="icon">
+            <IconEyeOpen v-if="showPassword" @click="togglePasswordVisibility" />
+            <IconEyeClose v-if="!showPassword" @click="togglePasswordVisibility" />
+          </div>
+        </label>
       </div>
-      <button class="button" :disabled="password.length >= 8  && newPassword.length >= 8  && newPassword != confirmPassword" @click="changePassword">Change password</button>
+
+      <button class="button" :disabled="password.length < 8  || newPassword.length < 8  || newPassword === confirmPassword" @click="changePassword">Change password</button>
     </div>
   </div>
 </template>
@@ -20,8 +45,15 @@
 import { useAppStore } from '@/stores/app.store'
 // @ts-ignore
 import { TestPassword } from '@/popup/libs/tools'
+// @ts-ignore
+import IconEyeOpen from '@/components/svgIcon/EyeOpen.vue'
+// @ts-ignore
+import IconEyeClose from '@/components/svgIcon/EyeClose.vue'
 
 export default {
+  components: {
+    IconEyeOpen, IconEyeClose
+  },
   setup() {
     
     const store = useAppStore()
@@ -38,6 +70,13 @@ export default {
       password: '',
       newPassword: '',
       confirmPassword: '',
+      showPassword: false,
+    }
+  },
+  computed: {
+    TestOk() { 
+      console.log('test: ', TestPassword(this.password) && TestPassword(this.newPassword) && TestPassword(this.confirmPassword), this.password.length < 8, this.newPassword.length < 8 , this.newPassword === this.confirmPassword )
+      return TestPassword(this.password) && TestPassword(this.newPassword) && TestPassword(this.confirmPassword)
     }
   },
   created() {
@@ -48,6 +87,9 @@ export default {
     initData() {
       // @ts-ignore
       this.$root.setTitle('Password configuration')
+    },
+    togglePasswordVisibility() { 
+      this.showPassword = !this.showPassword
     },
     async changePassword(){
       if(!TestPassword(this.password)) {
@@ -69,7 +111,8 @@ export default {
       }
       
       // Change password
-      this.store.resetPassword(this.newPassword)
+      // @ts-ignore
+      await this.store.resetPassword(this.newPassword)
       // @ts-ignore
       this.$root._toast('Password changed','success')
 

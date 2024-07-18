@@ -32,7 +32,7 @@
     </div>
 
     <label class="form-control w-full max-w-xs my-4">
-      <button :disabled="Number(formData.amount) <= 0 || formData.recv_addr.length != 44 || isSubmitting || !isBtcAddressOk()" class="button" @click="send">Send</button>
+      <button :disabled="Number(formData.amount) <= 0 || formData.recv_addr.length != 44 || isSubmitting || !isBtcAddressOk()" class="button" @click="sendConfirm">Send</button>
     </label>
 
   </div>

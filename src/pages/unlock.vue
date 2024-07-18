@@ -4,12 +4,12 @@
       <IconLogo />
       <!-- <img src="@/assets/logo.svg" /> -->
     </div>
-    <div class="tips text-center text-lg mt-20">Verify the unlock password for assets safe.</div>
+    <div class="tips text-left text-md mt-20">Verify the unlock password for assets safe.</div>
     <div class="mt-4">
       <label class="input-box input-append">
         <input
 v-model="password" :type="showPassword ? 'text' : 'password'"
-          placeholder="password" />
+          placeholder="Enter password" />
         <div class="icon">
           <IconEyeOpen v-if="showPassword" @click="togglePasswordVisibility" />
           <IconEyeClose v-if="!showPassword" @click="togglePasswordVisibility" />
@@ -18,6 +18,7 @@ v-model="password" :type="showPassword ? 'text' : 'password'"
     </div>
     <div class="mt-4 flex flex-col justify-center items-center">
         <button class="btn btn-primary btn-block" :disabled="disabledVisible" @click="verifyPassword">Unlock</button>
+        <router-link to="/common/importAccount?clear=all" class="btn btn-link no-underline">Forgot your password</router-link>
       </div>
   </div>
 </template>

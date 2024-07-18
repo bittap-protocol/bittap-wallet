@@ -33,13 +33,13 @@ export default {
     const goBack = computed(() => store.goBack)
     const goBackUrl = computed(() => store.goBackUrl)
     const goToPrevious = () => {
-      console.log('goBackUrl.value: ', goBackUrl.value)
+      // console.log('goBackUrl.value: ', goBackUrl.value)
       goBackUrl.value ? router.push(goBackUrl.value) : window.history.go(-1);
     }
-    console.log('router.currentRoute.value.fullPath: ', router.currentRoute.value.fullPath)
+    // console.log('router.currentRoute.value.fullPath: ', router.currentRoute.value.fullPath)
     const isHome = computed(() => ['/', '/popup'].includes(router.currentRoute.value.fullPath))
     const path_css = computed(() =>'path'+router.currentRoute.value.fullPath.split('/').join('_'))
-    console.log('isHome: ', isHome.value, accountCount.value)
+    // console.log('isHome: ', isHome.value, accountCount.value)
 
    
     
@@ -300,9 +300,9 @@ v-if="isHome && accountCount >= 1"
   }
 }
 .dialog {
-    @apply w-11/12 rounded-xl bg-white px-4 py-2;
+    @apply w-11/12 rounded-xl bg-white p-4;
     .message{
-        @apply flex flex-col flex-nowrap justify-start items-center p-4 w-full overflow-y-auto overflow-x-hidden text-lg font-light font-sans;
+        @apply flex flex-col flex-nowrap justify-start items-center px-2 py-4 w-full overflow-y-auto overflow-x-hidden text-lg font-normal text-center;
     }
     .dialog-actions {
         @apply flex justify-between items-stretch w-full ;

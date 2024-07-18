@@ -67,7 +67,7 @@ body {
     @extend .br;
   }
   &-append{
-    @apply flex flex-row justify-between items-center w-full mb-1 bg-white pl-2;
+    @apply flex flex-row justify-between items-center w-full mb-1 bg-white pl-2 py-2;
     input{
       @apply bg-transparent border-0 outline-0 ring-0;
       &:hover, &:focus, &:focus-visible, &:focus, &:focus, &:focus-within {
@@ -78,6 +78,9 @@ body {
       }
       
     }
+    &.error {
+      @apply ring-red-500 ring-[1px];
+    }
     >.icon{
       @apply flex flex-col justify-center items-center pr-2;
     }
@@ -85,7 +88,7 @@ body {
     &:has(>input:focus-visible), &:has(>input:focus-visible), &:has(>input:active) {
       @apply ring-[1px] ring-primary;
       &.error {
-        @apply ring-red-500;
+        @apply ring-red-600;
       }
     }
   }
@@ -103,6 +106,9 @@ body {
       border-radius: 50px;
       background-color: transparent;
       padding: 1px;
+    }
+    .label-text{
+      @apply text-gray-700;
     }
   }
   
@@ -151,7 +157,7 @@ body {
   .input-field {
     .arrow {
       position: absolute;
-      margin-top: -50px;
+      margin-top: -42px;
       right: 10%;
       @apply text-primary font-bold;
       &:hover {

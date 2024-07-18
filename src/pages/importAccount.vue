@@ -37,7 +37,10 @@
 <script lang="ts">
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app.store'
-import { sendMessage } from '@/popup/libs/tools';
+import { getQuery, sendMessage } from '@/popup/libs/tools';
+
+
+
 export default {
   setup(){
     const store = useAppStore()
@@ -62,24 +65,35 @@ export default {
       ],
       wordsForm: [],
       importPrivateKey: '',
-      errorMessage: ''
+      errorMessage: '',
+      isClear: false,
     }
   },
   created() {
-    // @ts-ignore
-    this.$root.setTitle('Import Account')
+    
     for(var i=0;  i < 12; i++) {
       // @ts-ignore
       this.wordsForm[i] = ''
     }
+    this.isClear = getQuery('clear') === 'all'
+    if (this.isClear) { 
+      // @ts-ignore
+      this.$root.setTitle('Reset Account')
+    } else {
+      // @ts-ignore
+      this.$root.setTitle('Import Account')
+    }
   },
   methods: {
+    // @ts-ignore
     handlePaste(event) {
+      // @ts-ignore
       const clipboardData = event.clipboardData || window.clipboardData;
       const pastedData = clipboardData.getData('Text');
       if (pastedData.split(' ').length === 12) { 
         const words = pastedData.split(' ')
         for (var i = 0; i < 12; i++) { 
+          // @ts-ignore
           this.wordsForm[i] = words[i] 
         }
         event.preventDefault();
@@ -97,14 +111,18 @@ export default {
             throw 'Mnemonic word '+(i+1)+' is incorrect'
           }
         }
+        // @ts-ignore
+        this.store.validateMnemonicWords(this.wordsForm.join(' '))
         const password = await sendMessage('getPassword', {})
         if (!password) { 
           // not set password , go to create new password
-          this.$router.push('/common/createPassword?w=' + this.wordsForm.join('|'))
+          this.$router.push('/common/createPassword?w=' + this.wordsForm.join('|')+'&clear='+getQuery('clear'))
           return 
         }
+        // @ts-ignore
         this.$root._showLoading('In process...')
         await this.store.createNewUser(this.wordsForm.join(' ')).finally(() => { 
+          // @ts-ignore
           this.$root._hideLoading()
         })
         // @ts-ignore

@@ -4,13 +4,21 @@
 // import myWasmModule from '@/assets/main.wasm?url';
 
 // import { phrases, getActiveAccount, activeAccount } from '@/stores/app.store'
-
-import { useStorage } from '@vueuse/core'
-const phrases = useStorage('phrases', [])
-
-import { sendMessage, encryptData, decryptData } from '@/popup/libs/tools'
+import {
+  sendMessage,
+  encryptData,
+  decryptData,
+  TestPassword,
+} from '@/popup/libs/tools'
 
 let sessionPassword: string | null = null
+
+chrome.storage.session.get(['sessionPassword'], (result) => {
+  // Restore the password saved in the message
+  if (result.sessionPassword && TestPassword(result.sessionPassword)) {
+    sessionPassword = result.sessionPassword
+  }
+})
 
 interface configOpt {
   activeAccount: number
@@ -42,6 +50,7 @@ const ws = {
 
 const clearPassword = () => {
   sessionPassword = null
+  chrome.storage.session.set({ sessionPassword: '' })
   console.log('cleared password.')
 }
 
@@ -68,13 +77,9 @@ chrome.runtime.onInstalled.addListener(async (opt) => {
     })
   }
 
-  // 清除密码，当扩展关闭或重新加载时
   chrome.runtime.onStartup.addListener(() => {
     clearPassword()
   })
-
-  // // @ts-ignore
-  // const go = new Go(); // 假设你已经有了 Go 的实例化对象
 
   // WebAssembly.instantiateStreaming(fetch(myWasmModule), go.importObject).then(result => {
   //   go.run(result.instance);
@@ -96,27 +101,40 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       InitConfig(message.data)
       break
     case 'isUnlocked':
+      // @ts-ignore
       return sendResponse({
         type: 'isUnlocked',
         data: { status: sessionPassword ? true : false },
       })
     case 'getPassword':
-      console.log('getPassword phrases: ', phrases)
-      // for (const row of phrases) {
-      //   console.log('phrases: ', row)
-      // }
+      // @ts-ignore
       return sendResponse({ type: 'getPassword', data: sessionPassword })
     case 'setPassword':
       sessionPassword = message.data
+      chrome.storage.session.set({ sessionPassword })
+      // @ts-ignore
       return sendResponse({ type: 'setPassword' })
     case 'resetPassword':
-      const newPassword = message.data
-      const oldPassword = sessionPassword
-      console.log('oldPassword: %s newPassword: %s', oldPassword, newPassword)
-      // sessionPassword = message.data
-      return sendResponse({ type: 'resetPassword', data: { status: true } })
+      const { newPassword, phrases } = message.data
+      // @ts-ignore
+      const oldPassword: string = sessionPassword
+      for (let i = 0; i < phrases.length; i++) {
+        const { phrase } = phrases[i]
+        phrases[i].phrase = encryptData(
+          decryptData(phrase, oldPassword),
+          newPassword
+        )
+      }
+      // reset current password
+      sessionPassword = newPassword
+      // @ts-ignore
+      return sendResponse({
+        type: 'resetPassword',
+        data: { status: true, phrases },
+      })
     case 'clearPassword':
       clearPassword()
+      // @ts-ignore
       return sendResponse({ type: 'setPassword' })
     case 'checkPassword':
       // console.log('Checking password: ', message.data.check, message.data.pwd)
@@ -126,18 +144,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       )
       console.log('decrypted: ', decrypted)
       const data = decrypted ? 'Ok' : 'No'
+      // @ts-ignore
       return sendResponse({ type: 'checkPassword', data })
     case 'encryptMnemonic':
       const encryptedMnemonic: string = encryptData(
         message.data,
+        // @ts-ignore
         sessionPassword
       )
+      // @ts-ignore
       return sendResponse({ type: 'encryptMnemonic', data: encryptedMnemonic })
     case 'decryptMnemonic':
       const decryptedMnemonic: string = decryptData(
         message.data,
+        // @ts-ignore
         sessionPassword
       )
+      // @ts-ignore
       return sendResponse({ type: 'decryptMnemonic', data: decryptedMnemonic })
     default:
       break
@@ -157,6 +180,7 @@ function ReceiveEvents(encoded: string) {
 
 function InitConfig(data: configOpt) {
   Object.keys(data).forEach((key) => {
+    // @ts-ignore
     configs[key] = data[key]
   })
   if (sessionPassword === null) {

@@ -10,7 +10,7 @@ import IconEyeClose from '@/components/svgIcon/EyeClose.vue'
 
 // import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app.store'
-import { ref, reactive } from 'vue';
+import { ref, reactive, getCurrentInstance } from 'vue';
 import {  useRouter } from 'vue-router';
 import { TestPassword, sendMessage, postToast, getQuery } from '@/popup/libs/tools'
 
@@ -20,15 +20,17 @@ export default {
   },
   setup() {
     const importWords = getQuery('w')
+    const isClear = ref(getQuery('clear') === 'all')
+    
     const isImported = ref(importWords?importWords.split('|'):[])
     console.log('setup params: ', location.href, isImported.value)
     const showPassword = ref(false);
     const disabledVisible = ref(true);
     const formData = reactive({
-      password: 'Abc123456',
-      passwordConfirm: 'Abc123456',
-      // password: '',
-      // passwordConfirm: '',
+      // password: 'Abc123456',
+      // passwordConfirm: 'Abc123456',
+      password: '',
+      passwordConfirm: '',
       agree: false,
     })
 
@@ -74,12 +76,15 @@ export default {
     };
 
     watch(formData, validateForm);
-
+    const vm = getCurrentInstance()
+    
     const submitForm = async () => {
+      
       validateForm();
       if (!formErrors.value.passwordError && !formErrors.value.passwordConfirmError && !formErrors.value.termsError) {
         try {
-          // console.log('formData: ', formData)
+          // @ts-ignore
+          vm.$root._showLoading('Creating...')
           await sendMessage('setPassword', formData.password)
           // const pwd = await sendMessage('getPassword')
           // console.log('pwd: ', pwd)
@@ -88,27 +93,41 @@ export default {
           // const dePhrase = await sendMessage('encryptMnemonic', phrase)
           // const newPhrase = await sendMessage('decryptMnemonic', dePhrase)
           // console.log('dePhrase: %s newPhrase: %s', dePhrase, newPhrase)
-          await store.createNewUser(isImported.value.length === 12 ? isImported.value.join(' ') : '')
+          // clear all data
+          if (isClear.value) { 
+            // @ts-ignore
+            store.clearAllData()
+          }
+          await store.createNewUser(isImported.value.length === 12 ? isImported.value.join(' ') : '').finally(() => { 
+            // @ts-ignore
+            vm.$root._hideLoading()
+          })
           postToast('Success', 'success')
-          router.push('/common/backupKey')
+          if (isImported.value.length === 12) {
+            router.push('/')
+          } else {
+            router.push('/common/backupKey')
+          }
         } catch (error) {
           console.error('Submission error:', error);
           postToast('error: ' + error)
         }
       }
     };
+    // @ts-ignore
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       console.log('Message received ==password', message, sender, sendResponse)
       sendResponse()
     })
     return {
-      togglePasswordVisibility, formErrors, formData, showPassword, submitForm, disabledVisible, isImported
+      togglePasswordVisibility, formErrors, formData, showPassword, submitForm, disabledVisible, isImported,isClear
     }
   },
   created() {
     // @ts-ignore
     this.$root.setTitle('Set password')
-    console.log('created params: ', this.$route.params, location.href, this.isImported)
+    // console.log('created params: ', this.$route.params, location.href, this.isImported)
+    
   },
 }
 

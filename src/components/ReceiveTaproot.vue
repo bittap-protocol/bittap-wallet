@@ -63,7 +63,7 @@
 <script lang="ts">
 import { useAppStore } from '@/stores/app.store';
 import { NewAssetAddress } from '@/popup/api/btc/blockStream'
-import { payments, initEccLib, crypto, address } from 'bitcoinjs-lib'
+// import { payments, initEccLib, crypto, address } from 'bitcoinjs-lib'
 
 export default {
     name: 'ReceiveTaproot',
@@ -166,9 +166,9 @@ export default {
         }
     }
     .switchItem{
-        @apply text-left w-full my-1 p-3 rounded-md shadow-sm border border-gray-200 border-solid bg-gray-200 transition duration-200 ease-out hover:ease-in;
+        @apply text-left w-full my-1 p-3  rounded-2xl shadow-sm ring-0 border border-gray-100 border-solid bg-gray-200 transition duration-200 ease-out hover:ease-in;
         &:hover, :focus, :active {
-            @apply border-primary bg-primary cursor-pointer shadow-sm shadow-primary ring-primary;
+            @apply border-primary bg-primary cursor-pointer  shadow-sm ring-0 shadow-primary ring-primary;
             .font-bold{
                 @apply text-white;
             }

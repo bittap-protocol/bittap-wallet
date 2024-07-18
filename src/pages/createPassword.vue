@@ -10,9 +10,9 @@ import IconEyeClose from '@/components/svgIcon/EyeClose.vue'
 
 // import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app.store'
-import { ref, reactive, getCurrentInstance } from 'vue';
+import { ref, reactive } from 'vue';
 import {  useRouter } from 'vue-router';
-import { TestPassword, sendMessage, postToast, getQuery } from '@/popup/libs/tools'
+import { TestPassword, sendMessage, postToast, getQuery, showLoading, hideLoading } from '@/popup/libs/tools'
 
 export default {
   components: {
@@ -76,7 +76,6 @@ export default {
     };
 
     watch(formData, validateForm);
-    const vm = getCurrentInstance()
     
     const submitForm = async () => {
       
@@ -84,7 +83,7 @@ export default {
       if (!formErrors.value.passwordError && !formErrors.value.passwordConfirmError && !formErrors.value.termsError) {
         try {
           // @ts-ignore
-          vm.$root._showLoading('Creating...')
+          showLoading('Creating...')
           await sendMessage('setPassword', formData.password)
           // const pwd = await sendMessage('getPassword')
           // console.log('pwd: ', pwd)
@@ -100,7 +99,7 @@ export default {
           }
           await store.createNewUser(isImported.value.length === 12 ? isImported.value.join(' ') : '').finally(() => { 
             // @ts-ignore
-            vm.$root._hideLoading()
+            hideLoading()
           })
           postToast('Success', 'success')
           if (isImported.value.length === 12) {

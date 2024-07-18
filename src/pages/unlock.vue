@@ -21,6 +21,7 @@ v-model="password" :type="showPassword ? 'text' : 'password'"
         <router-link to="/common/importAccount?clear=all" class="btn btn-link no-underline">Forgot your password</router-link>
       </div>
   </div>
+  
 </template>
   
 <script lang="ts">
@@ -32,7 +33,7 @@ import IconLogo from '@/components/svgIcon/logo.vue'
 import IconEyeOpen from '@/components/svgIcon/EyeOpen.vue'
 // @ts-ignore
 import IconEyeClose from '@/components/svgIcon/EyeClose.vue'
-import { TestPassword, sendMessage } from '@/popup/libs/tools'
+import { TestPassword, postToast, sendMessage } from '@/popup/libs/tools'
 
 
 export default {
@@ -60,8 +61,9 @@ export default {
     window.addEventListener('keydown', this.onKeyDownFunction, true)
     console.log('import.meta.env.MODE:', import.meta.env.DEV)
     if(import.meta.env.DEV) { 
-      this.password = 'Abc123456';
+      this.password = 'Abc123456##';
     }
+    // postToast('Success', 'success', 500000)
   },
   methods: {
     togglePasswordVisibility() { 

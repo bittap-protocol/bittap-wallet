@@ -48,6 +48,7 @@ declare module 'vue-router/auto/routes' {
     '/common/createPassword': RouteRecordInfo<'/common/createPassword', '/common/createPassword', Record<never, never>, Record<never, never>>,
     '/common/importAccount': RouteRecordInfo<'/common/importAccount', '/common/importAccount', Record<never, never>, Record<never, never>>,
     '/common/importAssets': RouteRecordInfo<'/common/importAssets', '/common/importAssets', Record<never, never>, Record<never, never>>,
+    '/common/mangeAssets': RouteRecordInfo<'/common/mangeAssets', '/common/mangeAssets', Record<never, never>, Record<never, never>>,
     '/common/networkConfiguration': RouteRecordInfo<'/common/networkConfiguration', '/common/networkConfiguration', Record<never, never>, Record<never, never>>,
     '/common/passwordConfiguration': RouteRecordInfo<'/common/passwordConfiguration', '/common/passwordConfiguration', Record<never, never>, Record<never, never>>,
     '/common/receive': RouteRecordInfo<'/common/receive', '/common/receive', Record<never, never>, Record<never, never>>,

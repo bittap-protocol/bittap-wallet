@@ -35,7 +35,7 @@ const activeAccount = computed(() => store.getActiveAccount())
           <IconMdiInformationSlabCircleOutline></IconMdiInformationSlabCircleOutline>
           <div class="pl-1">Current Wallet is not backed up</div>
         </div>
-        <RouterLink class="no-underline bg-red-500 text-white rounded-full px-4 py-1" to="/common/backupKey">
+        <RouterLink class="no-underline bg-red-500 text-white rounded-full px-4 py-1" to="/common/backupKey?auth=yes">
           Go
         </RouterLink>
       </div>

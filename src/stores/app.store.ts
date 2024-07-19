@@ -23,6 +23,7 @@ import {
   ListTransfers,
   QueryAddressList,
   QueryAssetBalance,
+  getBTCPriceAll,
 } from '@/popup/api/btc/blockStream'
 import { sendMessage, convertXpubToOther, toHex } from '@/popup/libs/tools'
 
@@ -99,6 +100,16 @@ export interface InternalKey {
 
 export const useAppStore = defineStore('app', () => {
   const count = useStorage('count', 0)
+  const btcPrice = useStorage('btcPrice', {
+    time: 0,
+    USD: 0,
+    EUR: 0,
+    GBP: 0,
+    CAD: 0,
+    CHF: 0,
+    AUD: 0,
+    JPY: 0,
+  })
   const name = useStorage('name', 'BitTap')
   const goBack = useStorage('goBack', false)
   const goBackUrl = useStorage('goBackUrl', '')
@@ -719,6 +730,19 @@ export const useAppStore = defineStore('app', () => {
     currentBtcBalance.value = btcBalance
   }
 
+  const updateBtcPrices = async () => {
+    const nowTime = Math.floor(Date.now() / 1000)
+    if (nowTime - 30 < btcPrice.value.time) {
+      return false
+    }
+    // @ts-ignore
+    const { time, USD, EUR, GBP, CAD, CHF, AUD, JPY } = await getBTCPriceAll()
+    if (time && USD) {
+      btcPrice.value = { time, USD, EUR, GBP, CAD, CHF, AUD, JPY }
+    }
+    return btcPrice.value
+  }
+
   const clearAllData = () => {
     count.value = 0
 
@@ -744,6 +768,7 @@ export const useAppStore = defineStore('app', () => {
     phrases,
     receiveAddressList,
     currentBtcBalance,
+    btcPrice,
 
     validateMnemonicWords,
     changeAccountName,
@@ -781,5 +806,6 @@ export const useAppStore = defineStore('app', () => {
     signTapprootAssetTransfer,
     signAnchorPsbt,
     setCurrentBtcBalance,
+    updateBtcPrices,
   }
 })

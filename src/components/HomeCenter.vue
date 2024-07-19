@@ -7,7 +7,7 @@
             {{ $root.formatAssets(accountInfo.balance, 8, 'BTC') }}
           </div>
           <div class="usdt">
-            ≈${{ $root.formatAssets(usdtBalance, 4, '') }}
+            ≈${{ $root.formatAssets(usdtBalance, 2, '') }}
           </div>
         </div>
         <div class="address">
@@ -95,12 +95,11 @@
                     <div class="name">{{ ass.name }}</div>
                     <div class="des">{{ ass.des || ass.name }}</div>
                   </div>
-
-
                 </div>
                 <div class="balance pr-2">
                   <div class="b">{{ $root.formatToken(ass.amount) }}</div>
-                  <div class="u">≈${{ $root.formatToken(showUsdtBalance(ass.amount)) }}</div>
+                  <div v-if="ass.asset_id === 'Base'" class="u">≈${{ $root.formatToken(showUsdtBalance(ass.amount),2) }}</div>
+                  <div v-else class="u">≈${{ $root.formatToken(showTokenBalance(ass.asset_id, ass.amount),2) }}</div>
                 </div>
               </div>
             </template>
@@ -153,9 +152,9 @@
 
 
       <div class="join flex justify-center items-center fixed z-10 w-full bottom-2 left-0 h-10">
-        <RouterLink class="no-underline join-item flex flex-row pr-1 text-primary" to="/common/importAssets">
+        <RouterLink class="no-underline join-item flex flex-row pr-1 text-primary" to="/common/mangeAssets">
         <Import class="mr-1"></Import>
-          Import Assets
+          Assets Mange
         </RouterLink>
         <RouterLink class="no-underline hidden join-item pl-1 flex flex-row justify-center items-center text-primary"
           to="/common/createAssets">
@@ -186,6 +185,7 @@ import { useAppStore } from '@/stores/app.store'
 
 
 import { QueryBtcBalance } from '@/popup/api/btc/blockStream'
+import { showAddressAndAssetId } from '@/popup/libs/tools';
 // import { postToast } from '@/popup/libs/tools';
 // import Import from './svgIcon/Import.vue';
 
@@ -199,8 +199,8 @@ export default {
     const account = computed(() => store.getActiveAccount())
 
     // console.log('account: ', account)
-    const showAddress = (address:string) => {
-        return address?[address.substring(0, 12), address.substring(address.length-12)].join('...') : ''
+    const showAddress = (address: string) => {
+      return showAddressAndAssetId(address, 12, 12)
     }
     const tabs = reactive([
       { label: 'Assets', value: 'token' },
@@ -271,6 +271,13 @@ export default {
     showUsdtBalance(n: number) {
       return Number(this.btcPrice * Number(n))
     },
+    showTokenBalance(asset_id: string, n: number) {
+      return Number(this.getTokenPrice(asset_id) * Number(n))
+    },
+    getTokenPrice(asset_id: string): number { 
+      console.log('getTokenPrice asset_id: ',asset_id)
+      return 0
+    },
     async refreshData() { 
       this.refresh = true
       this.initAccount().then(() => { 
@@ -306,9 +313,15 @@ export default {
       //   this.transfers = this.store.getTransferListForCurrent()
       // })
       const { wallet_id, btcAddress } = this.store.getActiveAccount()
-      const btcBalance = await QueryBtcBalance({ wallet_id, btc_addr: btcAddress })
-      this.store.setCurrentBtcBalance(btcBalance)
-      this.accountInfo.balance = btcBalance
+      QueryBtcBalance({ wallet_id, btc_addr: btcAddress }).then((btcBalance: number) => { 
+        this.store.setCurrentBtcBalance(btcBalance)
+        this.accountInfo.balance = btcBalance
+      })
+      
+      this.store.updateBtcPrices().then(res => {
+        console.log('updateBtcPrices res: ', res)
+        this.btcPrice = res.USD
+      })
       await this.store.updateAssets().then(async () => {
         // @ts-ignore
         this.assets = await this.store.getAssetsBalances()
@@ -317,7 +330,7 @@ export default {
         // @ts-ignore
         this.assets.unshift({
           asset_id: 'Base',
-          amount: btcBalance,
+          amount: this.accountInfo.balance,
           name: 'BTC',
           asset_type: 'base'
         })
@@ -327,7 +340,7 @@ export default {
     listenReceiveAllMessage() {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this
-      
+      // @ts-ignore
       chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log('Message received ==popup', message, sender, sendResponse)
         switch (message.type) {

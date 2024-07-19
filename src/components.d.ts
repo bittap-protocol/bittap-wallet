@@ -25,6 +25,7 @@ declare module 'vue' {
     Refresh: typeof import('./components/svgIcon/Refresh.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Search: typeof import('./components/svgIcon/Search.vue')['default']
     SelectGas: typeof import('./components/SelectGas.vue')['default']
     SendBtc: typeof import('./components/SendBtc.vue')['default']
     SendTaproot: typeof import('./components/SendTaproot.vue')['default']

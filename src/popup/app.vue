@@ -66,7 +66,7 @@ export default {
         actionCls: [],
         cls: [],
         showClose: false,
-      }
+      },
     }
   },
   async mounted(){
@@ -75,6 +75,7 @@ export default {
     }catch (e) {
       // this._toast(e, 'error')
     }
+    // console.log('$router.currentRoute: ', this.$router.currentRoute.value.fullPath)
   },
   methods: {
     async initApp(){
@@ -216,8 +217,8 @@ v-if="isHome && accountCount >= 1"
       <div class="title font-medium text-lg">
         <div v-if="!isHome && title">{{ title }}</div>
       </div>
-      <div class="setting">
-
+      <div class="setting font-normal text-sm">
+          <router-link v-if="$router.currentRoute.value.fullPath === '/common/mangeAssets'" to="/common/importAssets">Import</router-link>
       </div>
     </div>
   </header>

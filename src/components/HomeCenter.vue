@@ -17,7 +17,7 @@
           </div>
           <div class="copy">
             <button class="link" @click="copyAddress(account.btcAddress)">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg width="20" height="20" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd"
                   d="M5.40077 2.60309C5.25832 2.60309 5.14284 2.71858 5.14284 2.86103V4.32741C5.14284 4.67807 4.85857 4.96233 4.50792 4.96233C4.15726 4.96233 3.873 4.67807 3.873 4.32741V2.86103C3.873 2.01726 4.55701 1.33325 5.40077 1.33325H13.1389C13.9826 1.33325 14.6666 2.01726 14.6666 2.86103V10.5991C14.6666 11.4429 13.9826 12.1269 13.1389 12.1269H11.6559C11.3053 12.1269 11.021 11.8426 11.021 11.492C11.021 11.1413 11.3053 10.8571 11.6559 10.8571H13.1389C13.2813 10.8571 13.3968 10.7416 13.3968 10.5991V2.86103C13.3968 2.71858 13.2813 2.60309 13.1389 2.60309H5.40077Z"
                   fill="white" />
@@ -46,7 +46,7 @@
               </linearGradient>
             </defs>
           </svg>
-          <div>Send</div>
+          <div class="font-bold">Send</div>
         </router-link>
         <router-link to="/common/receive" class="receive">
           <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -65,7 +65,7 @@
           </svg>
 
 
-          <div>Receive</div>
+          <div class="font-bold">Receive</div>
         </router-link>
       </div>
     </div>
@@ -320,11 +320,12 @@ export default {
       
       this.store.updateBtcPrices().then(res => {
         console.log('updateBtcPrices res: ', res)
+        // @ts-ignore
         this.btcPrice = res.USD
       })
       await this.store.updateAssets().then(async () => {
         // @ts-ignore
-        this.assets = await this.store.getAssetsBalances()
+        this.assets = await this.store.getUserAssetsBalance()
         console.log('this.assets: ', this.assets)
         // add balance for BTC
         // @ts-ignore
@@ -389,19 +390,20 @@ export default {
   @apply border-0 px-3;
   .top {
     .account {
-      @apply w-full border-0 rounded-2xl flex flex-col justify-between items-center py-2 px-3 pb-10;
+      @apply w-full border-0 rounded-2xl flex flex-col justify-between items-center py-3 px-3 pb-10;
       background: radial-gradient(47.17% 129.97% at 51.3% 44.54%, rgba(0, 123, 255, 0.85) 0%, #8000FF 100%);
       .assets{
         @apply text-left w-full py-2;
         .btc{
-          @apply text-white text-2xl leading-9;
+          @apply text-white text-2xl leading-9 font-bold;
         }
         .usdt{
-          @apply text-white opacity-60 text-base;
+          @apply text-white opacity-60 text-base font-medium;
+          font-feature-settings: 'clig' off, 'liga' off;
         }
       }
       .address {
-        @apply flex flex-row justify-between items-center space-x-2 w-full text-white rounded-xl px-2 text-xs;
+        @apply flex flex-row justify-between items-center space-x-2 w-full text-white rounded-xl py-[5px] px-2 text-xs;
         background: rgba(255,255,255,.3);
       }
     }
@@ -415,7 +417,8 @@ export default {
     .tabs-container{
       @apply flex flex-row flex-nowrap justify-between items-center space-x-2 mb-3 border-b border-solid border-gray-200;
       .tab-btn{
-        @apply btn-sm w-1/2 border-b-0 border-none rounded-none;
+        @apply btn-sm w-1/2 border-b-0 border-none rounded-none font-medium pb-4;
+        color: #60606F;
         border-bottom-width: 2px;
         border-image-source: radial-gradient(47.17% 129.97% at 51.3% 44.54%, rgba(0, 123, 255, 0.0) 49%, #8000FF00 51%);
         border-image-slice: 30%;

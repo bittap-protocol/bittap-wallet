@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { useStorage } from '@vueuse/core'
+import { RemovableRef, useStorage } from '@vueuse/core'
 
 import ECPairFactory, { networks } from 'ecpair'
 import * as ecc from 'tiny-secp256k1'
@@ -42,7 +42,7 @@ export interface Account {
   import?: boolean
   name?: string
 }
-type AccountInfo = Account | null
+export type AccountInfo = Account | null
 
 export const PathKey = {
   m44: "m/44'/0'/0'",
@@ -83,6 +83,15 @@ export interface InternalKey {
   status?: number
 }
 
+export interface tokenInfo {
+  wallet_id?: string
+  asset_id: string
+  icon?: string
+  amount: number
+  name: string
+  asset_type: string
+}
+
 // @ts-ignore
 // import browserCrypto from 'browser-crypto';
 
@@ -113,6 +122,8 @@ export const useAppStore = defineStore('app', () => {
   const name = useStorage('name', 'BitTap')
   const goBack = useStorage('goBack', false)
   const goBackUrl = useStorage('goBackUrl', '')
+
+  const tokens: RemovableRef<tokenInfo[]> = useStorage('tokens', [])
 
   const accountList = useStorage('accountList', [])
   const activeAccount = useStorage('activeAccount', -1)
@@ -251,6 +262,22 @@ export const useAppStore = defineStore('app', () => {
       })
     })
   }
+
+  const getUserAssetsBalance = async (): Promise<tokenInfo[]> => {
+    const wallet_id = getCurrentWalletId()
+    const assets: tokenInfo[] = (await getAssetsBalances()) as tokenInfo[]
+    assets.forEach((row) => {
+      const tokenItem = tokens.value.find(
+        (token) =>
+          token.wallet_id === wallet_id && token.asset_id === row.asset_id
+      )
+      if (tokenItem) {
+        tokenItem.amount = row.amount
+      }
+    })
+    return tokens.value.filter((x: tokenInfo) => x.wallet_id === wallet_id)
+  }
+
   const updateListTransfers = async () => {
     // return ListTransfers().then(res => {
     //   if(res) {
@@ -743,7 +770,34 @@ export const useAppStore = defineStore('app', () => {
     return btcPrice.value
   }
 
-  const clearAllData = () => {
+  const getCurrentWalletId = (): string => {
+    const { wallet_id } = getActiveAccount()
+    return wallet_id as string
+  }
+  const getTokens = (): tokenInfo[] => {
+    const wallet_id = getCurrentWalletId()
+    return tokens.value.filter((token) => token.wallet_id === wallet_id)
+  }
+  const addToken = (token: tokenInfo): void => {
+    token.wallet_id = getCurrentWalletId()
+    tokens.value.push(token)
+  }
+  const removeToken = (asset_id: string): void => {
+    const wallet_id = getCurrentWalletId()
+    const isFound = tokens.value.findIndex(
+      (token) => token.wallet_id === wallet_id && token.asset_id === asset_id
+    )
+    console.log('isFound:', isFound)
+    if (isFound >= 0) {
+      tokens.value.splice(isFound, 1)
+    }
+  }
+
+  const clearAllTokens = (): void => {
+    tokens.value = []
+  }
+
+  const clearAllData = (): void => {
     count.value = 0
 
     accountList.value = []
@@ -807,5 +861,11 @@ export const useAppStore = defineStore('app', () => {
     signAnchorPsbt,
     setCurrentBtcBalance,
     updateBtcPrices,
+    getCurrentWalletId,
+    getTokens,
+    addToken,
+    removeToken,
+    getUserAssetsBalance,
+    clearAllTokens,
   }
 })

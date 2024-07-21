@@ -33,7 +33,9 @@
           <div class="id">{{ ass.asset_type === 'base' ? '' : showAssetId(ass.asset_id) }}</div>
         </div>
         <div class="b">
-          <button v-if="ass.asset_type !== 'base'" class="btn btn-primary" @click="toggleToken(ass.asset_id)">Show</button>
+          <button v-if="ass.asset_type !== 'base'" class="btn btn-primary" @click="toggleToken(ass)">
+            {{ isAddState(ass)?'Hide':'Show' }}
+          </button>
           <button v-else disabled class="btn btn-primary bg-purple-600">Not set</button>
         </div>
       </div>
@@ -45,7 +47,7 @@
 // @ts-ignore
 import IconMdiBitcoin from '~icons/mdi/bitcoin';
 // @ts-ignore
-import { useAppStore } from '@/stores/app.store'
+import { tokenInfo, useAppStore } from '@/stores/app.store'
 // @ts-ignore
 import IconSearch from '@/components/svgIcon/Search.vue'
 
@@ -63,10 +65,15 @@ export default {
       store
     }
   },
-  data() {
+  data(): {
+    searchKeyword: string;
+    assets: tokenInfo[];
+    userAssets: tokenInfo[];
+  } {
     return {
       searchKeyword: '',
-      assets: []
+      assets: [] as tokenInfo[],
+      userAssets: [] as tokenInfo[]
     }
   },
   computed: {
@@ -75,12 +82,17 @@ export default {
       if (!sk) return this.assets;
       // @ts-ignore
       return this.assets.filter(x => x.name.toLowerCase().startsWith(sk) )
-    }
+    },
+    
   },
   created() {
     this.initData()
   },
   methods: {
+    isAddState(tokenRow: tokenInfo) { 
+      if (this.userAssets.length <= 0) { return false }
+      return this.userAssets.some((x:tokenInfo) => x.asset_id === tokenRow.asset_id)
+    },
     showAssetId(asset_id: string): string{
       return showAddressAndAssetId(asset_id, 8, 8)
     },
@@ -91,6 +103,7 @@ export default {
     },
     async loadData() { 
       this.assets = await this.store.getAssetsBalances()
+      this.refreshTokenList()
       // @ts-ignore
       this.assets.push({
         asset_id: 'Base',
@@ -98,10 +111,22 @@ export default {
         asset_type: 'base'
       })
     },
-    toggleToken(asset_id: string): void { 
-      console.log('asset_id: ', asset_id)
+    refreshTokenList() { 
       // @ts-ignore
-      this.$root._toast('Coming soon', 'info')
+      this.userAssets = this.store.getTokens()
+    },
+    toggleToken(token: tokenInfo): void { 
+      const state = this.isAddState(token)
+      console.log('state: ', state)
+      if (state) {
+        // @ts-ignore
+        this.store.removeToken(token.asset_id)
+      } else {
+        // @ts-ignore
+        this.store.addToken(token)
+      }
+      // @ts-ignore
+      this.refreshTokenList()
     }
   }
 }
@@ -126,7 +151,7 @@ export default {
   .token{
     @apply my-2;
     &-item{
-      @apply mb-4 rounded-2xl shadow-xl px-3 py-4 flex flex-row justify-between items-center;
+      @apply mb-4 rounded-2xl shadow-xl px-3 py-4 flex flex-row justify-between items-center shadow-gray-200/90;
       .icon-img{
         @apply flex flex-col justify-center items-center w-[10%] h-10;
         .img{

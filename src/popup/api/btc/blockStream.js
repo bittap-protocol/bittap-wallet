@@ -4,7 +4,7 @@
 // @ts-ignore
 import { useAppStore } from '@/stores/app.store'
 
-import { postToast, toHex } from '../../libs/tools.ts'
+import { postToast, toHex, hideLoading } from '../../libs/tools.ts'
 
 const OptionMethod = {
   POST: 'POST',
@@ -18,7 +18,7 @@ const requestRpc = async (api, data = null, options = {}) => {
   if (netType === 0) {
     throw 'Not currently supported'
   }
-  console.log('netType, url: ', netType, url)
+  // console.log('netType, url: ', netType, url)
   const fetchUrl =
     netType === 1 ? [url, api].join('').replace('//v1/', '/v1/') : ''
   const opts = Object.assign({}, options, {
@@ -42,7 +42,8 @@ const requestRpc = async (api, data = null, options = {}) => {
       console.log('requestRpc ', new URL(fetchUrl).pathname, ' is res: ', data)
       if (data) {
         if (data.code || data.message) {
-          postToast('FetchError: ' + data.message)
+          postToast('FetchError: ' + data.message, 'error', 3000)
+          hideLoading()
           throw 'FetchError: ' + data.message
         } else {
           return data
@@ -271,6 +272,16 @@ export async function ImportAsset(data) {
     throw 'universe_host is required'
   }
   return requestRpc('/api/import-asset', asset, { method: 'POST' })
+}
+export async function ListAssetHistory(params) {
+  const data = Object.assign({}, params)
+  if (!data.wallet_id) {
+    throw 'wallet_id is required'
+  }
+  data.occurred_after = data.occurred_after || 0
+  return requestRpc('/api/list-asset-history', data, { method: 'POST' })
+    .then((res) => res.data.tx_histories)
+    .catch((e) => [])
 }
 
 export async function AddrReceives(filter_addr, filter_status) {

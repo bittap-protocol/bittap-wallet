@@ -27,6 +27,9 @@ export function showLoading(text: string) {
 export function hideLoading() {
   postMsg('hideLoading', {})
 }
+export function hideFullscreen() {
+  postMsg('hideFullscreen', {})
+}
 
 export function sendMessage(
   type: string,

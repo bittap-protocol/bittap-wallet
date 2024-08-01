@@ -1,29 +1,51 @@
 <template>
-  <div class="unlock w-full min-box flex flex-col justify-center items-stretch px-6">
+  <div
+    class="unlock w-full min-box flex flex-col justify-center items-stretch px-6"
+  >
     <div class="logo flex flex-row justify-center items-center">
       <IconLogo />
       <!-- <img src="@/assets/logo.svg" /> -->
     </div>
-    <div class="tips text-left text-md mt-20">Verify the unlock password for assets safe.</div>
+    <div class="tips text-left text-md mt-20">
+      Verify the unlock password for assets safe.
+    </div>
     <div class="mt-4">
       <label class="input-box input-append">
         <input
-v-model="password" :type="showPassword ? 'text' : 'password'"
-          placeholder="Enter password" />
+          v-model="password"
+          :type="showPassword ? 'text' : 'password'"
+          placeholder="Enter password"
+        />
         <div class="icon">
-          <IconEyeOpen v-if="showPassword" @click="togglePasswordVisibility" />
-          <IconEyeClose v-if="!showPassword" @click="togglePasswordVisibility" />
+          <IconEyeOpen
+            v-if="showPassword"
+            @click="togglePasswordVisibility"
+          />
+          <IconEyeClose
+            v-if="!showPassword"
+            @click="togglePasswordVisibility"
+          />
         </div>
       </label>
     </div>
     <div class="mt-4 flex flex-col justify-center items-center">
-        <button class="btn btn-primary btn-block" :disabled="disabledVisible" @click="verifyPassword">Unlock</button>
-        <router-link to="/common/importAccount?clear=all" class="btn btn-link no-underline">Forgot your password</router-link>
-      </div>
+      <button
+        class="btn btn-primary btn-block"
+        :disabled="disabledVisible"
+        @click="verifyPassword"
+      >
+        Unlock
+      </button>
+      <router-link
+        to="/common/importAccount?clear=all"
+        class="btn btn-link no-underline"
+      >
+        Forgot your password
+      </router-link>
+    </div>
   </div>
-  
 </template>
-  
+
 <script lang="ts">
 import { useAppStore } from '@/stores/app.store'
 // @ts-ignore
@@ -33,14 +55,15 @@ import IconLogo from '@/components/svgIcon/logo.vue'
 import IconEyeOpen from '@/components/svgIcon/EyeOpen.vue'
 // @ts-ignore
 import IconEyeClose from '@/components/svgIcon/EyeClose.vue'
-import { TestPassword, postToast, sendMessage } from '@/popup/libs/tools'
-
+import { TestPassword, hideFullscreen, sendMessage } from '@/popup/libs/tools'
 
 export default {
   components: {
-    IconEyeOpen, IconEyeClose, IconLogo
+    IconEyeOpen,
+    IconEyeClose,
+    IconLogo,
   },
-  setup() { 
+  setup() {
     const store = useAppStore()
     return { store }
   },
@@ -52,29 +75,29 @@ export default {
     }
   },
   watch: {
-    password: function () { 
+    password: function () {
       this.checkPasswordDisabled()
-    }
+    },
   },
   created() {
     this.initData()
     window.addEventListener('keydown', this.onKeyDownFunction, true)
     console.log('import.meta.env.MODE:', import.meta.env.DEV)
-    if(import.meta.env.DEV) { 
-      this.password = 'Abc123456##';
+    if (import.meta.env.DEV) {
+      this.password = 'Abc123456##'
     }
     // postToast('Success', 'success', 500000)
   },
   methods: {
-    togglePasswordVisibility() { 
+    togglePasswordVisibility() {
       this.showPassword = !this.showPassword
     },
-    onKeyDownFunction(e) { 
+    onKeyDownFunction(e) {
       if (e.keyCode === 13) {
         this.verifyPassword()
       }
     },
-    checkPasswordDisabled() { 
+    checkPasswordDisabled() {
       this.disabledVisible = !TestPassword(this.password)
     },
     async verifyPassword() {
@@ -84,10 +107,13 @@ export default {
       if (!checkStatus) {
         this.checkPasswordDisabled()
         // @ts-ignore
-        return this.$root._toast('Current password is invalid','error')
+        return this.$root._toast('Current password is invalid', 'error')
       }
       await sendMessage('setPassword', this.password)
-      window.removeEventListener('keydown', this.onKeyDownFunction, { capture: true })
+      window.removeEventListener('keydown', this.onKeyDownFunction, {
+        capture: true,
+      })
+      hideFullscreen()
       this.$router.push('/')
     },
     initData() {
@@ -96,20 +122,23 @@ export default {
       this.$root.setTitle('Unlock wallet')
       const store = useAppStore()
       // const router = useRouter()
-  
+
       store.setGoBackUrl('/')
       store.notGoBack()
-    }
-  }
+    },
+  },
 }
-
-
 </script>
 
 <style lang="scss" scoped>
 .unlock {
-  background: linear-gradient(180deg, #D4E0FF 0%, rgba(212, 224, 255, 0) 22.5%,rgba(212, 224, 255, 0) 82.5%, #D4E0FF 100%);
+  background: linear-gradient(
+    180deg,
+    #d4e0ff 0%,
+    rgba(212, 224, 255, 0) 22.5%,
+    rgba(212, 224, 255, 0) 82.5%,
+    #d4e0ff 100%
+  );
   margin-top: -66px;
-  
 }
 </style>

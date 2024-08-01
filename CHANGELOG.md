@@ -1,5 +1,3 @@
-# Update #Whatever Version Here
-
 # update
 
 - Update README.md
@@ -17,4 +15,8 @@
 | Create address     |     Ok |  - |
 | Receive assets     |     Ok |  - |
 | Show account balance     |     Ok |  - |
+| Show Asset history     |     Ok |  - |
+| Asset display management     |     Ok |  - |
+| Send taproot assets     |     Ok |  - |
+| Send BTC assets     |     Ok |  - |
 | Improve UI     |     in progress |  - |

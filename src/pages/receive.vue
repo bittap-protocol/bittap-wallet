@@ -36,7 +36,7 @@ export default {
     store.setGoBackUrl('/')
     store.isGoBack()
     return {
-
+      store
     }
   },
   data() {
@@ -56,6 +56,13 @@ export default {
     initData() {
       // @ts-ignore
       this.$root.setTitle('Receive')
+      const { backup } = this.store.getActiveAccount()
+      if (!backup) {
+        // @ts-ignore
+        this.$root._toast('Please Backup Your Mnemonic Phrase First', 'warning', 2000)
+        this.$router.push('/common/backupKey?auth=yes')
+        
+      }
     }
   }
 }

@@ -1,3 +1,4 @@
+import { phrases } from '@/stores/app.store'
 import { defineStore } from 'pinia'
 import { RemovableRef, useStorage } from '@vueuse/core'
 
@@ -20,7 +21,7 @@ import { Buffer } from 'buffer'
 import {
   CreateWallet,
   ListAssetsQuery,
-  ListTransfers,
+  ListAssetHistory,
   QueryAddressList,
   QueryAssetBalance,
   getBTCPriceAll,
@@ -92,6 +93,15 @@ export interface tokenInfo {
   asset_type: string
 }
 
+export interface TransferRow {
+  timestamp: number
+  tx_id: string
+  asset_id: string
+  wallet_id?: string
+  amount: number
+  op_type: string
+}
+
 // @ts-ignore
 // import browserCrypto from 'browser-crypto';
 
@@ -128,7 +138,7 @@ export const useAppStore = defineStore('app', () => {
   const accountList = useStorage('accountList', [])
   const activeAccount = useStorage('activeAccount', -1)
 
-  const phrases = useStorage('phrases', [])
+  const phrases: RemovableRef<PhraseRow[]> = useStorage('phrases', [])
 
   const networkType = useStorage('networkType', 1) // default network is 0 for mainnet
   const networkRpcUrl = useStorage(
@@ -139,7 +149,10 @@ export const useAppStore = defineStore('app', () => {
   const currentBtcBalance = useStorage('currentBtcBalance', 0)
 
   const assetsList = useStorage('assetsList', [])
-  const transferList = useStorage('transferList', [])
+  const transferList: RemovableRef<TransferRow[]> = useStorage(
+    'transferList',
+    []
+  )
   const internalKeyList = useStorage('internalKeyList', [])
   const receiveAddressList = useStorage('receiveAddressList', [])
 
@@ -209,6 +222,17 @@ export const useAppStore = defineStore('app', () => {
     goBackUrl.value = url
   }
 
+  const getActiveAccount = (): AccountRow => {
+    return getActiveAccountForIndex(activeAccount.value)
+  }
+  const getActiveAccountForIndex = (index: number): AccountRow => {
+    // @ts-ignore
+    return accountList.value.length <= 0 ||
+      index <= -1 ||
+      index > accountList.value.length - 1
+      ? null
+      : accountList.value[index]
+  }
   const updateAssets = async () => {
     return ListAssetsQuery().then((res) => {
       if (res) {
@@ -278,12 +302,26 @@ export const useAppStore = defineStore('app', () => {
     return tokens.value.filter((x: tokenInfo) => x.wallet_id === wallet_id)
   }
 
+  const getCurrentWalletForAssetBalance = async (
+    asset_id: string
+  ): Promise<number> => {
+    const userAssets = await getUserAssetsBalance()
+    const currentAsset = userAssets.find((x) => x.asset_id === asset_id)
+    console.log('userAssets:', userAssets, currentAsset, asset_id)
+    return currentAsset ? currentAsset.amount : 0
+  }
+
   const updateListTransfers = async () => {
-    // return ListTransfers().then(res => {
-    //   if(res) {
-    //     transferList.value = res
-    //   }
-    // })
+    const wallet_id = getCurrentWalletId()
+    return ListAssetHistory({ wallet_id }).then((logs) => {
+      transferList.value = []
+      if (logs && logs.length > 0) {
+        logs.forEach((row: TransferRow) => {
+          row.wallet_id = wallet_id
+          transferList.value.push(row)
+        })
+      }
+    })
   }
   const getTransferList = () => {
     return transferList.value
@@ -307,18 +345,6 @@ export const useAppStore = defineStore('app', () => {
     receiveAddressList.value = []
     setCurrentBtcBalance(0)
     initConfig()
-  }
-
-  const getActiveAccount = (): AccountRow => {
-    return getActiveAccountForIndex(activeAccount.value)
-  }
-  const getActiveAccountForIndex = (index: number): AccountRow => {
-    // @ts-ignore
-    return accountList.value.length <= 0 ||
-      index <= -1 ||
-      index > accountList.value.length - 1
-      ? null
-      : accountList.value[index]
   }
 
   const AuthenticationPassword = async (pwd: string): Promise<boolean> => {
@@ -542,6 +568,10 @@ export const useAppStore = defineStore('app', () => {
           childNodeScript.neutered().toBase58(),
           'vpub'
         )
+        // @ts-ignore
+        if (accountList.value.some((r) => r.b84PublicKey === b84PublicKey)) {
+          throw 'Mnemonics already exist'
+        }
 
         // add request to web service
         // main for b84PublicKey
@@ -792,6 +822,25 @@ export const useAppStore = defineStore('app', () => {
       tokens.value.splice(isFound, 1)
     }
   }
+  /**
+   * get transaction details
+   * @param hash
+   * @returns TransferRow
+   * @throws Error
+   */
+  const getTransactionDetails = (hash: string): TransferRow | undefined => {
+    if (!hash) {
+      throw 'hash invalidity'
+    }
+    const wallet_id = getCurrentWalletId()
+    const info = transferList.value.find(
+      (row) => row.wallet_id === wallet_id && row.tx_id === hash
+    )
+    if (info) {
+      throw 'transaction data not found'
+    }
+    return info
+  }
 
   const clearAllTokens = (): void => {
     tokens.value = []
@@ -867,5 +916,7 @@ export const useAppStore = defineStore('app', () => {
     removeToken,
     getUserAssetsBalance,
     clearAllTokens,
+    getCurrentWalletForAssetBalance,
+    getTransactionDetails,
   }
 })

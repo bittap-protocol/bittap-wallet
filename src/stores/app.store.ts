@@ -1,5 +1,6 @@
+import { phrases } from '@/stores/app.store'
 import { defineStore } from 'pinia'
-import { useStorage } from '@vueuse/core'
+import { RemovableRef, useStorage } from '@vueuse/core'
 
 import ECPairFactory, { networks } from 'ecpair'
 import * as ecc from 'tiny-secp256k1'
@@ -20,9 +21,10 @@ import { Buffer } from 'buffer'
 import {
   CreateWallet,
   ListAssetsQuery,
-  ListTransfers,
+  ListAssetHistory,
   QueryAddressList,
   QueryAssetBalance,
+  getBTCPriceAll,
 } from '@/popup/api/btc/blockStream'
 import { sendMessage, convertXpubToOther, toHex } from '@/popup/libs/tools'
 
@@ -41,7 +43,7 @@ export interface Account {
   import?: boolean
   name?: string
 }
-type AccountInfo = Account | null
+export type AccountInfo = Account | null
 
 export const PathKey = {
   m44: "m/44'/0'/0'",
@@ -82,6 +84,24 @@ export interface InternalKey {
   status?: number
 }
 
+export interface tokenInfo {
+  wallet_id?: string
+  asset_id: string
+  icon?: string
+  amount: number
+  name: string
+  asset_type: string
+}
+
+export interface TransferRow {
+  timestamp: number
+  tx_id: string
+  asset_id: string
+  wallet_id?: string
+  amount: number
+  op_type: string
+}
+
 // @ts-ignore
 // import browserCrypto from 'browser-crypto';
 
@@ -99,14 +119,26 @@ export interface InternalKey {
 
 export const useAppStore = defineStore('app', () => {
   const count = useStorage('count', 0)
+  const btcPrice = useStorage('btcPrice', {
+    time: 0,
+    USD: 0,
+    EUR: 0,
+    GBP: 0,
+    CAD: 0,
+    CHF: 0,
+    AUD: 0,
+    JPY: 0,
+  })
   const name = useStorage('name', 'BitTap')
   const goBack = useStorage('goBack', false)
   const goBackUrl = useStorage('goBackUrl', '')
 
+  const tokens: RemovableRef<tokenInfo[]> = useStorage('tokens', [])
+
   const accountList = useStorage('accountList', [])
   const activeAccount = useStorage('activeAccount', -1)
 
-  const phrases = useStorage('phrases', [])
+  const phrases: RemovableRef<PhraseRow[]> = useStorage('phrases', [])
 
   const networkType = useStorage('networkType', 1) // default network is 0 for mainnet
   const networkRpcUrl = useStorage(
@@ -117,7 +149,10 @@ export const useAppStore = defineStore('app', () => {
   const currentBtcBalance = useStorage('currentBtcBalance', 0)
 
   const assetsList = useStorage('assetsList', [])
-  const transferList = useStorage('transferList', [])
+  const transferList: RemovableRef<TransferRow[]> = useStorage(
+    'transferList',
+    []
+  )
   const internalKeyList = useStorage('internalKeyList', [])
   const receiveAddressList = useStorage('receiveAddressList', [])
 
@@ -187,6 +222,17 @@ export const useAppStore = defineStore('app', () => {
     goBackUrl.value = url
   }
 
+  const getActiveAccount = (): AccountRow => {
+    return getActiveAccountForIndex(activeAccount.value)
+  }
+  const getActiveAccountForIndex = (index: number): AccountRow => {
+    // @ts-ignore
+    return accountList.value.length <= 0 ||
+      index <= -1 ||
+      index > accountList.value.length - 1
+      ? null
+      : accountList.value[index]
+  }
   const updateAssets = async () => {
     return ListAssetsQuery().then((res) => {
       if (res) {
@@ -240,12 +286,42 @@ export const useAppStore = defineStore('app', () => {
       })
     })
   }
+
+  const getUserAssetsBalance = async (): Promise<tokenInfo[]> => {
+    const wallet_id = getCurrentWalletId()
+    const assets: tokenInfo[] = (await getAssetsBalances()) as tokenInfo[]
+    assets.forEach((row) => {
+      const tokenItem = tokens.value.find(
+        (token) =>
+          token.wallet_id === wallet_id && token.asset_id === row.asset_id
+      )
+      if (tokenItem) {
+        tokenItem.amount = row.amount
+      }
+    })
+    return tokens.value.filter((x: tokenInfo) => x.wallet_id === wallet_id)
+  }
+
+  const getCurrentWalletForAssetBalance = async (
+    asset_id: string
+  ): Promise<number> => {
+    const userAssets = await getUserAssetsBalance()
+    const currentAsset = userAssets.find((x) => x.asset_id === asset_id)
+    console.log('userAssets:', userAssets, currentAsset, asset_id)
+    return currentAsset ? currentAsset.amount : 0
+  }
+
   const updateListTransfers = async () => {
-    // return ListTransfers().then(res => {
-    //   if(res) {
-    //     transferList.value = res
-    //   }
-    // })
+    const wallet_id = getCurrentWalletId()
+    return ListAssetHistory({ wallet_id }).then((logs) => {
+      transferList.value = []
+      if (logs && logs.length > 0) {
+        logs.forEach((row: TransferRow) => {
+          row.wallet_id = wallet_id
+          transferList.value.push(row)
+        })
+      }
+    })
   }
   const getTransferList = () => {
     return transferList.value
@@ -269,18 +345,6 @@ export const useAppStore = defineStore('app', () => {
     receiveAddressList.value = []
     setCurrentBtcBalance(0)
     initConfig()
-  }
-
-  const getActiveAccount = (): AccountRow => {
-    return getActiveAccountForIndex(activeAccount.value)
-  }
-  const getActiveAccountForIndex = (index: number): AccountRow => {
-    // @ts-ignore
-    return accountList.value.length <= 0 ||
-      index <= -1 ||
-      index > accountList.value.length - 1
-      ? null
-      : accountList.value[index]
   }
 
   const AuthenticationPassword = async (pwd: string): Promise<boolean> => {
@@ -504,6 +568,10 @@ export const useAppStore = defineStore('app', () => {
           childNodeScript.neutered().toBase58(),
           'vpub'
         )
+        // @ts-ignore
+        if (accountList.value.some((r) => r.b84PublicKey === b84PublicKey)) {
+          throw 'Mnemonics already exist'
+        }
 
         // add request to web service
         // main for b84PublicKey
@@ -719,7 +787,66 @@ export const useAppStore = defineStore('app', () => {
     currentBtcBalance.value = btcBalance
   }
 
-  const clearAllData = () => {
+  const updateBtcPrices = async () => {
+    const nowTime = Math.floor(Date.now() / 1000)
+    if (nowTime - 30 < btcPrice.value.time) {
+      return false
+    }
+    // @ts-ignore
+    const { time, USD, EUR, GBP, CAD, CHF, AUD, JPY } = await getBTCPriceAll()
+    if (time && USD) {
+      btcPrice.value = { time, USD, EUR, GBP, CAD, CHF, AUD, JPY }
+    }
+    return btcPrice.value
+  }
+
+  const getCurrentWalletId = (): string => {
+    const { wallet_id } = getActiveAccount()
+    return wallet_id as string
+  }
+  const getTokens = (): tokenInfo[] => {
+    const wallet_id = getCurrentWalletId()
+    return tokens.value.filter((token) => token.wallet_id === wallet_id)
+  }
+  const addToken = (token: tokenInfo): void => {
+    token.wallet_id = getCurrentWalletId()
+    tokens.value.push(token)
+  }
+  const removeToken = (asset_id: string): void => {
+    const wallet_id = getCurrentWalletId()
+    const isFound = tokens.value.findIndex(
+      (token) => token.wallet_id === wallet_id && token.asset_id === asset_id
+    )
+    console.log('isFound:', isFound)
+    if (isFound >= 0) {
+      tokens.value.splice(isFound, 1)
+    }
+  }
+  /**
+   * get transaction details
+   * @param hash
+   * @returns TransferRow
+   * @throws Error
+   */
+  const getTransactionDetails = (hash: string): TransferRow | undefined => {
+    if (!hash) {
+      throw 'hash invalidity'
+    }
+    const wallet_id = getCurrentWalletId()
+    const info = transferList.value.find(
+      (row) => row.wallet_id === wallet_id && row.tx_id === hash
+    )
+    if (info) {
+      throw 'transaction data not found'
+    }
+    return info
+  }
+
+  const clearAllTokens = (): void => {
+    tokens.value = []
+  }
+
+  const clearAllData = (): void => {
     count.value = 0
 
     accountList.value = []
@@ -744,6 +871,7 @@ export const useAppStore = defineStore('app', () => {
     phrases,
     receiveAddressList,
     currentBtcBalance,
+    btcPrice,
 
     validateMnemonicWords,
     changeAccountName,
@@ -781,5 +909,14 @@ export const useAppStore = defineStore('app', () => {
     signTapprootAssetTransfer,
     signAnchorPsbt,
     setCurrentBtcBalance,
+    updateBtcPrices,
+    getCurrentWalletId,
+    getTokens,
+    addToken,
+    removeToken,
+    getUserAssetsBalance,
+    clearAllTokens,
+    getCurrentWalletForAssetBalance,
+    getTransactionDetails,
   }
 })

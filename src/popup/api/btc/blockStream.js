@@ -4,7 +4,7 @@
 // @ts-ignore
 import { useAppStore } from '@/stores/app.store'
 
-import { postToast, toHex } from '../../libs/tools.ts'
+import { postToast, toHex, hideLoading } from '../../libs/tools.ts'
 
 const OptionMethod = {
   POST: 'POST',
@@ -18,7 +18,7 @@ const requestRpc = async (api, data = null, options = {}) => {
   if (netType === 0) {
     throw 'Not currently supported'
   }
-  console.log('netType, url: ', netType, url)
+  // console.log('netType, url: ', netType, url)
   const fetchUrl =
     netType === 1 ? [url, api].join('').replace('//v1/', '/v1/') : ''
   const opts = Object.assign({}, options, {
@@ -42,7 +42,8 @@ const requestRpc = async (api, data = null, options = {}) => {
       console.log('requestRpc ', new URL(fetchUrl).pathname, ' is res: ', data)
       if (data) {
         if (data.code || data.message) {
-          postToast('FetchError: ' + data.message)
+          postToast('FetchError: ' + data.message, 'error', 3000)
+          hideLoading()
           throw 'FetchError: ' + data.message
         } else {
           return data
@@ -272,6 +273,16 @@ export async function ImportAsset(data) {
   }
   return requestRpc('/api/import-asset', asset, { method: 'POST' })
 }
+export async function ListAssetHistory(params) {
+  const data = Object.assign({}, params)
+  if (!data.wallet_id) {
+    throw 'wallet_id is required'
+  }
+  data.occurred_after = data.occurred_after || 0
+  return requestRpc('/api/list-asset-history', data, { method: 'POST' })
+    .then((res) => res.data.tx_histories)
+    .catch((e) => [])
+}
 
 export async function AddrReceives(filter_addr, filter_status) {
   return requestRpc(
@@ -399,48 +410,3 @@ export async function getGas() {
   const data = await response.json()
   return data
 }
-
-// /**
-//  * get address information
-//  * @param {string} address
-//  * @returns
-//  */
-// export async function getAddressInfo(p2trAddress) {
-//   const { bitcoin: { addresses } } = mempoolJS({
-//     hostname: 'mempool.space'
-//   });
-
-//   const address = '1wiz18xYmhRX6xStj2b9t1rwWX4GKUgpv';
-//   const myAddress = await addresses.getAddress({ address:p2trAddress });
-//   // myAddress result:
-//   // {
-//   //   address: "1wiz18xYmhRX6xStj2b9t1rwWX4GKUgpv",
-//   //   chain_stats: {
-//   //     funded_txo_count: 5,
-//   //     funded_txo_sum: 15007599040,
-//   //     spent_txo_count: 5,
-//   //     spent_txo_sum: 15007599040,
-//   //     tx_count: 7
-//   //   },
-//   //   mempool_stats: {
-//   //     funded_txo_count: 0,
-//   //     funded_txo_sum: 0,
-//   //     spent_txo_count: 0,
-//   //     spent_txo_sum: 0,
-//   //     tx_count: 0
-//   //   }
-//   // }
-//   return myAddress
-// }
-
-// /**
-//  * Get unconfirmed transaction history
-//  * @param {*} address
-//  */
-// export async function getAddressTxsMempool(p2trAddress) {
-//   const { bitcoin: { addresses } } = mempoolJS({
-//     hostname: 'mempool.space'
-//   });
-//   const addressTxsMempool = await addresses.getAddressTxsMempool({ address:p2trAddress });
-//   return addressTxsMempool
-// }

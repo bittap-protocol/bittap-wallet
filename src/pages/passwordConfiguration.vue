@@ -1,45 +1,79 @@
 <template>
   <div class="w-full min-box pwd">
-    <div class="w-full py-10 flex flex-col justify-center items-center px-4 ">
+    <div class="w-full py-10 flex flex-col justify-center items-center px-4">
       <div class="item form-control">
         <label class="input-box input-append">
           <input
-  v-model="password" :type="showPassword ? 'text' : 'password'"
-            placeholder="Current password" />
+            v-model="password"
+            :type="showPassword ? 'text' : 'password'"
+            placeholder="Current password"
+          />
           <div class="icon">
-            <IconEyeOpen v-if="showPassword" @click="togglePasswordVisibility" />
-            <IconEyeClose v-if="!showPassword" @click="togglePasswordVisibility" />
+            <IconEyeOpen
+              v-if="showPassword"
+              @click="togglePasswordVisibility"
+            />
+            <IconEyeClose
+              v-if="!showPassword"
+              @click="togglePasswordVisibility"
+            />
           </div>
         </label>
       </div>
       <div class="item form-control">
         <label class="input-box input-append">
           <input
-  v-model="newPassword" :type="showPassword ? 'text' : 'password'"
-            placeholder="New password" />
+            v-model="newPassword"
+            :type="showPassword ? 'text' : 'password'"
+            placeholder="Enter 8-12 letters and numbers"
+          />
           <div class="icon">
-            <IconEyeOpen v-if="showPassword" @click="togglePasswordVisibility" />
-            <IconEyeClose v-if="!showPassword" @click="togglePasswordVisibility" />
+            <IconEyeOpen
+              v-if="showPassword"
+              @click="togglePasswordVisibility"
+            />
+            <IconEyeClose
+              v-if="!showPassword"
+              @click="togglePasswordVisibility"
+            />
           </div>
         </label>
       </div>
       <div class="item form-control">
         <label class="input-box input-append">
           <input
-  v-model="confirmPassword" :type="showPassword ? 'text' : 'password'"
-            placeholder="Confirm password" />
+            v-model="confirmPassword"
+            :type="showPassword ? 'text' : 'password'"
+            placeholder="Confirm the password"
+          />
           <div class="icon">
-            <IconEyeOpen v-if="showPassword" @click="togglePasswordVisibility" />
-            <IconEyeClose v-if="!showPassword" @click="togglePasswordVisibility" />
+            <IconEyeOpen
+              v-if="showPassword"
+              @click="togglePasswordVisibility"
+            />
+            <IconEyeClose
+              v-if="!showPassword"
+              @click="togglePasswordVisibility"
+            />
           </div>
         </label>
       </div>
 
-      <button class="button" :disabled="password.length < 8  || newPassword.length < 8  || newPassword === confirmPassword" @click="changePassword">Change password</button>
+      <button
+        class="button"
+        :disabled="
+          password.length < 8 ||
+          newPassword.length < 8 ||
+          newPassword === confirmPassword
+        "
+        @click="changePassword"
+      >
+        Change password
+      </button>
     </div>
   </div>
 </template>
-  
+
 <script lang="ts">
 // @ts-ignore
 import { useAppStore } from '@/stores/app.store'
@@ -52,17 +86,17 @@ import IconEyeClose from '@/components/svgIcon/EyeClose.vue'
 
 export default {
   components: {
-    IconEyeOpen, IconEyeClose
+    IconEyeOpen,
+    IconEyeClose,
   },
   setup() {
-    
     const store = useAppStore()
     // const router = useRouter()
 
     store.setGoBackUrl('')
     store.isGoBack()
     return {
-      store
+      store,
     }
   },
   data() {
@@ -74,10 +108,22 @@ export default {
     }
   },
   computed: {
-    TestOk() { 
-      console.log('test: ', TestPassword(this.password) && TestPassword(this.newPassword) && TestPassword(this.confirmPassword), this.password.length < 8, this.newPassword.length < 8 , this.newPassword === this.confirmPassword )
-      return TestPassword(this.password) && TestPassword(this.newPassword) && TestPassword(this.confirmPassword)
-    }
+    TestOk() {
+      console.log(
+        'test: ',
+        TestPassword(this.password) &&
+          TestPassword(this.newPassword) &&
+          TestPassword(this.confirmPassword),
+        this.password.length < 8,
+        this.newPassword.length < 8,
+        this.newPassword === this.confirmPassword
+      )
+      return (
+        TestPassword(this.password) &&
+        TestPassword(this.newPassword) &&
+        TestPassword(this.confirmPassword)
+      )
+    },
   },
   created() {
     // @ts-ignore
@@ -88,47 +134,47 @@ export default {
       // @ts-ignore
       this.$root.setTitle('Password configuration')
     },
-    togglePasswordVisibility() { 
+    togglePasswordVisibility() {
       this.showPassword = !this.showPassword
     },
-    async changePassword(){
-      if(!TestPassword(this.password)) {
+    async changePassword() {
+      if (!TestPassword(this.password)) {
         // @ts-ignore
-        return this.$root._toast('Current password format is invalid','error')
+        return this.$root._toast('Current password format is invalid', 'error')
       }
-      if(!TestPassword(this.newPassword)) {
+      if (!TestPassword(this.newPassword)) {
         // @ts-ignore
-        return this.$root._toast('New password format is invalid','error')
+        return this.$root._toast('New password format is invalid', 'error')
       }
-      if(this.newPassword != this.confirmPassword) {
+      if (this.newPassword != this.confirmPassword) {
         // @ts-ignore
-        return this.$root._toast('The new password is different from the confirmed password','error')
+        return this.$root._toast(
+          'The new password is different from the confirmed password',
+          'error'
+        )
       }
       // Authentication password
-      if(await this.store.AuthenticationPassword(this.password)) {
+      if (await this.store.AuthenticationPassword(this.password)) {
         // @ts-ignore
-        return this.$root._toast('Current password is invalid','error')
+        return this.$root._toast('Current password is invalid', 'error')
       }
-      
+
       // Change password
       // @ts-ignore
       await this.store.resetPassword(this.newPassword)
       // @ts-ignore
-      this.$root._toast('Password changed','success')
-
-    }
-  }
+      this.$root._toast('Password changed', 'success')
+    },
+  },
 }
-
-
 </script>
 
 <style lang="scss" scoped>
 .pwd {
-  .item{
-    @apply mb-4 w-full ;
-    .field{
-      @apply w-full ;
+  .item {
+    @apply mb-4 w-full;
+    .field {
+      @apply w-full;
     }
   }
 }

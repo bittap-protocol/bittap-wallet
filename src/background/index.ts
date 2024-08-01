@@ -192,7 +192,7 @@ function InitConfig(data: configOpt) {
 
 function ActionSubscribeReceive() {
   const { networkRpcUrl } = configs
-  console.log('networkRpcUrl: ', networkRpcUrl, encodes)
+  // console.log('networkRpcUrl: ', networkRpcUrl, encodes)
   if (!networkRpcUrl || !encodes || encodes.length <= 0) {
     return
   }

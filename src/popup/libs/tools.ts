@@ -27,6 +27,9 @@ export function showLoading(text: string) {
 export function hideLoading() {
   postMsg('hideLoading', {})
 }
+export function hideFullscreen() {
+  postMsg('hideFullscreen', {})
+}
 
 export function sendMessage(
   type: string,
@@ -65,6 +68,27 @@ export function getQuery(key: string): string {
     })
     .find((x) => x.k === key)
   return vRow ? vRow.v : ''
+}
+
+/**
+ * show address and asset_id
+ * @param address
+ * @param left
+ * @param right
+ * @returns
+ */
+export function showAddressAndAssetId(
+  address: string,
+  left: number = 8,
+  right: number = 8,
+  centerString: string = '...'
+): string {
+  return address
+    ? [
+        address.substring(0, left),
+        address.substring(address.length - right),
+      ].join(centerString)
+    : ''
 }
 
 export function randomInt(min: number, max: number): number {

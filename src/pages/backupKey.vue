@@ -116,6 +116,8 @@ export default {
     if (this.isAuth) {
       // @ts-ignore
       this.$root.setTitle('Verify Identity')
+      this.store.setGoBackUrl('/')
+      this.store.isGoBack()
     } else { 
       // @ts-ignore
       this.$root.setTitle('Backup Mnemonic')

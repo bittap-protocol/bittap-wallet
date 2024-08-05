@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full send">
+  <div class="send">
     <label class="form-control w-full max-w-xs">
       <div class="label">
         <span class="label-text">Invoice</span>
@@ -43,16 +43,16 @@
       </div>
     </label>
 
-    <div class="form-control w-full max-w-xs">
+    <div class="form-control">
       <SelectGas v-model="formData.gas" />
     </div>
 
-    <label class="form-control w-full max-w-xs my-4">
+    <label class="form-control">
       <button
         :disabled="
           formData.to.length <= 60 ||
           isSubmitting ||
-          showInfo.name === 'Unknown asset' ||
+          showInfo.name === 'Unknown' ||
           store.currentBtcBalance * 10 ** 8 <= formData.gas ||
           assetBalance <= 0
         "
@@ -138,12 +138,9 @@ export default {
       }
     },
     showAddressInfo() {
-      const store = useAppStore()
-      const assets = store.getAssetsListForSelect()
       console.log(' this.formData: ', this.formData)
       DecodeAssetsAddress({ addr: this.formData.to }).then((res) => {
-        const assetInfo = assets.find((x) => x.asset_id === res.asset_id)
-        res.name = assetInfo ? assetInfo.name : 'Unknown asset'
+        res.name = this.store.getAssetsNameForAssetID(res.asset_id)
         this.showInfo = res
         this.getAssetBalance()
       })
@@ -257,6 +254,7 @@ export default {
 
 <style lang="scss" scoped>
 .send {
+  @apply mx-4;
   .addr-info {
     @apply text-left m-2 leading-6 flex flex-col justify-center items-start bg-gray-100 rounded-md my-4 p-4;
     .item {

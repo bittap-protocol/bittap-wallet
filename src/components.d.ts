@@ -11,7 +11,7 @@ declare module 'vue' {
     ArrowRight: typeof import('./components/svgIcon/ArrowRight.vue')['default']
     AutoTokenName: typeof import('./components/svgIcon/AutoTokenName.vue')['default']
     Changelog: typeof import('./components/Changelog.vue')['default']
-    copy: typeof import('./components/svgIcon/ArrowRight copy.vue')['default']
+    Copy: typeof import('./components/svgIcon/Copy.vue')['default']
     CreateWallet: typeof import('./components/svgIcon/CreateWallet.vue')['default']
     EyeClose: typeof import('./components/svgIcon/EyeClose.vue')['default']
     EyeOpen: typeof import('./components/svgIcon/EyeOpen.vue')['default']

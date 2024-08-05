@@ -106,7 +106,7 @@ export default {
 <style lang="scss" scoped>
 .tr-logs {
   .tr-item {
-    @apply my-2 flex flex-row justify-between items-stretch border-b border-gray-200 border-solid py-2 mb-1;
+    @apply flex flex-row justify-between items-stretch border-b border-gray-200 border-solid py-[18px] mx-[16px];
     .asset {
       @apply flex flex-row justify-start items-center;
       .dir-icon {

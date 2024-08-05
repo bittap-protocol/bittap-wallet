@@ -72,7 +72,7 @@ export default {
 
 <style lang="scss" scoped>
 .receive{
-  @apply px-3;
+  @apply px-0;
   .home-tab{
     @apply py-1 my-2 w-full border-none;
     border-top-width: 1px;
@@ -89,7 +89,7 @@ export default {
     
       }
     .contents{
-      @apply p-10 mx-4;
+      
     }
 
   }

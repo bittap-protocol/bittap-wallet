@@ -1,19 +1,19 @@
 <!-- eslint-disable @typescript-eslint/no-unused-vars -->
 <template>
-  <div class="w-full min-box p-4">
-    <div class="w-full flex flex-row justify-between items-center space-x-3">
+  <div class=" min-box p-4">
+    <div class="flex flex-row flex-nowrap justify-between items-center space-x-3">
       <button
-        class="button"
+        class="btn btn-primary text-sm font-medium px-3"
         @click="createAccount"
       >
-        <IconMdiAccountAdd class="mr-1"></IconMdiAccountAdd>
+        <IconMdiAccountAdd class="size-4"></IconMdiAccountAdd>
         Create account
       </button>
       <button
-        class="button"
+        class="btn btn-primary  text-sm font-medium px-3"
         @click="importAccount"
       >
-        <IconMdiApplicationImport class="mr-1"></IconMdiApplicationImport>
+        <IconMdiApplicationImport class="size-4"></IconMdiApplicationImport>
         Import account
       </button>
     </div>
@@ -27,15 +27,20 @@
           <div>{{ acc.name || 'Account-' + (index + 1) }}</div>
           <button
             class="link flex flex-row justify-between items-center"
-            @click="editName(index, acc.name || 'Account-' + (index + 1))"
+            @click="editName(index, acc.name || 'Account ' + (index + 1))"
           >
             <IconMdiAccountBoxEditOutline
-              class="size-5"
+              class="size-5 mr-1"
             ></IconMdiAccountBoxEditOutline>
             Edit
           </button>
         </div>
-        <div class="address">{{ acc.path }}</div>
+        <div class="address w-full">
+          <div class="balance w-full flex flex-col justify-start items-right pr-2 text-sm font-medium leading-snug">
+            <div class="btc text-[#3c454e] mr-4">Balance: {{ $root.formatAssets(acc.btcBalance, 6, 'BTC') }}</div>
+            <div class="usd text-[#888f99]">≈${{ $root.formatToken($root.showUsdtBalance(acc.btcBalance), 2) }}</div>
+          </div>
+        </div>
         <div class="path flex flex-row justify-start items-center">
           {{ showAddress(acc.btcAddress) }}
           <button
@@ -65,7 +70,7 @@
           <button
             v-if="acc.phraseIndex >= 0"
             @click="backupWords(index)"
-            class="btn btn-primary btn-block flex flex-row justify-center items-center"
+            class="btn btn-text btn-block flex flex-row justify-center items-center"
           >
             <IconMdiPasswordReset class="size-10"></IconMdiPasswordReset>
             Backup mnemonics
@@ -142,7 +147,7 @@ export default {
     store.isGoBack()
     const accounts = computed(() => store.accountList)
     return {
-      accounts,
+      accounts,store
     }
   },
   data() {
@@ -174,9 +179,7 @@ export default {
       modal_save.showModal()
     },
     async saveName() {
-      const store = useAppStore()
-      console.log('this.$store: ', store)
-      store.changeAccountName(this.newAccountName, this.editIndex)
+      this.store.changeAccountName(this.newAccountName, this.editIndex)
       modal_save.close()
       this.$root._toast('Edit success!', 'success')
     },
@@ -190,10 +193,10 @@ export default {
       modal_backup.showModal()
     },
     async createAccount() {
-      const store = useAppStore()
-      await store.createNewUser()
-      // store.updateCurrentAccountBackupState()
+      await this.store.createNewUser()
+      // @ts-ignore
       this.$root._toast('Create account success!', 'success', 1000)
+      this.store.updateAllAccountsBtcBalance()
       setTimeout(() => {
         this.$root._toast(
           'Please Backup Your Mnemonic Phrase First',

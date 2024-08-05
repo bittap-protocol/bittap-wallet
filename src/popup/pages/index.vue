@@ -27,11 +27,11 @@ const activeAccount = computed(() => store.getActiveAccount())
 </script>
 
 <template>
-  <div class="text-center mx-2 flex flex-col gap-y-2">
+  <div class="text-center mx-0 flex flex-col gap-y-2">
     <div class="min-box">
       <div v-if="count > 0 && activeAccount && !activeAccount.backup"
-        class="flex flex-row justify-between items-center m-2 mt-0 bg-red-100 rounded-2xl px-[12px] pr-[7px] py-[8px] text-red-600">
-        <div class="tips flex flex-row items-start justify-start">
+        class="flex flex-row justify-between items-center m-2 mt-0 bg-red-100 rounded-2xl px-[12px] pr-[7px] py-[8px] mx-4 text-red-600">
+        <div class="tips flex flex-row items-center justify-start">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
             <g clip-path="url(#clip0_1_2259)">
               <path d="M7.99998 14.6663C9.84091 14.6663 11.5076 13.9201 12.714 12.7137C13.9204 11.5073 14.6666 9.84061 14.6666 7.99967C14.6666 6.15874 13.9204 4.49207 12.714 3.28563C11.5076 2.0792 9.84091 1.33301 7.99998 1.33301C6.15905 1.33301 4.49238 2.0792 3.28593 3.28563C2.07951 4.49207 1.33331 6.15874 1.33331 7.99967C1.33331 9.84061 2.07951 11.5073 3.28593 12.7137C4.49238 13.9201 6.15905 14.6663 7.99998 14.6663Z" stroke="#F23A3A" stroke-width="1.33333" stroke-linejoin="round"/>
@@ -44,7 +44,7 @@ const activeAccount = computed(() => store.getActiveAccount())
               </clipPath>
             </defs>
           </svg>
-          <div class="text-sm font-normal text-left pl-2">Current Wallet is not backd up</div>
+          <div class="text-sm font-normal text-left pl-1">Current Wallet is not backd up</div>
         </div>
         <RouterLink class="no-underline bg-red-500 text-white rounded-full px-[15px] py-[3px] text-[14px] font-normal" to="/common/backupKey?auth=yes">
           Go

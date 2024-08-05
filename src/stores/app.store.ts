@@ -25,6 +25,8 @@ import {
   QueryAddressList,
   QueryAssetBalance,
   getBTCPriceAll,
+  getBTCUSDTPrice,
+  QueryBtcBalance,
 } from '@/popup/api/btc/blockStream'
 import { sendMessage, convertXpubToOther, toHex } from '@/popup/libs/tools'
 
@@ -53,8 +55,8 @@ export const PathKey = {
 }
 
 export interface AccountRow {
-  address: string | undefined
-  btcAddress?: string | undefined
+  address: string 
+  btcAddress?: string 
   phraseIndex: number
   b84PublicKey: string
   b1017PublicKey: string
@@ -62,7 +64,8 @@ export interface AccountRow {
   path: string
   backup: boolean
   import: boolean
-  name: string
+  name: string,
+  btcBalance?: number
 }
 
 export interface PhraseRow {
@@ -135,7 +138,7 @@ export const useAppStore = defineStore('app', () => {
 
   const tokens: RemovableRef<tokenInfo[]> = useStorage('tokens', [])
 
-  const accountList = useStorage('accountList', [])
+  const accountList: RemovableRef<AccountRow[]> = useStorage('accountList', [])
   const activeAccount = useStorage('activeAccount', -1)
 
   const phrases: RemovableRef<PhraseRow[]> = useStorage('phrases', [])
@@ -248,26 +251,36 @@ export const useAppStore = defineStore('app', () => {
   }
 
   const getAssetsListForSelect = () => {
+    // @ts-ignore
     const assetsListOk = []
     assetsList.value.forEach((row) => {
+      // @ts-ignore
       const rowInfo = assetsListOk.find(
+        // @ts-ignore
         (x) => x.asset_id === row.asset.asset_id
       )
       if (rowInfo) {
+        // @ts-ignore
         rowInfo.total_supply += Number(row.total_supply)
       } else {
+        // @ts-ignore
         assetsListOk.push({
+          // @ts-ignore
           asset_id: row.asset.asset_id,
+          // @ts-ignore
           total_supply: Number(row.asset.total_supply),
+          // @ts-ignore
           name: row.asset.asset_name,
         })
       }
     })
+    // @ts-ignore
     return assetsListOk
   }
-  const getAssetsNameForAssetID = (asset_id: string) => {
+  const getAssetsNameForAssetID = (asset_id: string):string => {
+    // @ts-ignore
     const info = assetsList.value.find((x) => x.asset.asset_id === asset_id)
-    // console.log('asset_id: ',  asset_id, info)
+    // @ts-ignore
     return info ? info.asset.asset_name : 'Unknown'
   }
 
@@ -290,6 +303,7 @@ export const useAppStore = defineStore('app', () => {
   const getUserAssetsBalance = async (): Promise<tokenInfo[]> => {
     const wallet_id = getCurrentWalletId()
     const assets: tokenInfo[] = (await getAssetsBalances()) as tokenInfo[]
+    
     assets.forEach((row) => {
       const tokenItem = tokens.value.find(
         (token) =>
@@ -299,7 +313,9 @@ export const useAppStore = defineStore('app', () => {
         tokenItem.amount = row.amount
       }
     })
-    return tokens.value.filter((x: tokenInfo) => x.wallet_id === wallet_id)
+    const currentTokens = tokens.value.filter((x: tokenInfo) => x.wallet_id === wallet_id) 
+    console.log('tokens.value.length: ', tokens.value.length, tokens.value, currentTokens)
+    return currentTokens.length >0 ? currentTokens : assets
   }
 
   const getCurrentWalletForAssetBalance = async (
@@ -594,8 +610,8 @@ export const useAppStore = defineStore('app', () => {
               backup: _importMnemonic ? true : false,
               import: _importMnemonic ? true : false,
               name: _importMnemonic
-                ? 'Import-' + (accountList.value.length + 1)
-                : 'Account-' + (accountList.value.length + 1),
+                ? 'Import ' + (accountList.value.length + 1)
+                : 'Account ' + (accountList.value.length + 1),
               wallet_id: res.data.wallet_id,
               btcAddress: res.data.address,
             }
@@ -785,6 +801,15 @@ export const useAppStore = defineStore('app', () => {
   }
   const setCurrentBtcBalance = (btcBalance: number) => {
     currentBtcBalance.value = btcBalance
+    const ac = getActiveAccount()
+    ac.btcBalance = btcBalance
+  }
+
+  const updateAllAccountsBtcBalance = async ():Promise<void> => {
+    for(let i =0 ; i < accountList.value.length; i ++ ){
+      const { wallet_id, btcAddress } = accountList.value[i]
+      accountList.value[i].btcBalance = await QueryBtcBalance({ wallet_id, btc_addr: btcAddress })
+    }
   }
 
   const updateBtcPrices = async () => {
@@ -918,5 +943,7 @@ export const useAppStore = defineStore('app', () => {
     clearAllTokens,
     getCurrentWalletForAssetBalance,
     getTransactionDetails,
+    getAssetsNameForAssetID,
+    updateAllAccountsBtcBalance
   }
 })

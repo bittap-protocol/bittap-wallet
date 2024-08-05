@@ -44,8 +44,8 @@ export default {
     return {
       activeTab: 'btc',
       tabs:[
-        { label: 'Send BTC', value: 'btc' },
-        { label: 'Send Taproot Assets', value: 'taproot' },
+        { label: 'BTC Asset', value: 'btc' },
+        { label: 'Taproot Asset', value: 'taproot' },
       ]
     }
   },
@@ -66,7 +66,7 @@ export default {
 
 <style lang="scss" scoped>
 .send{
-  @apply px-3;
+  @apply px-0;
   .home-tab{
     @apply py-2 my-2 w-full border-none;
     border-top-width: 1px;
@@ -83,7 +83,7 @@ export default {
     
       }
     .contents{
-      @apply p-10 mx-4;
+      
     }
 
   }

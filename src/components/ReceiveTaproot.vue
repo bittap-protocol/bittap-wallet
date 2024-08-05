@@ -1,9 +1,9 @@
 <template>
-    <div class="w-full receiveTaproot px-4">
+    <div class="receiveTaproot">
         <div v-if="receiveAddress.length<=0" class="form w-full">
             <label class="form-control w-full max-w-xs">
                 <div class="label">
-                    <span class="label-text">Receive asset
+                    <span class="label-text">Asset
                     </span>
                 </div>
                 <div class="join-input">
@@ -15,10 +15,10 @@
 
             <label class="form-control w-full max-w-xs">
                 <div class="label">
-                    <span class="label-text">Receive quantity
+                    <span class="label-text">Amount
                     </span>
                 </div>
-                <input v-model="formData.amount" type="number" min="1" step="1" placeholder="Please enter" class="field" />
+                <input v-model="formData.amount" type="number" min="1" step="1" placeholder="Enter amount" class="field" />
             </label>
 
             <label class="form-control w-full max-w-xs mt-2">
@@ -139,6 +139,7 @@ export default {
 
 <style lang="scss" scoped>
 .receiveTaproot{
+    @apply mx-4;
     .form-control{
         
     .join-input{

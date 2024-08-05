@@ -24,7 +24,7 @@ defineProps({
     <circle
       cx="18"
       cy="18"
-      r="15"
+      r="16"
       fill="#8000FF"
       stroke="none"
       stroke-width="2"
@@ -33,10 +33,10 @@ defineProps({
       x="18"
       y="22"
       fill="white"
-      font-size="100%"
+      :font-size="name.length > 5 ? '80%' : '100%'"
       text-anchor="middle"
     >
-      {{ name && name.length > 5 ? name.substring(0, 5) : name }}
+      {{ name && name.length > 5 ? name.substring(0, 5).toUpperCase() : name.toUpperCase() }}
     </text>
   </svg>
 </template>

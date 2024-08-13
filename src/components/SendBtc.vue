@@ -1,8 +1,8 @@
 <template>
-  <div class="w-full send">
+  <div class="send">
     <label class="form-control w-full max-w-xs">
       <div class="label">
-        <span class="label-text">Receiving address</span>
+        <span class="label-text">Transfer address</span>
       </div>
       <input
         v-model="formData.recv_addr"
@@ -29,7 +29,8 @@
       <div class="input-field">
         <input
           v-model="formData.amount"
-          type="text"
+          type="number"
+          min="0.00000001"
           :max="store.currentBtcBalance"
           placeholder="Please enter"
           class="field"
@@ -47,14 +48,14 @@
       <SelectGas v-model="formData.fee_rate" />
     </div>
 
-    <label class="form-control w-full max-w-xs my-4">
+    <label class="form-control w-full max-w-xs ">
       <button
         :disabled="
           Number(formData.amount) <= 0 ||
           formData.recv_addr.length != 44 ||
           isSubmitting ||
           !isBtcAddressOk() ||
-          store.currentBtcBalance * 10 ** 8 >
+          store.currentBtcBalance * 10 ** 8 <
             formData.amount * 10 ** 8 + Number(formData.fee_rate) * 2
         "
         class="button"
@@ -235,5 +236,6 @@ export default {
 
 <style lang="scss" scoped>
 .send {
+  @apply mx-4;
 }
 </style>

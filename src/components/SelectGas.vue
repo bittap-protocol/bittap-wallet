@@ -19,10 +19,10 @@
       <input
         class="input"
         :value="modelValue"
-        @input="$emit('update:modelValue', Number($event.target.value))"
         type="number"
         min="1"
         placeholder="Custom gas fee"
+        @input="$emit('update:modelValue', Number($event.target.value))"
       />
       <div class="badge badge-primary sat">Sats</div>
     </div>
@@ -61,13 +61,13 @@
           </a>
         </div>
         <div
-          class="choose"
           v-if="tabActive === 'Recommend'"
+          class="choose"
         >
           <label
             v-for="(item, index) in categories"
             :key="index"
-            :class="['item', formDataGas === item.gas ? 'active' : '']"
+            :class="['item', selectedCate === item.name ? 'active' : '']"
             @click="setFormDataGas(item)"
           >
             <div class="iconInfo">
@@ -83,20 +83,22 @@
             <div class="ch">
               <input
                 type="checkbox"
-                :checked="formDataGas === item.gas"
+                :value="item.name"
+                :checked="item.name === showCate"
+                @change="onChangeHandle(item)"
                 class="checkbox checkbox-primary"
               />
             </div>
           </label>
         </div>
         <div
-          class="custom"
           v-if="tabActive === 'Custom'"
+          class="custom"
         >
           <div class="name">SATS</div>
           <input
-            class="field"
             v-model="formDataGas"
+            class="field"
             type="number"
             min="1"
             placeholder="Enter sats"
@@ -119,7 +121,7 @@
 // @ts-ignore
 import IconamoonArrowDown2Fill from '~icons/iconamoon/arrow-down-2-fill'
 import { getGas } from '@/popup/api/btc/blockStream'
-import { randomInt, showLoading } from '@/popup/libs/tools'
+import { randomInt } from '@/popup/libs/tools'
 // @ts-ignore
 import Fast from './svgIcon/Fast.vue'
 // @ts-ignore
@@ -146,6 +148,7 @@ export default {
         { name: 'Medium', key: 'halfHourFee', gas: 0 },
         { name: 'Slow', key: 'economyFee', gas: 0 },
       ],
+      selectedCate: '',
       timer: null,
       formDataGas: 0,
       tabActive: 'Recommend',
@@ -174,10 +177,6 @@ export default {
     this.dialogId = ['modal_select_gas', Date.now(), randomInt(1, 1000)].join(
       '_'
     )
-    console.log('SelectGas created', this.modelValue, this.dialogId)
-    // this.gasValue = this.value
-    // @ts.ignore
-    // this.value = this.value;
     this.initGasPrice()
     // @ts-ignore
     this.timer = setInterval(() => {
@@ -196,20 +195,17 @@ export default {
       // @ts-ignore
       document.getElementById(this.dialogId).showModal()
     },
+    onChangeHandle(item: {name: string, gas: number}){
+      this.selectedCate = item.name; 
+      this.formDataGas = item.gas
+    },
     // @ts-ignore
     showCateName() {
-      // @ts-ignore
-      const isCate = this.getCate()
-      if (isCate) {
-        return isCate.name
+      if (this.tabActive === 'Recommend') {
+        return this.selectedCate
       } else {
         return 'Custom'
       }
-    },
-    // @ts-ignore
-    getCate() {
-      // @ts-ignore
-      return this.categories.find((x) => x.gas === Number(this.modelValue))
     },
     // @ts-ignore
     setFormDataGas({ gas }) {
@@ -241,10 +237,12 @@ export default {
           if (r) {
             // @ts-ignore
             r.gas = value
-            if (Number(this.formDataGas) === 0 && key === 'halfHourFee') {
+            if (Number(this.formDataGas) === 0 && key === 'halfHourFee' && this.selectedCate === '') {
               // @ts-ignore
               this.formDataGas = value
+              this.selectedCate = 'Medium'
               this.$emit('update:modelValue', this.formDataGas)
+              console.log('selected gas is default Medium', Date.now())
             }
           }
         }
@@ -260,11 +258,11 @@ export default {
 </script>
 <style lang="scss" scoped>
 .select-gas {
-  @apply w-full py-2;
+  @apply w-full py-0;
   .box {
     @apply w-full flex flex-row justify-start items-center;
     .label {
-      @apply pr-10;
+      @apply pr-10 text-black text-sm leading-snug font-normal;
     }
   }
   .checkBtn {

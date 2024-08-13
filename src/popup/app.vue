@@ -12,7 +12,6 @@ import { useAppStore } from '@/stores/app.store'
 
 import {
   hideFullscreen,
-  hideLoading,
   randomInt,
   sendMessage,
   showAddressAndAssetId,
@@ -205,10 +204,7 @@ export default {
       return [Number(balance).toFixed(len), symbol].join(' ')
     },
     showAssetName(asset_id: string): string {
-      // @ts-ignore
-      const tokenInfo = this.assets.find((x) => x.asset_id === asset_id)
-      // @ts-ignore
-      return tokenInfo ? tokenInfo.name : 'Unknown asset'
+      return this.store.getAssetsNameForAssetID(asset_id)
     },
     showUsdtBalance(n: number) {
       return Number(this.btcPrice * Number(n))

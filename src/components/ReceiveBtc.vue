@@ -1,9 +1,9 @@
 <template>
-    <div class="w-full flex flex-col justify-center items-center receive">
-        <div class="w-full py-4 flex flex-row justify-center items-center mt-5">
+    <div class="flex flex-col justify-center items-center receive">
+        <div class="py-4 flex flex-row justify-center items-center mt-5">
             <VueQr :text="account.btcAddress" :size="200" class="bg-box"></VueQr>
         </div>
-        <div class="w-full py-4 px-2 my-1 flex flex-row justify-between items-center br">
+        <div class="py-4 px-2 my-1 flex flex-row justify-between items-center br">
             <div class="address">
                 {{ account.btcAddress }}
             </div>
@@ -49,6 +49,7 @@ export default {
 
 <style lang="scss" scoped>
 .receive{
+    @apply mx-4;
     .address{
         word-break: break-all;
         @apply pr-1 font-mono;

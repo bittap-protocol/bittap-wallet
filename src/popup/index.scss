@@ -14,7 +14,7 @@ body {
 }
 
 .button {
-  @apply p-4 bg-primary text-white w-full shadow-sm shadow-primary flex flex-row justify-center space-x-1;
+  @apply py-[14px] bg-primary text-white w-full shadow-sm shadow-primary flex flex-row justify-center space-x-1 text-base font-medium;
   &:hover, :focus, :focus-visible, :focus-within, :active {
     @apply bg-purple-700 shadow-sm shadow-purple-600 opacity-80;
   }
@@ -69,7 +69,7 @@ body {
   &-append{
     @apply flex flex-row justify-between items-center w-full mb-1 bg-white pl-2 py-2;
     input{
-      @apply bg-transparent border-0 outline-0 ring-0;
+      @apply bg-transparent border-0 outline-0 ring-0 w-full;
       &:hover, &:focus, &:focus-visible, &:focus, &:focus, &:focus-within {
         @apply bg-transparent border-0 outline-0 ring-0;
       }
@@ -97,6 +97,7 @@ body {
 
 
 .form-control {
+  @apply mb-6;
   .label {
     .faq {
       height: 16px;
@@ -108,7 +109,7 @@ body {
       padding: 1px;
     }
     .label-text{
-      @apply text-black text-sm leading-snug;
+      @apply text-black text-sm leading-snug font-normal;
     }
   }
   
@@ -127,6 +128,14 @@ body {
     
     &[type=password]::-ms-reveal {
       display: none;
+    }
+    &::-webkit-outer-spin-button, &::-webkit-inner-spin-button{
+      -webkit-appearance: none;
+    }
+    &[type=number]{
+      -webkit-appearance: none;
+      -moz-appearance: textfield;
+      appearance: none;
     }
   }
   .encode {
@@ -159,7 +168,7 @@ body {
       position: absolute;
       margin-top: -42px;
       right: 10%;
-      @apply text-primary font-bold;
+      @apply text-primary text-sm font-normal leading-snug;
       &:hover {
         @apply opacity-80;
       }

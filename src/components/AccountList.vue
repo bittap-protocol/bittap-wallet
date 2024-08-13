@@ -5,7 +5,7 @@
       @click="showDialog"
     >
       <span class="pl-2 pr-0 font-medium text-base">
-        {{ activeAccountInfo.name || 'Account-' + (activeAccountIndex + 1) }}
+        {{ activeAccountInfo.name || 'Account ' + (activeAccountIndex + 1) }}
       </span>
       <span>
         <svg
@@ -47,28 +47,36 @@
             <div
               class="name text-base flex flex-row justify-between items-center w-full"
             >
-              <div class="name-label flex flex-row justify-start items-center">
-                <span class="block">
-                  {{ acc.name || 'Account-' + (index + 1) }}
-                </span>
-                <span
-                  v-if="acc.import"
-                  class="block w-10 h-3.5 bg-gradient-to-b from-[#007bff] to-[#8000ff] rounded text-white text-[10px] font-normal ml-1 leading-[12px] text-center"
-                >
-                  Import
-                </span>
+              <div class="name-label flex flex-col justify-center items-start">
+                <div class="name flex flex-row justify-start items-center">
+                  <span class="block text-[#131211]">
+                    {{ acc.name || 'Account-' + (index + 1) }}
+                  </span>
+                  <span
+                    v-if="acc.import"
+                    class="block w-10 h-3.5 bg-gradient-to-b from-[#007bff] to-[#8000ff] rounded text-white text-[10px] font-normal ml-1 leading-[12px] text-center"
+                  >
+                    Import
+                  </span>
+                </div>
+                <div class="address text-ellipsis text-wrap text-[#888f99] text-sm font-medium leading-snug">
+                  {{ showAddress(acc.btcAddress) }}
+                </div>
               </div>
-              <IconMdiCheck
-                v-if="activeAccountIndex === index"
-                class="pl-1 icon active"
-              ></IconMdiCheck>
+              <div class="info flex flex-row justify-end items-center">
+                <div class="balance flex flex-col justify-center items-right pr-2 text-sm font-medium leading-snug text-right">
+                  <div class="btc text-[#3c454e]">{{ $root.formatAssets(acc.btcBalance, 6, 'BTC') }}</div>
+                  <div class="usd text-[#888f99]">≈${{ $root.formatToken($root.showUsdtBalance(acc.btcBalance), 2) }}</div>
+                </div>
+                <div class="arrow">
+                  <IconMdiCheck
+                    v-if="activeAccountIndex === index"
+                    class="pl-1 icon active"
+                  ></IconMdiCheck>
+                </div>
+              </div>
             </div>
-            <!-- <div class="path  w-full text-gray-500  w-full">
-                        {{ acc.path}}
-                    </div> -->
-            <div class="address text-ellipsis text-wrap w-full">
-              {{ showAddress(acc.btcAddress) }}
-            </div>
+           
           </div>
         </div>
         <div class="dialog-actions">
@@ -93,15 +101,15 @@
 <script lang="ts">
 // @ts-ignore
 import IconMdiCheck from '~icons/mdi/check'
-// @ts-ignore
-import IconMdiArrowDownDrop from '~icons/mdi/arrow-down-drop'
+// // @ts-ignore
+// import IconMdiArrowDownDrop from '~icons/mdi/arrow-down-drop'
 
 import { useAppStore } from '@/stores/app.store'
 
 export default {
   components: {
     IconMdiCheck,
-    IconMdiArrowDownDrop,
+    // IconMdiArrowDownDrop,
   },
   setup() {
     const store = useAppStore()
@@ -112,12 +120,12 @@ export default {
     // @ts-ignore
     const activeAccountIndex = computed(() => store.activeAccount)
 
-    console.log('activeAccount:', accounts.value, activeAccountIndex.value)
+    // console.log('activeAccount:', accounts.value, activeAccountIndex.value)
 
     const showAddress = (address: string) => {
       return [
-        address.substring(0, 16),
-        address.substring(address.length - 16),
+        address.substring(0, 4),
+        address.substring(address.length - 4),
       ].join('...')
     }
     const showDialog = () => {
@@ -131,6 +139,7 @@ export default {
       // @ts-ignore
       my_modal_select_account.close()
     }
+    store.updateAllAccountsBtcBalance()
     return {
       showDialog,
       selectAccount,
@@ -138,13 +147,13 @@ export default {
       activeAccountInfo,
       accounts,
       activeAccountIndex,
+      store
     }
   },
   methods: {
     async createAccount() {
-      const store = useAppStore()
-      await store.createNewUser()
-      //   store.updateCurrentAccountBackupState()
+      await this.store.createNewUser()
+      this.store.updateAllAccountsBtcBalance()
       // @ts-ignore
       my_modal_select_account.close()
       // @ts-ignore

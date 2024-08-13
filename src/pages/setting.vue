@@ -40,6 +40,16 @@
           </router-link>
         </div>
         <div class="item">
+          <a
+            href="javascript:void(0)"
+            @click="$root._toast('Coming soon...')"
+            class="flex flex-row justify-start items-center"
+          >
+            <IconBackup class="mr-2"></IconBackup>
+            Backup Proof of Transaction
+          </a>
+        </div>
+        <div class="item">
           <router-link
             to="/common/aboutWallet"
             class="flex flex-row justify-start items-center"
@@ -64,6 +74,8 @@ import IconMdiPasswordOutline from '~icons/mdi/password-outline'
 import IconMdiWideAreaNetwork from '~icons/mdi/wide-area-network'
 // @ts-ignore
 import IconMdiPasswordReset from '~icons/mdi/password-reset'
+// @ts-ignore
+import IconBackup from '@/components/svgIcon/Backup.vue'
 
 import { sendMessage } from '@/popup/libs/tools'
 
@@ -76,6 +88,7 @@ export default {
     IconMdiPasswordOutline,
     IconMdiWideAreaNetwork,
     IconMdiPasswordReset,
+    IconBackup
   },
   setup() {
     const store = useAppStore()

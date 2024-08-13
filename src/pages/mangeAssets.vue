@@ -41,7 +41,7 @@
         <div class="b">
           <button
             v-if="ass.asset_type !== 'base'"
-            class="btn btn-primary"
+            :class="['btn btn-primary',isAddState(ass) ? 'btn-accent' : '']"
             @click="toggleToken(ass)"
           >
             {{ isAddState(ass) ? 'Hide' : 'Show' }}
@@ -54,6 +54,13 @@
             Not set
           </button>
         </div>
+      </div>
+      <div class="no-result" v-if="showListData.length<=0">
+        <img
+          src="@/assets/notrans.png"
+          height="110"
+          width="120"
+        />
       </div>
     </div>
   </div>
@@ -101,7 +108,7 @@ export default {
       const sk = this.searchKeyword.trim().toLowerCase()
       if (!sk) return this.assets
       // @ts-ignore
-      return this.assets.filter((x) => x.name.toLowerCase().startsWith(sk))
+      return this.assets.filter((x) => x.name.toLowerCase().includes(sk.trim().toLowerCase()))
     },
   },
   created() {
@@ -109,9 +116,9 @@ export default {
   },
   methods: {
     showKeywordsName(name: string) {
-      return this.searchKeyword.length > 0
+      return this.searchKeyword.trim().length > 0
         ? name.toUpperCase().replace(
-            this.searchKeyword.toUpperCase(),
+            this.searchKeyword.trim().toUpperCase(),
             `
             <span class="text-primary p-0 m-0 inline">${this.searchKeyword.toUpperCase()}</span>
             `
@@ -204,6 +211,9 @@ export default {
         }
       }
     }
+  }
+  .no-result{
+    @apply w-full flex flex-row justify-center items-center min-h-[50vh];
   }
 }
 </style>

@@ -64,7 +64,7 @@ export default {
         formData.password,
       ])
       formErrors.value.passwordError = !TestPassword(formData.password)
-        ? 'The password must be 8 to 16 characters starting with an uppercase letter.'
+        ? 'The password must be 8 to 12 characters starting with an uppercase letter.'
         : ''
 
       formErrors.value.passwordConfirmError =

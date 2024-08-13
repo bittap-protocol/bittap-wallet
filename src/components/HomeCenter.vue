@@ -208,7 +208,7 @@
                       <!-- <IconMdiBitcoin
                         class="icon-img text-gray-300"
                       ></IconMdiBitcoin> -->
-                      <IconAutoTokenName :name="ass.name"></IconAutoTokenName>
+                      <IconAutoTokenName :name="ass.name" class="icon-img"></IconAutoTokenName>
                     </div>
                   </div>
                   <div class="names">
@@ -228,22 +228,18 @@
                   <div
                     v-if="ass.asset_id === 'Base'"
                     class="u"
-                  >
-                    ≈${{
+                  >≈${{
                       $root.formatToken($root.showUsdtBalance(ass.amount), 2)
-                    }}
-                  </div>
+                    }}</div>
                   <div
                     v-else
                     class="u"
-                  >
-                    ≈${{
+                  >≈${{
                       $root.formatToken(
                         $root.showTokenBalance(ass.asset_id, ass.amount),
                         2
                       )
-                    }}
-                  </div>
+                    }}</div>
                 </div>
               </div>
             </template>
@@ -279,11 +275,11 @@
         class="join flex justify-center items-center fixed z-10 w-full bottom-2 left-0 h-10"
       >
         <RouterLink
-          class="no-underline join-item flex flex-row pr-1 text-primary"
+          class="no-underline flex flex-row text-center justify-between items-center pr-1 text-primary bg-white rounded-2xl px-4 py-2 pr-4 shadow-xl shadow-gray-200"
           to="/common/mangeAssets"
         >
           <Import class="mr-1"></Import>
-          Assets Mange
+          <span>Assets Mange</span>
         </RouterLink>
         <RouterLink
           class="no-underline hidden join-item pl-1 flex flex-row justify-center items-center text-primary"
@@ -296,7 +292,7 @@
     </div>
   </div>
   <div :class="['refreshIcon']">
-    <button @click="refreshData">
+    <button @click="refreshData" class="bg-white">
       <Refresh :class="['icc', refresh ? 'refreshing' : '']"></Refresh>
     </button>
   </div>
@@ -379,7 +375,7 @@ export default {
       return this.store
         .getTransferList()
         .filter((x: TransferRow) => (x.wallet_id = this.wallet_id))
-        .sort((a: TransferRow, b: TransferRow) => a.timestamp - b.timestamp)
+        // .sort((a: TransferRow, b: TransferRow) => b.timestamp - a.timestamp)
     },
   },
   // computed(() => store.getActiveAccount())
@@ -550,7 +546,7 @@ export default {
 
 <style lang="scss" scoped>
 .home {
-  @apply border-0 px-3 pb-14;
+  @apply border-0 pb-14 px-0;
   .fullWhite {
     position: fixed;
     z-index: 99999;
@@ -561,8 +557,9 @@ export default {
     @apply bg-white;
   }
   .top {
+    @apply px-4;
     .account {
-      @apply w-full border-0 rounded-2xl flex flex-col justify-between items-center py-3 px-3 pb-10;
+      @apply w-full border-0 rounded-2xl flex flex-col justify-between items-center p-3 pb-10;
       background: radial-gradient(
         47.17% 129.97% at 51.3% 44.54%,
         rgba(0, 123, 255, 0.85) 0%,
@@ -593,7 +590,7 @@ export default {
   .home-tab {
     @apply pb-3 pt-1 mb-2 w-full;
     .tabs-container {
-      @apply flex flex-row flex-nowrap justify-between items-center space-x-2 mb-3 border-b border-solid border-gray-200;
+      @apply flex flex-row flex-nowrap justify-between items-center space-x-2 mb-0 border-b border-solid border-gray-200;
       .tab-btn {
         @apply btn-sm w-1/2 border-b-0 border-none rounded-none font-medium pb-4;
         color: #60606f;
@@ -621,26 +618,27 @@ export default {
       }
     }
     .contents {
-      @apply p-10 mx-4;
+      @apply p-0;
       .content-tab {
         min-height: 25vh;
         .token-item {
-          @apply w-full my-2 flex flex-row justify-between items-center border-b border-gray-200 border-solid py-2 mb-1;
+          @apply flex flex-row justify-between items-center border-b border-gray-200 border-solid  py-[18px] mx-[16px] ;
           .b {
-            @apply text-base font-semibold;
+            @apply text-base font-semibold text-right;
           }
           .u {
-            @apply text-gray-400 text-sm font-normal;
+            @apply text-gray-400 text-sm font-normal text-right;
           }
           .iconName {
             @apply flex flex-nowrap flex-row justify-start items-center;
             .icon {
-              @apply flex flex-nowrap flex-row justify-center items-center p-1;
+              @apply flex flex-nowrap flex-row justify-start items-center p-1;
               .icon-img {
                 @apply size-10 rounded-full;
               }
             }
             .names {
+              @apply text-left;
               .name {
                 @apply text-base font-bold uppercase;
               }

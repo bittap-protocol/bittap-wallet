@@ -208,7 +208,7 @@
                       <!-- <IconMdiBitcoin
                         class="icon-img text-gray-300"
                       ></IconMdiBitcoin> -->
-                      <IconAutoTokenName :name="ass.name"></IconAutoTokenName>
+                      <IconAutoTokenName :name="ass.name" class="icon-img"></IconAutoTokenName>
                     </div>
                   </div>
                   <div class="names">

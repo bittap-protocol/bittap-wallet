@@ -10,6 +10,7 @@ declare module 'vue' {
     AccountList: typeof import('./components/AccountList.vue')['default']
     ArrowRight: typeof import('./components/svgIcon/ArrowRight.vue')['default']
     AutoTokenName: typeof import('./components/svgIcon/AutoTokenName.vue')['default']
+    Backup: typeof import('./components/svgIcon/Backup.vue')['default']
     Changelog: typeof import('./components/Changelog.vue')['default']
     Copy: typeof import('./components/svgIcon/Copy.vue')['default']
     CreateWallet: typeof import('./components/svgIcon/CreateWallet.vue')['default']

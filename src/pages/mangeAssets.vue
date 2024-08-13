@@ -41,7 +41,7 @@
         <div class="b">
           <button
             v-if="ass.asset_type !== 'base'"
-            class="btn btn-primary"
+            :class="['btn btn-primary',isAddState(ass) ? 'btn-accent' : '']"
             @click="toggleToken(ass)"
           >
             {{ isAddState(ass) ? 'Hide' : 'Show' }}

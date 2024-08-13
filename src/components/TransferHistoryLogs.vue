@@ -35,14 +35,12 @@
         <div
           v-if="tr.asset_id === ''"
           class="u"
-        >
-          ≈${{ $root.formatToken($root.showUsdtBalance(tr.amount), 2) }}
+        >≈${{ $root.formatToken($root.showUsdtBalance(tr.amount), 2) }}
         </div>
         <div
           v-else
           class="u"
-        >
-          ≈${{
+        >≈${{
             $root.formatToken($root.showTokenBalance(tr.asset_id, tr.amount), 2)
           }}
         </div>
@@ -124,6 +122,7 @@ export default {
       }
     }
     .amount {
+      @apply text-right flex-col justify-center items-end;
       .b {
         @apply text-base font-medium;
       }

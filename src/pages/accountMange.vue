@@ -72,7 +72,7 @@
             @click="backupWords(index)"
             class="btn btn-text btn-block flex flex-row justify-center items-center"
           >
-            <IconMdiPasswordReset class="size-10"></IconMdiPasswordReset>
+            <IconMdiCloudKey class="size-6"></IconMdiCloudKey>
             Backup mnemonics
           </button>
           <!-- <button class="button" @click="backupPrivate(acc, index)"><IconMdiCloudKey class="size-10"></IconMdiCloudKey>Export privateKey</button> -->
@@ -127,6 +127,8 @@ import IconMdiAccountBoxEditOutline from '~icons/mdi/account-box-edit-outline'
 import IconMdiPasswordReset from '~icons/mdi/password-reset'
 import IconMdiCloudKey from '~icons/mdi/cloud-key'
 import IconMdiContentSave from '~icons/mdi/content-save'
+// @ts-ignore
+import IconBackup from '@/components/svgIcon/Backup.vue'
 
 import { useAppStore } from '@/stores/app.store'
 
@@ -138,6 +140,7 @@ export default {
     IconMdiPasswordReset,
     IconMdiCloudKey,
     IconMdiContentSave,
+    IconBackup
   },
   setup() {
     const store = useAppStore()

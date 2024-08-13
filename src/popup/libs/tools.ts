@@ -4,7 +4,7 @@ import AES from 'crypto-js/aes'
 import EncUtf8 from 'crypto-js/enc-utf8'
 
 export function TestPassword(pwd: string) {
-  return /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z\!\@\#\$\%\^\&\*\(\)\_\-+]{8,16}$/.test(
+  return /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z\!\@\#\$\%\^\&\*\(\)\_\-+]{8,12}$/.test(
     pwd
   )
 }

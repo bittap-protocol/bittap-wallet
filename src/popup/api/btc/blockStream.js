@@ -20,7 +20,7 @@ const requestRpc = async (api, data = null, options = {}) => {
   }
   // console.log('netType, url: ', netType, url)
   const fetchUrl =
-    netType === 1 ? [url, api].join('').replace('//v1/', '/v1/') : ''
+    netType !== 0 ? [url, api].join('').replace('//v1/', '/v1/') : ''
   const opts = Object.assign({}, options, {
     method: options.method || 'GET',
     headers: {

@@ -17,10 +17,20 @@
             v-model="networkType"
             type="radio"
             name="networkType"
-            value="1"
+            value="2"
             class="radio radio-primary w-[23px] h-[23px]"
           />
           <span class="label-text w-auto">Testnet</span>
+        </label>
+        <label class="label cursor-pointer pl-4 flex flex-row">
+          <input
+            v-model="networkType"
+            type="radio"
+            name="networkType"
+            value="1"
+            class="radio radio-primary w-[23px] h-[23px]"
+          />
+          <span class="label-text w-auto">Local Custom</span>
         </label>
       </div>
       <div
@@ -92,11 +102,20 @@ export default {
       token: '',
     }
   },
+  watch:{
+    'networkType': function(k,v){
+      if(k!==v) {
+        const nets = store.getNetWorks()
+        this.url = nets[this.networkType].url || store.getNetWorkConfig().url
+      }
+    }
+  },
   created() {
     this.initData()
   },
   methods: {
     initData() {
+      console.log('store:', store)
       store.setGoBackUrl('')
       store.isGoBack()
       // @ts-ignore
@@ -111,28 +130,28 @@ export default {
       // @ts-ignore
       this.token = token
     },
-    changeConfig() {
+    async changeConfig() {
       try {
         // @ts-ignore
-        if (this.networkType === 0) {
-          // @ts-ignore
-          this.url = ''
-          // @ts-ignore
-          this.token = ''
-          // @ts-ignore
-          this.$root._toast('Currently, the mainnet is not supported', 'error')
-          return
-        } else {
+        this.$root._showLoading('Switching network...')
+        // @ts-ignore
+        if (this.networkType !== 0) {
           if (!TestUrl(this.url)) {
+            // @ts-ignore
+            this.$root._hideLoading()
             throw 'Url invalid'
           }
-          // if(this.token === '' || this.token.length < 32) {
-          //   throw 'Token invalid'
-          // }
         }
-        store.changeNetWork(Number(this.networkType), this.url, this.token)
         // @ts-ignore
-        this.$root._toast('The network is configured successfully.', 'success')
+        await store.changeNetWork(Number(this.networkType), this.url, this.token).catch(e =>{
+           console.error(e)
+           // @ts-ignore
+           this.$root._hideLoading()
+        })
+        // @ts-ignore
+        this.$root._hideLoading()
+        // @ts-ignore
+        this.$root._toast('Switching network successfully.', 'success')
         this.refreshConfig()
       } catch (e) {
         console.error('on error: ' + e)

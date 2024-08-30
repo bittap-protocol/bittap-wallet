@@ -22,5 +22,5 @@ export const defineViteConfig = {
   __DISPLAY_NAME__: jsn(packageJson.displayName),
   __CHANGELOG__: jsn(changelog),
   __GIT_COMMIT__: jsn(gitCommit),
-  __GITHUB_URL__: jsn(packageJson.repository.url),
+  __GITHUB_URL__: jsn(packageJson.repository.url)
 }

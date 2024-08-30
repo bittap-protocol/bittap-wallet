@@ -156,6 +156,7 @@ export default {
             &-r{
                 @apply text-white ;
                 flex: 1;
+                padding: 10px 5px;
             }
             &.token-name{
                 @apply uppercase;

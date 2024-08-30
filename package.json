@@ -91,7 +91,7 @@
   },
   "private": true,
   "scripts": {
-    "zip": "jszip-cli add ./dist/build/  --output ./dist/bittap-build-`date +%s`.zip && open ./dist/",
+    "zip": "rm -rf ./dist/zip/*.zip;jszip-cli add ./dist/build/  --output ./dist/zip/bittap-build-`date +%s`.zip && open ./dist/zip/",
     "build": "rm -rf ./dist/build &&vite build --sourcemap && pnpm zip",
     "dev": "rm -rf ./dist/dev && vite",
     "lint": "eslint . --fix --ext js,mjs,cjs,ts,mts,cts,vue",

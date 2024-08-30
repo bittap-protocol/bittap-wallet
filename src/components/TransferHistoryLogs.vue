@@ -3,9 +3,11 @@
     v-if="logs.length > 0 && !loading"
     class="tr-logs"
   >
-    <div
+    <a
       v-for="tr in logs"
       :key="tr.tx_id"
+      :href="txUrl(tr.tx_id)"
+      target="_blank"
       class="tr-item"
     >
       <div class="asset">
@@ -26,7 +28,7 @@
         <div class="b">
           {{
             $root.formatToken(
-              tr.amount,
+              tr.asset_id === '' ? Number(Number(tr.amount) / 10**8 ) : tr.amount,
               tr.asset_id === '' ? 6 : 0,
               tr.asset_id === '' ? 'BTC' : $root.showAssetName(tr.asset_id)
             )
@@ -45,7 +47,7 @@
           }}
         </div>
       </div>
-    </div>
+    </a>
   </div>
   <div
     v-else
@@ -69,13 +71,15 @@
 import IconReceive from '@/components/svgIcon/Receive.vue'
 // @ts-ignore
 import IconSend from '@/components/svgIcon/Send.vue'
+import { getTxUrl } from '@/popup/libs/tools';
 
-import { useAppStore } from '@/stores/app.store'
+import { useAppStore, TransferRow } from '@/stores/app.store'
+type T = TransferRow[]
 export default {
   components: { IconReceive, IconSend },
   props: {
     logs: {
-      type: Array,
+      type: Array<T>,
       required: true,
       default: function () {
         return []
@@ -98,6 +102,11 @@ export default {
       return this.store.btcPrice.USD
     },
   },
+  methods: {
+    txUrl(tx_id:string){
+      return getTxUrl(tx_id,this.store.getNetWorkType() === 0 ? '': 'test3')
+    }
+  }
 }
 </script>
 

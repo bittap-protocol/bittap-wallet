@@ -16,7 +16,6 @@
       class="err-tips"
     >
       The Btc receive address is incorrect, it should be a 44-character length
-      address starting with bcrt1q
     </div>
 
     <label class="form-control w-full max-w-xs">

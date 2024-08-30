@@ -25,8 +25,9 @@ import {
   QueryAssetBalance,
   getBTCPriceAll,
   QueryBtcBalance,
+  getGas,
 } from '@/popup/api/btc/blockStream'
-import { sendMessage, convertXpubToOther, toHex } from '@/popup/libs/tools'
+import { sendMessage, convertXpubToOther, toHex, UnixNow } from '@/popup/libs/tools'
 
 export interface Account {
   address: string
@@ -103,6 +104,18 @@ export interface TransferRow {
   op_type: string
 }
 
+/**
+ * fees
+ */
+export interface Fees {
+  fastestFee: number
+  halfHourFee:number
+  hourFee:number
+  economyFee:number
+  minimumFee:number
+  lastTime: number
+}
+
 // @ts-ignore
 // import browserCrypto from 'browser-crypto';
 
@@ -120,6 +133,8 @@ export interface TransferRow {
 const MainNetUrl = 'https://mainnet.bittap.org'
 const TestNetUrl = 'https://testnet.onebits.org'
 const LocalNetUrl = 'https://devapi.onebits.org'
+
+let RequestFeesLoading = false
 
 export const useAppStore = defineStore('app', () => {
   const count = useStorage('count', 0)
@@ -143,6 +158,7 @@ export const useAppStore = defineStore('app', () => {
   const activeAccount = useStorage('activeAccount', -1)
 
   const phrases: RemovableRef<PhraseRow[]> = useStorage('phrases', [])
+  const fees: RemovableRef<Fees> = useStorage('mempoolFees', {"fastestFee":0,"halfHourFee":0,"hourFee":0,"economyFee":0,"minimumFee":0, lastTime: -1})
 
   const networkType = useStorage('networkType', 1) // default network is 0 for mainnet
   const networkRpcUrl = useStorage(
@@ -150,6 +166,7 @@ export const useAppStore = defineStore('app', () => {
     'https://devapi.onebits.org'
   )
   const networkRpcToken = useStorage('networkRpcToken', '')
+  const networkRpcTokenExpiredTime = useStorage('networkRpcTokenExpiredTime', -1)
   const currentBtcBalance = useStorage('currentBtcBalance', 0)
 
   const assetsList = useStorage('assetsList', [])
@@ -160,6 +177,18 @@ export const useAppStore = defineStore('app', () => {
   const internalKeyList = useStorage('internalKeyList', [])
   const receiveAddressList = useStorage('receiveAddressList', [])
 
+  const getRpcToken = ()=>{
+    if(networkRpcTokenExpiredTime.value < UnixNow() ){
+      networkRpcToken.value = ''
+      return networkRpcToken.value
+    }
+    return networkRpcToken.value.toString()
+  }
+  const setRpcToken = (rpcToken:string):void=>{
+    // console.log('setRpcToken', networkRpcToken.value, rpcToken, new Date().toLocaleDateString())
+    networkRpcToken.value = rpcToken
+    networkRpcTokenExpiredTime.value = UnixNow() + 3600
+  }
   const initConfig = () => {
     if (activeAccount.value < 0) {
       return
@@ -263,6 +292,7 @@ export const useAppStore = defineStore('app', () => {
     networkType.value = nt
     initConfig()
   }
+
 
   // chrome.storage.local.set({ key: value }).then(() => { console.log("Value is set"); });029-61199530
 
@@ -736,6 +766,7 @@ export const useAppStore = defineStore('app', () => {
   const getNetwork = () => {
     return networkType.value === 0 ? networks.bitcoin : networks.testnet
   }
+
   const getNetWorks = () => {
     return [
       {url: MainNetUrl},
@@ -911,7 +942,6 @@ export const useAppStore = defineStore('app', () => {
     const isFound = tokens.value.findIndex(
       (token) => token.wallet_id === wallet_id && token.asset_id === asset_id
     )
-    console.log('isFound:', isFound)
     if (isFound >= 0) {
       tokens.value.splice(isFound, 1)
     }
@@ -953,6 +983,39 @@ export const useAppStore = defineStore('app', () => {
     transferList.value = []
     internalKeyList.value = []
     receiveAddressList.value = []
+  }
+
+  /**
+   * update fees
+   */
+  const updateGasFees = async (): Promise<Fees> => {
+    const feesRes = await getGas()
+    feesRes.lastTime = UnixNow()
+    fees.value = Object.assign({},fees.value, feesRes)
+    RequestFeesLoading = false
+    return fees.value
+  }
+  /**
+   * get fees
+   */
+  const getGasFees = async (): Promise<Fees> => {
+    
+    if(fees.value.lastTime <=0 || fees.value.lastTime + 30 < UnixNow()) {
+      if(RequestFeesLoading === true) {
+        return new Promise<Fees>((resolve, reject) => {
+          setTimeout(() => {
+            getGasFees().then(res => {
+              resolve(res)
+            }).catch(e => {
+              reject(e)
+            })
+          }, 1000)
+        })
+      }
+      RequestFeesLoading = true
+      return await updateGasFees()
+    }
+    return fees.value
   }
 
   return {
@@ -1014,6 +1077,11 @@ export const useAppStore = defineStore('app', () => {
     getTransactionDetails,
     getAssetsNameForAssetID,
     updateAllAccountsBtcBalance,
-    getNetWorks
+    getNetWorks,
+    getNetWorkType,
+    getRpcToken,
+    setRpcToken,
+    getGasFees,
+    updateGasFees
   }
 })

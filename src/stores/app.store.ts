@@ -295,6 +295,7 @@ export const useAppStore = defineStore('app', () => {
             acc.wallet_id = res.data.wallet_id
             acc.btcAddress = res.data.address
             acc.btcBalance = await QueryBtcBalance({ wallet_id: acc.wallet_id, btc_addr: acc.btcAddress })
+            updateAssets()
           })
       }catch (err) {
         console.error(`switch account for ${i} on error: `, err)
@@ -391,9 +392,15 @@ export const useAppStore = defineStore('app', () => {
       
       const assets = await getAssetsBalances()
       const asset_info = assets.find(x=>x.asset_id === asset_id)
-      console.log('assets: ', assets, asset_info, info)
-      info.asset.balance = asset_info.amount
-      info.asset.asset_type = asset_info.asset_type
+      console.log('assets: ',asset_id, assets, asset_info, info)
+      if(asset_info) {
+        info.asset.balance = asset_info.amount
+        info.asset.asset_type = asset_info.asset_type
+      }else{
+        info.asset.balance = 0
+        // TODO: Type here is incorrect
+        info.asset.asset_type = 0
+      }
     }
     return info
   }

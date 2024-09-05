@@ -30,7 +30,7 @@
                 </div>
             </div>
           </div>
-          <div class="balance" v-if="info.asset_type === 0">
+          <div v-if="info.asset_type === 0" class="balance">
             {{ info.asset_id === 'Base' ? 
             $root.formatAssets(info.balance, 8, 'BTC') :
             $root.formatAssets(info.balance, 0, info.asset_name)  }}
@@ -167,6 +167,7 @@
 </template>
 
 <script lang="ts">
+import { useAppStore } from '@/stores/app.store'
 // @ts-ignore
 import IconCopy from '@/components/svgIcon/Copy.vue'
 export default {
@@ -192,6 +193,12 @@ export default {
                 }
             },
         },
+    },
+    setup() {
+        const store = useAppStore()
+        return {
+            store
+        }
     },
     methods: {
         async copyData(text:string) {

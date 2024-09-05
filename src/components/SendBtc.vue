@@ -51,7 +51,7 @@
       <button
         :disabled="
           Number(formData.amount) <= 0 ||
-          formData.recv_addr.length != 44 ||
+          // formData.recv_addr.length != 44 ||
           isSubmitting ||
           !isBtcAddressOk() ||
           store.currentBtcBalance * 10 ** 8 <
@@ -196,7 +196,7 @@ export default {
       this.formData.wallet_id = wallet_id
       const sendData = Object.assign({}, this.formData)
       sendData.amount = Number(sendData.amount) * 10 ** 8
-      sendData.fee_rate = Number(sendData.fee_rate) * 10 ** 3
+      sendData.fee_rate = Number(sendData.fee_rate)
       await TransferBtc(sendData)
         .then((res) => res.data.funded_psbt)
         .then(async (funded_psbt) => {

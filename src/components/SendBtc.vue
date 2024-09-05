@@ -51,11 +51,10 @@
       <button
         :disabled="
           Number(formData.amount) <= 0 ||
-          formData.recv_addr.length != 44 ||
           isSubmitting ||
           !isBtcAddressOk() ||
           store.currentBtcBalance * 10 ** 8 <
-            formData.amount * 10 ** 8 + Number(formData.fee_rate) * 2
+            formData.amount * 10 ** 8 + Number(formData.fee_rate)
         "
         class="button"
         @click="sendConfirm"
@@ -129,13 +128,13 @@ export default {
     setMax() {
       console.log('this.store.currentBtcBalance * 10 ** 8: ', [
         this.store.currentBtcBalance * 10 ** 8,
-        Number(this.formData.fee_rate) * 2,
+        Number(this.formData.fee_rate),
         this.store.currentBtcBalance * 10 ** 8 -
-          Number(this.formData.fee_rate) * 2,
+          Number(this.formData.fee_rate),
         Number(
           Number(
             (this.store.currentBtcBalance * 10 ** 8 -
-              Number(this.formData.fee_rate) * 2) /
+              Number(this.formData.fee_rate)) /
               10 ** 8
           ).toFixed(6)
         ),
@@ -144,7 +143,7 @@ export default {
           Number(
             Number(
               (this.store.currentBtcBalance * 10 ** 8 -
-                Number(this.formData.fee_rate) * 2) /
+                Number(this.formData.fee_rate)) /
                 10 ** 8
             ).toFixed(6)
           )
@@ -155,7 +154,7 @@ export default {
         Number(
           Number(
             (this.store.currentBtcBalance * 10 ** 8 -
-              Number(this.formData.fee_rate) * 2) /
+              Number(this.formData.fee_rate)) /
               10 ** 8
           ).toFixed(6)
         )
@@ -196,7 +195,8 @@ export default {
       this.formData.wallet_id = wallet_id
       const sendData = Object.assign({}, this.formData)
       sendData.amount = Number(sendData.amount) * 10 ** 8
-      sendData.fee_rate = Number(sendData.fee_rate) * 10 ** 3
+      // sendData.fee_rate = Number(sendData.fee_rate) * 10 ** 3
+      sendData.fee_rate = Number(sendData.fee_rate)
       await TransferBtc(sendData)
         .then((res) => res.data.funded_psbt)
         .then(async (funded_psbt) => {

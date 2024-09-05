@@ -62,8 +62,8 @@
 <script lang="ts">
 import { showAddressAndAssetId } from '@/popup/libs/tools'
 import { useAppStore } from '@/stores/app.store'
+// @ts-ignore
 import IconCopy from '@/components/svgIcon/Copy.vue'
-// import { DecodeAssetsAddress } from '@/popup/api/btc/blockStream'
 
 export default {
   name: 'ReceiveTaproot',

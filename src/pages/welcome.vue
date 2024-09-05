@@ -28,9 +28,8 @@ import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app.store'
 const store = useAppStore()
 const router = useRouter()
-
-
 store.notGoBack()
+store.initConfig()
 
 </script>
 

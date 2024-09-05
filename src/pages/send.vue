@@ -20,15 +20,8 @@
 
 <script lang="ts">
 import { useAppStore } from '@/stores/app.store'
-// import sendBtc from './sendBtc.vue'
-
 
 export default {
-  // components: { sendBtc },
-  // components: {
-  //   SendBtc,
-  //   SendTaproot,
-  // },
   setup() {
     
     const store = useAppStore()
@@ -37,7 +30,7 @@ export default {
     store.setGoBackUrl('/')
     store.isGoBack()
     return {
-
+      store
     }
   },
   data() {

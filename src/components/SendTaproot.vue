@@ -67,21 +67,23 @@
 
 <script>
 import { Psbt } from 'bitcoinjs-lib'
-import { useAppStore, PathKey } from '@/stores/app.store'
+import { useAppStore } from '@/stores/app.store'
 import {
   AnchorVirtualPsbt,
   DecodeAssetsAddress,
   TransferAssets,
   PublishTransfer,
 } from '@/popup/api/btc/blockStream'
-import { toHex } from '@/popup/libs/tools'
+import { toHex, getQuery } from '@/popup/libs/tools'
 // import { decodeUnknownKeyVals } from '@/popup/libs/tools';
 
 export default {
   name: 'SendTaproot',
   setup() {
     const store = useAppStore()
-    return { store }
+    const asset_id = getQuery('asset_id')
+    const asset_type = getQuery('asset_type')
+    return { store, asset_id, asset_type }
   },
   data() {
     return {
@@ -131,7 +133,7 @@ export default {
       } else {
         if (
           this.store.currentBtcBalance * 10 ** 8 <
-          Number(this.formData.gas) * 2
+          Number(this.formData.gas)
         ) {
           this.$root._toast('The BTC balance is insufficient', 'warning', 5000)
         }
@@ -210,6 +212,7 @@ export default {
             wallet_id: ac.wallet_id,
             asset_psbts,
             passive_asset_psbts,
+            fee_rate: Number(this.formData.gas)
           })
             .then(async (res) => {
               // console.log('AnchorVirtualPsbt res: ', res)

@@ -23,14 +23,10 @@
   },
   {
     "phraseIndex": 0,
-    "address": "tb1px3te97all8df0j6kmu44p8sqd36e8emsv3ppguwzsls4prmklucq82rsny",
-    "b84PublicKey": "vpub5YuNuu1yYAnxHrUD7GSLDf4kCDA5EjUUqnk2Knm8thBNGgtho3ZaufHxfiz4cmozZPUTrLcpdyeYiziKCSP8LMLuSVSynJNQWjv4PLJovf4",
-    "b1017PublicKey": "vpub5YcbNEgm19bwffB7q5MnTcPFHAbkyozxaKXfYeFNi7h7YbmmxQqdquM7437Hbfv4iFZ9PzeQX52kgtMTvzNZZoRYUmYCqvN68yjjGbJ9XXd",
-    "path": "m/84'/1'/0'",
-    "backup": false,
-    "import": false,
-    "name": "Account-1",
-    "wallet_id": "ed83af5f-5c82-470b-8571-f04c8c16b9b9",
-    "btcAddress": "bcrt1qutv503jgadfj5zsvkrhej97h5wqqm3axft8h4m"
+    "phrase":"mass lonely attitude divorce maid sense copy flavor anger soap pool virus"
+  },
+  {
+    "phraseIndex": 1,
+    "phrase":"advice parade million expect pear cycle proof immune october soup soup laugh"
   }
 ]

@@ -20,7 +20,7 @@
             {{ tr.op_type == '0' ? 'Send' : 'Receive' }}
           </div>
           <div class="time">
-            {{ $root.formatTime(tr.timestamp * 1000) }}
+            {{ tr.timestamp && tr.timestamp>0 ? $root.formatTime(tr.timestamp * 1000) : '' }}
           </div>
         </div>
       </div>
@@ -29,7 +29,7 @@
           {{
             $root.formatToken(
               tr.asset_id === '' ? Number(Number(tr.amount) / 10**8 ) : tr.amount,
-              tr.asset_id === '' ? 6 : 0,
+              tr.asset_id === '' ? 8 : 0,
               tr.asset_id === '' ? 'BTC' : $root.showAssetName(tr.asset_id)
             )
           }}
@@ -37,7 +37,7 @@
         <div
           v-if="tr.asset_id === ''"
           class="u"
-        >≈${{ $root.formatToken($root.showUsdtBalance(tr.amount), 2) }}
+        >≈${{ $root.formatToken($root.showUsdtBalance(Number(tr.amount) / 10**8 ), 2) }}
         </div>
         <div
           v-else

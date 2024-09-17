@@ -2,7 +2,7 @@
   <div class="w-full px-3">
     <div class="history-list">
       <div
-        v-for="row in store.receiveAddressList"
+        v-for="row in store.receiveAddressList.reverse()"
         :key="row.taproot_output_key"
         class="item"
       >
@@ -94,7 +94,7 @@ export default {
     async initData() {
       this.loading = true
       await this.store.getReceiveAddress().then((res) => {
-        console.log('res: ', res)
+        console.log('getReceiveAddress res: ', res)
         this.loading = false
         return res
       })

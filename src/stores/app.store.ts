@@ -92,7 +92,7 @@ export interface tokenInfo {
   icon?: string
   amount: number
   name: string
-  asset_type: string
+  asset_type: string|number
 }
 
 export interface TransferRow {
@@ -369,6 +369,8 @@ export const useAppStore = defineStore('app', () => {
           // @ts-ignore
           asset_id: row.asset.asset_id,
           // @ts-ignore
+          asset_type: row.asset.asset_type || 0,
+          // @ts-ignore
           total_supply: Number(row.asset.total_supply),
           // @ts-ignore
           name: row.asset.asset_name,
@@ -430,8 +432,10 @@ export const useAppStore = defineStore('app', () => {
         (token) =>
           token.wallet_id === wallet_id && token.asset_id === row.asset_id
       )
+      console.log('tokenItem: ', tokenItem)
       if (tokenItem) {
         tokenItem.amount = row.amount
+        tokenItem.asset_type = row.asset_type || 0
       }
     })
     const currentTokens = tokens.value.filter((x: tokenInfo) => x.wallet_id === wallet_id) 

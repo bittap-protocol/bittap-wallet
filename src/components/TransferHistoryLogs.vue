@@ -18,13 +18,14 @@
         <div class="info">
           <div class="dir">
             {{ tr.op_type == '0' ? 'Send' : 'Receive' }}
+            <IconPending v-if="tr.pending" class="ml-[11px]"></IconPending>
           </div>
           <div class="time">
             {{ tr.timestamp && tr.timestamp>0 ? $root.formatTime(tr.timestamp * 1000) : '' }}
           </div>
         </div>
       </div>
-      <div class="amount">
+      <div v-if="!isNft" class="amount">
         <div class="b">
           {{
             $root.formatToken(
@@ -46,6 +47,9 @@
             $root.formatToken($root.showTokenBalance(tr.asset_id, tr.amount), 2)
           }}
         </div>
+      </div>
+      <div v-else class="amount">
+        <div class="b">{{ tr.amount }}</div>
       </div>
     </a>
   </div>
@@ -71,12 +75,15 @@
 import IconReceive from '@/components/svgIcon/Receive.vue'
 // @ts-ignore
 import IconSend from '@/components/svgIcon/Send.vue'
+// @ts-ignore
+import IconPending from '@/components/svgIcon/Pending.vue'
+
 import { getTxUrl } from '@/popup/libs/tools';
 
 import { useAppStore, TransferRow } from '@/stores/app.store'
 type T = TransferRow[]
 export default {
-  components: { IconReceive, IconSend },
+  components: { IconReceive, IconSend, IconPending },
   props: {
     logs: {
       type: Array<T>,
@@ -92,6 +99,13 @@ export default {
         return false
       },
     },
+    isNft: {
+      type: Boolean,
+      required: true,
+      default: function () {
+        return false
+      },
+    }
   },
   setup() {
     const store = useAppStore()
@@ -104,7 +118,7 @@ export default {
   },
   methods: {
     txUrl(tx_id:string){
-      return getTxUrl(tx_id,this.store.getNetWorkType() === 0 ? '': 'test3')
+      return getTxUrl(tx_id,this.store.getNetWorkType() === 0 ? '': 'testnet')
     }
   }
 }
@@ -123,7 +137,7 @@ export default {
       .info {
         @apply flex flex-col justify-center items-start;
         .dir {
-          @apply text-base font-medium;
+          @apply text-base font-medium flex flex-row justify-center items-center;
         }
         .time {
           @apply text-gray-400 text-sm font-normal;

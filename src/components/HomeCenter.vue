@@ -188,12 +188,13 @@
             v-if="activeTab === 'token'"
             class="content-tab"
           >
-            <template v-if="assets.length > 0 && !loading">
+            <template v-if="assets.filter(x => x.asset_type !== 1).length > 0 && !loading">
+              <!-- :to="ass.asset_id === 'Base'? '/': '/common/tokenInfo?asset_id='+ass.asset_id" -->
               <router-link
-                v-for="ass in assets"
+                v-for="ass in assets.filter(x => x.asset_type !== 1)"
                 :key="ass.asset_id"
                 class="token-item"
-                :to="ass.asset_id === 'Base'? '/': '/common/tokenInfo?asset_id='+ass.asset_id"
+                :to="'/common/tokenInfo?asset_id='+ass.asset_id"
               >
                 <div class="iconName">
                   <div class="icon">
@@ -261,13 +262,33 @@
           <div v-if="activeTab === 'nft'" class="content-tab">
             <div
               v-if="!loading"
-              class="flex flex-row justify-center items-center m-5"
+              class="flex flex-row justify-between items-center m-5 "
             >
-              <img
-                src="@/assets/nocollectible.png"
-                height="110"
-                width="120"
-              />
+            <template v-if="assets.filter(x => x.asset_type ===1 && x.amount >= 1).length > 0 && !loading">
+              <router-link
+                v-for="ass in assets.filter(x => x.asset_type ===1 && x.amount >= 1)"
+                :key="ass.asset_id"
+                class="nft-item"
+                :to="ass.asset_id === 'Base'? '/': '/common/tokenInfo?asset_id='+ass.asset_id"
+              >
+                <div class="nft-info">
+                  <div class="name">{{ ass.name }}</div>
+                  <div class="info">
+                    <div class="time">{{ ass.asset_type }}</div>
+                    <div class="amount">X {{ ass.amount }}</div>
+                  </div>
+                </div>
+              </router-link>
+              </template>
+              <template v-else>
+                <div class=" w-full flex flex-row justify-center items-center p-2">
+                  <img
+                    src="@/assets/nocollectible.png"
+                    height="110"
+                    width="120"
+                  />
+                </div>
+              </template>
             </div>
           </div>
 
@@ -291,7 +312,7 @@
           to="/common/mangeAssets"
         >
           <Import class="mr-1"></Import>
-          <span>Assets Mange</span>
+          <span>Assets Manage</span>
         </RouterLink>
         <RouterLink
           class="no-underline hidden join-item pl-1 flex flex-row justify-center items-center text-primary"
@@ -348,7 +369,7 @@ export default {
       return showAddressAndAssetId(address, 12, 12)
     }
     const tabs = reactive([
-      { label: 'Assets', value: 'token' },
+      { label: 'Token', value: 'token' },
       { label: 'Collectibles', value: 'nft' },
       { label: 'History', value: 'history' },
     ])
@@ -387,7 +408,7 @@ export default {
       return this.store
         .getTransferList()
         .filter((x: TransferRow) => (x.wallet_id = this.wallet_id))
-        // .sort((a: TransferRow, b: TransferRow) => b.timestamp - a.timestamp)
+        .sort((a: TransferRow, b: TransferRow) => a.timestamp - b.timestamp)
     },
   },
   // computed(() => store.getActiveAccount())
@@ -474,7 +495,7 @@ export default {
         this.assets = await this.store.getUserAssetsBalance()
         // @ts-ignore
         this.$root.updateGlobalState()
-        // console.log('this.assets: ', this.assets)
+        console.log('this.assets: ', this.assets)
         // add balance for BTC
         // @ts-ignore
         this.assets.unshift({
@@ -651,6 +672,24 @@ export default {
               }
               .des {
                 @apply text-sm text-gray-400 font-normal;
+              }
+            }
+          }
+        }
+        .nft-item{
+          
+          .nft-info{
+            @apply w-[150px] h-[196px] border-primary border border-solid p-0 rounded-md overflow-hidden;
+            .name{
+              @apply text-black text-xl font-semibold text-center leading-[30px] mt-[63px] mb-[68px];
+            }
+            .info{
+              @apply flex flex-row justify-between items-center bg-[#8000FF9E];
+              .time{
+                @apply text-white text-left text-[10px] font-semibold leading-[35px] pl-2;
+              }
+              .amount{
+                @apply text-white text-right text-[10px] font-semibold leading-[35px] pr-2;
               }
             }
           }

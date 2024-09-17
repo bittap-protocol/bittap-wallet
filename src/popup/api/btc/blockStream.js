@@ -4,7 +4,7 @@
 // @ts-ignore
 import { useAppStore } from '@/stores/app.store'
 
-import { postToast, toHex, hideLoading } from '../../libs/tools.ts'
+import { postToast, toHex, hideLoading, isValidBitcoinAddress } from '../../libs/tools.ts'
 
 // Request method
 const OptionMethod = {
@@ -361,7 +361,7 @@ export async function ListAssetHistory(params) {
   }
   data.occurred_after = data.occurred_after || 0
   return requestRpc('/api/list-asset-history', data, { method: 'POST' })
-    .then((res) => res.data.tx_histories)
+    .then((res) => res.data.tx_histories||[])
     .catch((e) => [])
 }
 
@@ -552,4 +552,21 @@ export async function getGas() {
   const response = await fetch('https://mempool.space'+testnet+'/api/v1/fees/recommended')
   const data = await response.json()
   return data
+}
+
+
+// get current gas price
+export async function nslookupDomainInfo(domainOrAddress) {
+  const isAddress = isValidBitcoinAddress(domainOrAddress)
+  
+  const store = useAppStore()
+  const testnet = store.getNetWorkType() === 0 ? '': ''
+  const result = { isAddress, data: null, }
+  if(!isAddress){
+    const response = await fetch('https://tna-btc.com'+testnet+'/api/tapnames/profile?name='+domainOrAddress)
+    result.data = (await response.json()).data
+  }else{
+
+  }
+  return result
 }

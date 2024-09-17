@@ -25,6 +25,7 @@ declare module 'vue' {
     LinkOut: typeof import('./components/svgIcon/LinkOut.vue')['default']
     Logo: typeof import('./components/svgIcon/logo.vue')['default']
     Medium: typeof import('./components/svgIcon/Medium.vue')['default']
+    Pending: typeof import('./components/svgIcon/Pending.vue')['default']
     Receive: typeof import('./components/svgIcon/Receive.vue')['default']
     ReceiveBtc: typeof import('./components/ReceiveBtc.vue')['default']
     ReceiveTaproot: typeof import('./components/ReceiveTaproot.vue')['default']

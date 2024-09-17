@@ -37,8 +37,8 @@ export default {
     return {
       activeTab: 'btc',
       tabs:[
-        { label: 'BTC Asset', value: 'btc' },
-        { label: 'Taproot Asset', value: 'taproot' },
+        { label: 'BTC', value: 'btc' },
+        { label: 'Taproot Assets', value: 'taproot' },
       ]
     }
   },

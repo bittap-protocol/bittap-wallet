@@ -25,8 +25,9 @@ import {
   QueryAssetBalance,
   getBTCPriceAll,
   QueryBtcBalance,
+  getGas,
 } from '@/popup/api/btc/blockStream'
-import { sendMessage, convertXpubToOther, toHex } from '@/popup/libs/tools'
+import { sendMessage, convertXpubToOther, toHex, UnixNow } from '@/popup/libs/tools'
 
 export interface Account {
   address: string
@@ -91,7 +92,7 @@ export interface tokenInfo {
   icon?: string
   amount: number
   name: string
-  asset_type: string
+  asset_type: string|number
 }
 
 export interface TransferRow {
@@ -101,6 +102,18 @@ export interface TransferRow {
   wallet_id?: string
   amount: number
   op_type: string
+}
+
+/**
+ * fees
+ */
+export interface Fees {
+  fastestFee: number
+  halfHourFee:number
+  hourFee:number
+  economyFee:number
+  minimumFee:number
+  lastTime: number
 }
 
 // @ts-ignore
@@ -120,6 +133,8 @@ export interface TransferRow {
 const MainNetUrl = 'https://mainnet.bittap.org'
 const TestNetUrl = 'https://testnet.onebits.org'
 const LocalNetUrl = 'https://devapi.onebits.org'
+
+let RequestFeesLoading = false
 
 export const useAppStore = defineStore('app', () => {
   const count = useStorage('count', 0)
@@ -143,13 +158,15 @@ export const useAppStore = defineStore('app', () => {
   const activeAccount = useStorage('activeAccount', -1)
 
   const phrases: RemovableRef<PhraseRow[]> = useStorage('phrases', [])
+  const fees: RemovableRef<Fees> = useStorage('mempoolFees', {"fastestFee":0,"halfHourFee":0,"hourFee":0,"economyFee":0,"minimumFee":0, lastTime: -1})
 
-  const networkType = useStorage('networkType', 1) // default network is 0 for mainnet
+  const networkType = useStorage('networkType', 2) // default network:  0 mainnet / 1 local / 2 Testnet
   const networkRpcUrl = useStorage(
     'networkRpcUrl',
-    'https://devapi.onebits.org'
+    TestNetUrl
   )
   const networkRpcToken = useStorage('networkRpcToken', '')
+  const networkRpcTokenExpiredTime = useStorage('networkRpcTokenExpiredTime', -1)
   const currentBtcBalance = useStorage('currentBtcBalance', 0)
 
   const assetsList = useStorage('assetsList', [])
@@ -157,22 +174,45 @@ export const useAppStore = defineStore('app', () => {
     'transferList',
     []
   )
-  const internalKeyList = useStorage('internalKeyList', [])
   const receiveAddressList = useStorage('receiveAddressList', [])
 
+  const getRpcToken = ()=>{
+    if(networkRpcTokenExpiredTime.value < UnixNow() ){
+      networkRpcToken.value = ''
+      return networkRpcToken.value
+    }
+    return networkRpcToken.value.toString()
+  }
+  const setRpcToken = (rpcToken:string):void=>{
+    // console.log('setRpcToken', networkRpcToken.value, rpcToken, new Date().toLocaleDateString())
+    networkRpcToken.value = rpcToken
+    networkRpcTokenExpiredTime.value = UnixNow() + 3600
+  }
   const initConfig = () => {
+    if (!networkRpcUrl.value) {
+      return 
+    }
+    switch (networkType.value) {
+      case 0:
+        networkRpcUrl.value = MainNetUrl
+        break;
+      case 1:
+        networkRpcUrl.value = LocalNetUrl
+        break;
+      case 2:
+        networkRpcUrl.value = TestNetUrl
+        break;
+    }
     if (activeAccount.value < 0) {
       return
     }
-    if (networkRpcUrl.value != '') {
-      sendMessage('InitConfig', {
-        activeAccount: activeAccount.value,
-        currentInfo: getActiveAccount(),
-        networkType: networkType.value,
-        networkRpcUrl: networkRpcUrl.value,
-        networkRpcToken: networkRpcToken.value,
-      })
-    }
+    sendMessage('InitConfig', {
+      activeAccount: activeAccount.value,
+      currentInfo: getActiveAccount(),
+      networkType: networkType.value,
+      networkRpcUrl: networkRpcUrl.value,
+      networkRpcToken: networkRpcToken.value,
+    })
   }
   const getNetWorkType = () => {
     const nt = networkType.value || 0
@@ -255,6 +295,7 @@ export const useAppStore = defineStore('app', () => {
             acc.wallet_id = res.data.wallet_id
             acc.btcAddress = res.data.address
             acc.btcBalance = await QueryBtcBalance({ wallet_id: acc.wallet_id, btc_addr: acc.btcAddress })
+            updateAssets()
           })
       }catch (err) {
         console.error(`switch account for ${i} on error: `, err)
@@ -263,6 +304,7 @@ export const useAppStore = defineStore('app', () => {
     networkType.value = nt
     initConfig()
   }
+
 
   // chrome.storage.local.set({ key: value }).then(() => { console.log("Value is set"); });029-61199530
 
@@ -327,6 +369,8 @@ export const useAppStore = defineStore('app', () => {
           // @ts-ignore
           asset_id: row.asset.asset_id,
           // @ts-ignore
+          asset_type: row.asset.asset_type || 0,
+          // @ts-ignore
           total_supply: Number(row.asset.total_supply),
           // @ts-ignore
           name: row.asset.asset_name,
@@ -341,6 +385,26 @@ export const useAppStore = defineStore('app', () => {
     const info = assetsList.value.find((x) => x.asset.asset_id === asset_id)
     // @ts-ignore
     return info ? info.asset.asset_name : 'Unknown'
+  }
+
+  const getAssetsInfoForAssetID = async (asset_id: string) => {
+    // @ts-ignore
+    const info = assetsList.value.find((x) => x.asset.asset_id === asset_id)
+    if(info) {
+      
+      const assets = await getAssetsBalances()
+      const asset_info = assets.find(x=>x.asset_id === asset_id)
+      console.log('assets: ',asset_id, assets, asset_info, info)
+      if(asset_info) {
+        info.asset.balance = asset_info.amount
+        info.asset.asset_type = asset_info.asset_type
+      }else{
+        info.asset.balance = 0
+        // TODO: Type here is incorrect
+        info.asset.asset_type = 0
+      }
+    }
+    return info
   }
 
   const getAssetsBalances = async () => {
@@ -368,8 +432,10 @@ export const useAppStore = defineStore('app', () => {
         (token) =>
           token.wallet_id === wallet_id && token.asset_id === row.asset_id
       )
+      console.log('tokenItem: ', tokenItem)
       if (tokenItem) {
         tokenItem.amount = row.amount
+        tokenItem.asset_type = row.asset_type || 0
       }
     })
     const currentTokens = tokens.value.filter((x: tokenInfo) => x.wallet_id === wallet_id) 
@@ -388,7 +454,7 @@ export const useAppStore = defineStore('app', () => {
 
   const updateListTransfers = async () => {
     const wallet_id = getCurrentWalletId()
-    return ListAssetHistory({ wallet_id }).then((logs) => {
+    return ListAssetHistory({ wallet_id, asset_id: 'all' }).then((logs) => {
       transferList.value = []
       if (logs && logs.length > 0) {
         logs.forEach((row: TransferRow) => {
@@ -400,20 +466,6 @@ export const useAppStore = defineStore('app', () => {
   }
   const getTransferList = () => {
     return transferList.value
-  }
-
-  const getTransferListForCurrent = () => {
-    const teakKeys = getInternalKeyList().map((x) => x.tweakPubKey)
-    return transferList.value
-      .filter((x) => {
-        // @ts-ignore
-        const keys = x.inputs.map((x) => x.script_key.substr(2))
-        // @ts-ignore
-        x.outputs.forEach((x) => keys.push(x.script_key.substr(2)))
-        // console.log('keys: ', keys, teakKeys)
-        return teakKeys.some((o) => keys.includes(o))
-      })
-      .reverse()
   }
 
   const switchActiveAccount = (index: number) => {
@@ -478,98 +530,9 @@ export const useAppStore = defineStore('app', () => {
     return true
   }
 
+  // @ts-ignore
   const toXOnly:Buffer = (publicKey: Buffer):Buffer => {
     return publicKey.slice(1, 33)
-  }
-
-  // @ts-ignore
-  const getInternalKeyList = (): InternalKey[] => {
-    const activeInfo: AccountInfo = getActiveAccount()
-    // @ts-ignore
-    return activeInfo
-      ? internalKeyList.value.filter((k) => k.rootKey === activeInfo?.publicKey)
-      : []
-  }
-
-  const generateInternalKey = (): InternalKey => {
-    // @ts-ignore
-    const { phrase, publicKey } = getActiveAccount()
-    initEccLib(ecc)
-    const seed = mnemonicToSeedSync(phrase)
-
-    const bip32 = BIP32Factory(ecc)
-    const rootKey = bip32.fromSeed(seed)
-    // @ts-ignore get next user index from internal key list
-    const userKeys = internalKeyList.value
-      .filter((k) => k.rootKey === publicKey)
-      .map((x) => Number(x.path.split('/')[5]))
-      .sort((a, b) => b - a)
-    const userIndex = userKeys.length <= 0 ? 1 : Number(userKeys[0]) + 2
-    const path = "m/86'/0'/0'/0/" + userIndex
-    const childNodePrimary = rootKey.derivePath(path)
-
-    const path2 = "m/86'/0'/0'/0/" + (userIndex + 1)
-    const childNodePrimary2 = rootKey.derivePath(path2)
-
-    const childNodeXOnlyPubkeyPrimary2 = toXOnly(childNodePrimary2.publicKey)
-
-    const tweakedChildNodePrimary2 = childNodePrimary.tweak(
-      crypto.taggedHash('TapTweak', childNodeXOnlyPubkeyPrimary2)
-    )
-    // @ts-ignore
-    const internalKeyInfo: InternalKey = {
-      rootKey: publicKey,
-      scriptPubKey: childNodePrimary2.publicKey.toString('hex'),
-      tweakPubKey: toXOnly(tweakedChildNodePrimary2.publicKey).toString('hex'),
-      internalPubkey: childNodePrimary.publicKey.toString('hex'),
-      path,
-    }
-    console.log('generate InternalKeyInfo: ', internalKeyInfo)
-    // @ts-ignore
-    internalKeyList.value.unshift(internalKeyInfo)
-    return internalKeyInfo
-  }
-
-  // @ts-ignore
-  const updateInternalKeyEncoded = (updateInfo, internalPubkey: string) => {
-    const myList = getInternalKeyList()
-    // @ts-ignore
-    myList.forEach((row) => {
-      // console.log('my list row : ', row)
-      if (row.internalPubkey === internalPubkey) {
-        // update internal key info
-        row.encoded = updateInfo.encoded
-        row.taproot_output_key = updateInfo.taproot_output_key
-        // add encoded to queue
-        sendMessage('SubscribeReceiveEvents', row.encoded)
-      }
-    })
-  }
-
-  // @ts-ignore
-  const subscribeReceiveAllEncoded = () => {
-    const myList = getInternalKeyList()
-    // @ts-ignore
-    myList.forEach((row) => {
-      sendMessage('SubscribeReceiveEvents', row.encoded)
-    })
-  }
-
-  // @ts-ignore
-  const updateInternalKeyStatus = (status: number, internalPubkey: string) => {
-    const myList = getInternalKeyList()
-    // @ts-ignore
-    myList.forEach((row) => {
-      // console.log('my list row : ', row)
-      if (row.internalPubkey === internalPubkey) {
-        // update internal key info
-        row.status = status
-      }
-    })
-  }
-
-  const convertTaprootOutputKeyToBech32m = (taproot_output_key: string) => {
-    return address.toBech32(Buffer.from(taproot_output_key, 'hex'), 1, 'bc')
   }
 
   const createNewUser = async (
@@ -665,6 +628,7 @@ export const useAppStore = defineStore('app', () => {
             console.log('accountList: ', accountList, accountList.value)
             const result: AccountRow = {
               phraseIndex,
+              // @ts-ignore
               address: p2trPrimary.address,
               b84PublicKey,
               b1017PublicKey,
@@ -674,7 +638,9 @@ export const useAppStore = defineStore('app', () => {
               name: _importMnemonic
                 ? 'Import ' + (accountList.value.length + 1)
                 : 'Account ' + (accountList.value.length + 1),
+              // @ts-ignore
               wallet_id: res.data.wallet_id,
+              // @ts-ignore
               btcAddress: res.data.address,
             }
             console.log('create account result: ', result)
@@ -736,11 +702,12 @@ export const useAppStore = defineStore('app', () => {
   const getNetwork = () => {
     return networkType.value === 0 ? networks.bitcoin : networks.testnet
   }
+
   const getNetWorks = () => {
     return [
-      {url: MainNetUrl},
-      {url: LocalNetUrl},
-      {url: TestNetUrl }
+      {url: MainNetUrl, id: 0,},
+      {url: LocalNetUrl, id: 1, custom:true },
+      {url: TestNetUrl, id: 2 }
     ]
   }
   // @ts-ignore
@@ -864,7 +831,6 @@ export const useAppStore = defineStore('app', () => {
           asset_name: getAssetsNameForAssetID(toHex(asset_id)),
         }
       })
-      console.log('receiveAddressList.value: ', receiveAddressList.value)
       return receiveAddressList.value
     })
   }
@@ -911,7 +877,6 @@ export const useAppStore = defineStore('app', () => {
     const isFound = tokens.value.findIndex(
       (token) => token.wallet_id === wallet_id && token.asset_id === asset_id
     )
-    console.log('isFound:', isFound)
     if (isFound >= 0) {
       tokens.value.splice(isFound, 1)
     }
@@ -951,8 +916,40 @@ export const useAppStore = defineStore('app', () => {
 
     assetsList.value = []
     transferList.value = []
-    internalKeyList.value = []
     receiveAddressList.value = []
+  }
+
+  /**
+   * update fees
+   */
+  const updateGasFees = async (): Promise<Fees> => {
+    const feesRes = await getGas()
+    feesRes.lastTime = UnixNow()
+    fees.value = Object.assign({},fees.value, feesRes)
+    RequestFeesLoading = false
+    return fees.value
+  }
+  /**
+   * get fees
+   */
+  const getGasFees = async (): Promise<Fees> => {
+    
+    if(fees.value.lastTime <=0 || fees.value.lastTime + 30 < UnixNow()) {
+      if(RequestFeesLoading === true) {
+        return new Promise<Fees>((resolve, reject) => {
+          setTimeout(() => {
+            getGasFees().then(res => {
+              resolve(res)
+            }).catch(e => {
+              reject(e)
+            })
+          }, 1000)
+        })
+      }
+      RequestFeesLoading = true
+      return await updateGasFees()
+    }
+    return fees.value
   }
 
   return {
@@ -987,13 +984,6 @@ export const useAppStore = defineStore('app', () => {
     getAssetsListForSelect,
     updateListTransfers,
     getTransferList,
-    getTransferListForCurrent,
-    getInternalKeyList,
-    generateInternalKey,
-    updateInternalKeyEncoded,
-    convertTaprootOutputKeyToBech32m,
-    updateInternalKeyStatus,
-    subscribeReceiveAllEncoded,
     initConfig,
     getCurrentAccountKeyPair,
     createNewUser,
@@ -1013,7 +1003,13 @@ export const useAppStore = defineStore('app', () => {
     getCurrentWalletForAssetBalance,
     getTransactionDetails,
     getAssetsNameForAssetID,
+    getAssetsInfoForAssetID,
     updateAllAccountsBtcBalance,
-    getNetWorks
+    getNetWorks,
+    getNetWorkType,
+    getRpcToken,
+    setRpcToken,
+    getGasFees,
+    updateGasFees
   }
 })

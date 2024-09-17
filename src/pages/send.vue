@@ -20,15 +20,8 @@
 
 <script lang="ts">
 import { useAppStore } from '@/stores/app.store'
-// import sendBtc from './sendBtc.vue'
-
 
 export default {
-  // components: { sendBtc },
-  // components: {
-  //   SendBtc,
-  //   SendTaproot,
-  // },
   setup() {
     
     const store = useAppStore()
@@ -37,15 +30,15 @@ export default {
     store.setGoBackUrl('/')
     store.isGoBack()
     return {
-
+      store
     }
   },
   data() {
     return {
       activeTab: 'btc',
       tabs:[
-        { label: 'BTC Asset', value: 'btc' },
-        { label: 'Taproot Asset', value: 'taproot' },
+        { label: 'BTC', value: 'btc' },
+        { label: 'Taproot Assets', value: 'taproot' },
       ]
     }
   },

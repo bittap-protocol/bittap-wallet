@@ -12,13 +12,13 @@
       />
     </label>
     <div
-      v-if="formData.recv_addr.length > 0 && !isBtcAddressOk()"
+      v-if="formData.recv_addr.length >= 38 && !isBtcAddressOk()"
       class="err-tips"
     >
       The Btc receive address is incorrect, it should be a 44-character length
-      address starting with bcrt1q
     </div>
-
+    <div v-if="checkResultMessage && checkResultMessage.length>0" class="msg pb-2 mt-[-15px] pl-2" v-html="checkResultMessage">
+    </div>
     <label class="form-control w-full max-w-xs">
       <div class="label">
         <span class="label-text">Amount</span>
@@ -52,11 +52,9 @@
       <button
         :disabled="
           Number(formData.amount) <= 0 ||
-          formData.recv_addr.length != 44 ||
           isSubmitting ||
-          !isBtcAddressOk() ||
           store.currentBtcBalance * 10 ** 8 <
-            formData.amount * 10 ** 8 + Number(formData.fee_rate) * 2
+            formData.amount * 10 ** 8 + Number(formData.fee_rate)
         "
         class="button"
         @click="sendConfirm"
@@ -68,7 +66,7 @@
 </template>
 
 <script>
-import { PublishTransferBtc, TransferBtc } from '@/popup/api/btc/blockStream'
+import { nslookupDomainInfo, PublishTransferBtc, TransferBtc } from '@/popup/api/btc/blockStream'
 import { postToast, isValidBitcoinAddress } from '@/popup/libs/tools'
 import { useAppStore } from '@/stores/app.store'
 import { Psbt } from 'bitcoinjs-lib'
@@ -92,6 +90,9 @@ export default {
         fee_rate: 0,
       },
       isSubmitting: false,
+      checkTimer: null,
+      checkResult: null,
+      checkResultMessage: ''
     }
   },
   watch: {
@@ -106,6 +107,11 @@ export default {
         this.checkUpdateFormData()
       }
     },
+    'formData.recv_addr': function (k, v) {
+      if(k && k != v && this.formData.recv_addr.length>=3) {
+        this.nslookupDomainInformation()
+      }
+    }
   },
   mounted() {
     // this.formData.recv_addr = 'bcrt1qtqxmmcda462t5dez4t4nnezxzfa3r862h9qyrm'
@@ -127,16 +133,35 @@ export default {
           10 ** 8
       )
     },
+    nslookupDomainInformation() {
+      if(this.checkTimer) {
+        clearTimeout(this.checkTimer)
+        this.checkTimer=null
+      }
+      const nsCheck = () => {
+        nslookupDomainInfo(this.formData.recv_addr).then(result => {
+          console.log('checkResultMessage: ', result)
+          if(result.isAddress){
+            this.checkResultMessage = result.data ? 'TNA Domin: <span class="text-primary">8888.btc</span>' : ''
+          }else{
+            this.checkResultMessage =  result.data ? 'Address: <span class="text-primary">'+this.$root._showMinMaxString(result.data.owner,8,8)+'</span>': ''
+          }
+        })
+      }
+      this.checkTimer = setTimeout(() => {
+        nsCheck()
+      }, 500)
+    },
     setMax() {
       console.log('this.store.currentBtcBalance * 10 ** 8: ', [
         this.store.currentBtcBalance * 10 ** 8,
-        Number(this.formData.fee_rate) * 2,
+        Number(this.formData.fee_rate),
         this.store.currentBtcBalance * 10 ** 8 -
-          Number(this.formData.fee_rate) * 2,
+          Number(this.formData.fee_rate),
         Number(
           Number(
             (this.store.currentBtcBalance * 10 ** 8 -
-              Number(this.formData.fee_rate) * 2) /
+              Number(this.formData.fee_rate)) /
               10 ** 8
           ).toFixed(6)
         ),
@@ -145,7 +170,7 @@ export default {
           Number(
             Number(
               (this.store.currentBtcBalance * 10 ** 8 -
-                Number(this.formData.fee_rate) * 2) /
+                Number(this.formData.fee_rate)) /
                 10 ** 8
             ).toFixed(6)
           )
@@ -156,7 +181,7 @@ export default {
         Number(
           Number(
             (this.store.currentBtcBalance * 10 ** 8 -
-              Number(this.formData.fee_rate) * 2) /
+              Number(this.formData.fee_rate)) /
               10 ** 8
           ).toFixed(6)
         )
@@ -196,8 +221,9 @@ export default {
       const { wallet_id } = this.store.getActiveAccount()
       this.formData.wallet_id = wallet_id
       const sendData = Object.assign({}, this.formData)
-      sendData.amount = Number(sendData.amount) * 10 ** 8
-      sendData.fee_rate = Number(sendData.fee_rate) * 10 ** 3
+      sendData.amount = Math.floor(Number(sendData.amount) * 10 ** 8)
+      // sendData.fee_rate = Number(sendData.fee_rate) * 10 ** 3
+      sendData.fee_rate = Number(sendData.fee_rate)
       await TransferBtc(sendData)
         .then((res) => res.data.funded_psbt)
         .then(async (funded_psbt) => {

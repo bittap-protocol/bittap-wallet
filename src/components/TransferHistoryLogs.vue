@@ -3,9 +3,11 @@
     v-if="logs.length > 0 && !loading"
     class="tr-logs"
   >
-    <div
+    <a
       v-for="tr in logs"
       :key="tr.tx_id"
+      :href="txUrl(tr.tx_id)"
+      target="_blank"
       class="tr-item"
     >
       <div class="asset">
@@ -16,18 +18,19 @@
         <div class="info">
           <div class="dir">
             {{ tr.op_type == '0' ? 'Send' : 'Receive' }}
+            <IconPending v-if="tr.pending" class="ml-[11px]"></IconPending>
           </div>
           <div class="time">
-            {{ $root.formatTime(tr.timestamp * 1000) }}
+            {{ tr.timestamp && tr.timestamp>0 ? $root.formatTime(tr.timestamp * 1000) : '' }}
           </div>
         </div>
       </div>
-      <div class="amount">
+      <div v-if="!isNft" class="amount">
         <div class="b">
           {{
             $root.formatToken(
-              tr.amount,
-              tr.asset_id === '' ? 6 : 0,
+              tr.asset_id === '' ? Number(Number(tr.amount) / 10**8 ) : tr.amount,
+              tr.asset_id === '' ? 8 : 0,
               tr.asset_id === '' ? 'BTC' : $root.showAssetName(tr.asset_id)
             )
           }}
@@ -35,7 +38,7 @@
         <div
           v-if="tr.asset_id === ''"
           class="u"
-        >≈${{ $root.formatToken($root.showUsdtBalance(tr.amount), 2) }}
+        >≈${{ $root.formatToken($root.showUsdtBalance(Number(tr.amount) / 10**8 ), 2) }}
         </div>
         <div
           v-else
@@ -45,7 +48,10 @@
           }}
         </div>
       </div>
-    </div>
+      <div v-else class="amount">
+        <div class="b">{{ tr.amount }}</div>
+      </div>
+    </a>
   </div>
   <div
     v-else
@@ -69,13 +75,18 @@
 import IconReceive from '@/components/svgIcon/Receive.vue'
 // @ts-ignore
 import IconSend from '@/components/svgIcon/Send.vue'
+// @ts-ignore
+import IconPending from '@/components/svgIcon/Pending.vue'
 
-import { useAppStore } from '@/stores/app.store'
+import { getTxUrl } from '@/popup/libs/tools';
+
+import { useAppStore, TransferRow } from '@/stores/app.store'
+type T = TransferRow[]
 export default {
-  components: { IconReceive, IconSend },
+  components: { IconReceive, IconSend, IconPending },
   props: {
     logs: {
-      type: Array,
+      type: Array<T>,
       required: true,
       default: function () {
         return []
@@ -88,6 +99,13 @@ export default {
         return false
       },
     },
+    isNft: {
+      type: Boolean,
+      required: true,
+      default: function () {
+        return false
+      },
+    }
   },
   setup() {
     const store = useAppStore()
@@ -98,6 +116,11 @@ export default {
       return this.store.btcPrice.USD
     },
   },
+  methods: {
+    txUrl(tx_id:string){
+      return getTxUrl(tx_id,this.store.getNetWorkType() === 0 ? '': 'testnet')
+    }
+  }
 }
 </script>
 
@@ -114,7 +137,7 @@ export default {
       .info {
         @apply flex flex-col justify-center items-start;
         .dir {
-          @apply text-base font-medium;
+          @apply text-base font-medium flex flex-row justify-center items-center;
         }
         .time {
           @apply text-gray-400 text-sm font-normal;

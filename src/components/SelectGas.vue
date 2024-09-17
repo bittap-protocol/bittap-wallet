@@ -85,8 +85,8 @@
                 type="checkbox"
                 :value="item.name"
                 :checked="item.name === showCate"
-                @change="onChangeHandle(item)"
                 class="checkbox checkbox-primary"
+                @change="onChangeHandle(item)"
               />
             </div>
           </label>
@@ -120,7 +120,6 @@
 <script lang="ts">
 // @ts-ignore
 import IconamoonArrowDown2Fill from '~icons/iconamoon/arrow-down-2-fill'
-import { getGas } from '@/popup/api/btc/blockStream'
 import { randomInt } from '@/popup/libs/tools'
 // @ts-ignore
 import Fast from './svgIcon/Fast.vue'
@@ -128,6 +127,7 @@ import Fast from './svgIcon/Fast.vue'
 import Slow from './svgIcon/Slow.vue'
 // @ts-ignore
 import Medium from './svgIcon/Medium.vue'
+import { useAppStore, Fees } from '@/stores/app.store'
 
 export default {
   name: 'SelectGas',
@@ -141,6 +141,12 @@ export default {
     modelValue: Number,
   },
   emits: ['update:modelValue'],
+  setup(){
+    const store = useAppStore()
+    return {
+      store
+    }
+  },
   data() {
     return {
       categories: [
@@ -213,6 +219,7 @@ export default {
       this.formDataGas = gas
     },
     setGasConfirm() {
+      console.log('this.selectedCate: ', this.selectedCate)
       // @ts-ignore
       this.$emit('update:modelValue', this.formDataGas)
       // @ts-ignore
@@ -225,14 +232,12 @@ export default {
       this.$emit('update:modelValue', item.gas)
     },
     initGasPrice() {
-      // @ts-ignore
-      getGas().then((res) => {
+      this.store.getGasFees().then((res: Fees) => {
         if (!res) {
           console.error('get gas data failed', res)
           return
         }
         for (const [key, value] of Object.entries(res)) {
-          console.log('key, value: ', key, value)
           const r = this.categories.find((x) => x.key === key)
           if (r) {
             // @ts-ignore
@@ -242,15 +247,9 @@ export default {
               this.formDataGas = value
               this.selectedCate = 'Medium'
               this.$emit('update:modelValue', this.formDataGas)
-              console.log('selected gas is default Medium', Date.now())
             }
           }
         }
-        // const { economyFee, halfHourFee, fastestFee } = res
-        // console.log('getGas res: ', res, economyFee, halfHourFee, fastestFee)
-        // this.categories[0].gas = economyFee
-        // this.categories[1].gas = halfHourFee
-        // this.categories[2].gas = fastestFee
       })
     },
   },

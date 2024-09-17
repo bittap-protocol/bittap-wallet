@@ -201,7 +201,7 @@ export default {
       this.loading = false
     },
     formatAssets(balance: number, len = 8, symbol = 'BTC') {
-      return [Number(balance).toFixed(len), symbol].join(' ')
+      return [Number(balance).toFixed(len), symbol.toUpperCase()].join(' ')
     },
     showAssetName(asset_id: string): string {
       return this.store.getAssetsNameForAssetID(asset_id)

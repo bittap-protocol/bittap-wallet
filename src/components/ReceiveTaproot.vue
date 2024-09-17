@@ -63,18 +63,20 @@
 <script lang="ts">
 import { useAppStore } from '@/stores/app.store';
 import { NewAssetAddress } from '@/popup/api/btc/blockStream'
-// import { payments, initEccLib, crypto, address } from 'bitcoinjs-lib'
+import { getQuery } from '@/popup/libs/tools'
 
 export default {
     name: 'ReceiveTaproot',
     setup(){
         const store = useAppStore()
         const account = computed(() => store.getActiveAccount())
-        const historyList = computed(() => store.getInternalKeyList().filter(e => e.encoded))
+        const asset_id = getQuery('asset_id')
+        const asset_type = getQuery('asset_type')
         return {
             account,
-            historyList,
-            store
+            store, 
+            asset_id, 
+            asset_type
         }
     },
     data() {
@@ -95,6 +97,16 @@ export default {
                 this.formData.amount = Number.parseInt(this.formData.amount)+''
             }
          }
+    },
+    async mounted(){
+        console.log('this.asset_id: ', this.asset_id)
+        if(this.asset_id) {
+            const token = await this.store.getAssetsInfoForAssetID(this.asset_id)
+            console.log('token: ', token)
+            this.formData.name = token.asset.asset_name
+            this.formData.assetsId = token.asset.asset_id
+            this.selectAssetInfo = token.asset
+        }
     },
     methods: {
         async createReceive() {
@@ -156,6 +168,7 @@ export default {
             &-r{
                 @apply text-white ;
                 flex: 1;
+                padding: 10px 5px;
             }
             &.token-name{
                 @apply uppercase;

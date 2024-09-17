@@ -19,6 +19,7 @@
 </template>
 
 <script lang="ts">
+import { getQuery } from '@/popup/libs/tools';
 import { useAppStore } from '@/stores/app.store'
 
 
@@ -49,7 +50,10 @@ export default {
     }
   },
   created() {
-    
+    const asset_id = getQuery('asset_id')
+    if(asset_id) {
+      this.activeTab = 'receiveTaproot'
+    }
     this.initData()
   },
   methods: {

@@ -338,14 +338,40 @@ export const useAppStore = defineStore('app', () => {
       : accountList.value[index]
   }
   const updateAssets = async () => {
-    return ListAssetsQuery().then((res) => {
-      if (res) {
-        assetsList.value = res.map((x) => {
-          x.asset.asset_id = toHex(x.asset.asset_id)
-          return x
-        })
+    const page_size = 10
+    const loadData = async (page= 1) => {
+      return ListAssetsQuery(undefined, undefined, page, page_size).then((res) => {
+        if (res) {
+          console.log('ListAssetsQuery res: ', res)
+          res.forEach((x) => {
+            console.log('updateAssets res: x: ', x)
+            if(x.asset) {
+              x.asset.asset_id = toHex(x.asset.asset_id)
+            }else{
+              x.asset = {
+                asset_id: toHex(x.group_anchor.asset_id),
+                group_key: x.group_key,
+                group_supply: x.group_supply,
+                asset_name: x.group_anchor.asset_name,
+                asset_type: x.group_anchor.asset_type,
+                total_supply: x.group_anchor.total_supply,
+              }
+            }
+            assetsList.value.push(x)
+          })
+        }
+        return assetsList.value
+      })
+    }
+    assetsList.value = []
+    for(let i = 1; i<=3;i++){
+      const re = await loadData(i)
+      // console.log('re: ', re)
+      if(re.length % page_size !== 0) {
+        break
       }
-    })
+    }
+    return assetsList.value
   }
   const getAssetsList = () => {
     return assetsList.value
@@ -388,23 +414,24 @@ export const useAppStore = defineStore('app', () => {
   }
 
   const getAssetsInfoForAssetID = async (asset_id: string) => {
+    const info = await ListAssetsQuery(undefined, asset_id, 1, 10)
     // @ts-ignore
-    const info = assetsList.value.find((x) => x.asset.asset_id === asset_id)
-    if(info) {
+    const currentInfo = info.find((x) => x.asset.asset_id === asset_id)
+    if(currentInfo) {
       
       const assets = await getAssetsBalances()
       const asset_info = assets.find(x=>x.asset_id === asset_id)
-      console.log('assets: ',asset_id, assets, asset_info, info)
+      console.log('assets: ',asset_id, assets, asset_info, info, currentInfo)
       if(asset_info) {
-        info.asset.balance = asset_info.amount
-        info.asset.asset_type = asset_info.asset_type
+        currentInfo.asset.balance = asset_info.amount
+        currentInfo.asset.asset_type = asset_info.asset_type
       }else{
-        info.asset.balance = 0
+        currentInfo.asset.balance = 0
         // TODO: Type here is incorrect
-        info.asset.asset_type = 0
+        currentInfo.asset.asset_type = 0
       }
     }
-    return info
+    return currentInfo
   }
 
   const getAssetsBalances = async () => {
@@ -469,10 +496,12 @@ export const useAppStore = defineStore('app', () => {
   }
 
   const switchActiveAccount = (index: number) => {
+    const oldIndex = activeAccount.value
     activeAccount.value = index
     transferList.value = []
     receiveAddressList.value = []
     setCurrentBtcBalance(0)
+    sendMessage('switchActiveAccount', { oldIndex, newIndex:index })
     initConfig()
   }
 
@@ -923,6 +952,7 @@ export const useAppStore = defineStore('app', () => {
    * update fees
    */
   const updateGasFees = async (): Promise<Fees> => {
+    console.log("getGasFees updateGasFees", new Date().getTime())
     const feesRes = await getGas()
     feesRes.lastTime = UnixNow()
     fees.value = Object.assign({},fees.value, feesRes)
@@ -933,23 +963,32 @@ export const useAppStore = defineStore('app', () => {
    * get fees
    */
   const getGasFees = async (): Promise<Fees> => {
-    
-    if(fees.value.lastTime <=0 || fees.value.lastTime + 30 < UnixNow()) {
-      if(RequestFeesLoading === true) {
-        return new Promise<Fees>((resolve, reject) => {
-          setTimeout(() => {
-            getGasFees().then(res => {
-              resolve(res)
-            }).catch(e => {
-              reject(e)
-            })
-          }, 1000)
-        })
+    return new Promise<Fees>((resolve, reject) => {
+      console.log("getGasFees 2", new Date().toISOString(), [RequestFeesLoading, fees.value])
+      if(fees.value.lastTime <=0 || fees.value.lastTime + 30 < UnixNow()) {
+        console.log("getGasFees 3", new Date().toISOString())
+        if(RequestFeesLoading === true) {
+          console.log("getGasFees 4", new Date().toISOString())
+            setTimeout(() => {
+              getGasFees().then(res => {
+                console.log("getGasFees 6", new Date().toISOString())
+                resolve(res)
+              }).catch(e => {
+                reject(e)
+              })
+            }, 1000)
+        }else{
+          console.log("getGasFees 5", new Date().toISOString())
+          RequestFeesLoading = true
+          updateGasFees().then(() => {
+            resolve(fees.value)
+          })
+        }
+      }else{
+        console.log("getGasFees 7", new Date().toISOString())
+        resolve(fees.value)
       }
-      RequestFeesLoading = true
-      return await updateGasFees()
-    }
-    return fees.value
+  })
   }
 
   return {

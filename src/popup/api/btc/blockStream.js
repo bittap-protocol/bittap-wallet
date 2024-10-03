@@ -4,7 +4,7 @@
 // @ts-ignore
 import { useAppStore } from '@/stores/app.store'
 
-import { postToast, toHex, hideLoading, isValidBitcoinAddress } from '../../libs/tools.ts'
+import { postToast, toHex, hideLoading, isValidBitcoinAddress, isAssetId } from '../../libs/tools.ts'
 
 // Request method
 const OptionMethod = {
@@ -143,16 +143,33 @@ export async function NewAssetAddress(wallet_id, asset_id, amount) {
 
 /**
  * Query all Taproot Assets metadata in Bittapd without regarding end users.
+ * @param {number} page_num Page number, default 1
+ * @param {number} page_size Page size, default 10
+ * @param {string|undefined} asset_name asset name
+ * @param {asset_id|undefined} asset_name asset id from hex
  * @returns Promise
  */
-export async function ListAssetsQuery() {
+export async function ListAssetsQuery(asset_name, asset_id, page_num=1, page_size=10) {
+  const sendData= {
+    page_num, page_size, asset_name, asset_id
+  }
+  if(asset_id && isAssetId(asset_id)){
+    sendData.asset_id = asset_id 
+  }else{
+    if(asset_name) {
+      sendData.asset_name = asset_name 
+    }
+  }
+
   return requestRpc(
     '/api/query-asset-stats',
-    {},
+    {
+      page_num, page_size, asset_name, asset_id
+    },
     {
       method: OptionMethod.POST,
     }
-  ).then((res) => res.data.asset_stats)
+  ).then((res) => res.data.asset_stats||[])
 }
 
 
@@ -334,6 +351,25 @@ export async function DecodeAssetsAddress(data) {
 }
 
 /**
+ * Estimate Max Btc
+ * @param {Object} data 
+ * @returns Promise<number>
+ */
+export async function EstimateMaxBtc(data) {
+  const params = Object.assign({}, data)
+  if (!params.wallet_id) {
+    throw 'wallet_id is required'
+  }
+  if (!params.min_conf) {
+    throw 'min_conf is required'
+  }
+  if (!params.fee_rate) {
+    throw 'fee_rate is required'
+  }
+  return requestRpc('/api/estimate-max-btc', params, { method: 'POST' }).then(res => res.data.amount)
+}
+
+/**
  * Import a Taproot Asset from other universe.
  * @param {Object} data 
  * @returns Promise
@@ -479,7 +515,7 @@ export async function ListAccounts() {
 }
 
 export async function getBalance(p2trAddress) {
-  // 替换为你选择的区块链浏览器API的URL
+  // Replace with the URL of the blockchain browser API of your choice
   const apiUrl = `https://blockchain.info/q/addressbalance/${p2trAddress}`
 
   try {
@@ -549,9 +585,13 @@ export async function validateAddress(p2trAddress) {
 export async function getGas() {
   const store = useAppStore()
   const testnet = store.getNetWorkType() === 0 ? '': '/testnet'
-  const response = await fetch('https://mempool.space'+testnet+'/api/v1/fees/recommended')
-  const data = await response.json()
-  return data
+  try {
+    const response = await fetch('https://mempool.space'+testnet+'/api/v1/fees/recommended')
+    const data = await response.json()
+    return data
+  } catch (err) {
+    console.error('getGas onerro :', err)
+  }
 }
 
 

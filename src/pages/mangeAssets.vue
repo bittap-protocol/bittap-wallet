@@ -18,14 +18,14 @@
         class="br token-item"
       >
         <div
-          class="icon-img"
           v-if="ass.asset_type === 'base'"
+          class="icon-img"
         >
           <IconMdiBitcoin class="img text-orange-400"></IconMdiBitcoin>
         </div>
         <div
-          class="icon-img"
           v-else
+          class="icon-img"
         >
           <IconAutoTokenName :name="ass.name"></IconAutoTokenName>
         </div>
@@ -55,7 +55,7 @@
           </button>
         </div>
       </div>
-      <div class="no-result" v-if="showListData.length<=0">
+      <div v-if="showListData.length<=0" class="no-result">
         <img
           src="@/assets/notrans.png"
           height="110"
@@ -76,7 +76,8 @@ import IconSearch from '@/components/svgIcon/Search.vue'
 // @ts-ignore
 import IconAutoTokenName from '@/components/svgIcon/AutoTokenName.vue'
 
-import { showAddressAndAssetId } from '@/popup/libs/tools'
+import { isAssetId, showAddressAndAssetId, toHex } from '@/popup/libs/tools'
+import { ListAssetsQuery } from '@/popup/api/btc/blockStream'
 
 export default {
   components: {
@@ -95,12 +96,14 @@ export default {
   data(): {
     searchKeyword: string
     assets: tokenInfo[]
-    userAssets: tokenInfo[]
+    userAssets: tokenInfo[],
+    timer: NodeJS.Timeout|null
   } {
     return {
       searchKeyword: '',
       assets: [] as tokenInfo[],
       userAssets: [] as tokenInfo[],
+      timer: null
     }
   },
   computed: {
@@ -111,10 +114,47 @@ export default {
       return this.assets.filter((x) => x.name.toLowerCase().includes(sk.trim().toLowerCase()))
     },
   },
+  watch: {
+    'searchKeyword': function(k,v) {
+      if(k!=v && this.searchKeyword) {
+        if(this.timer) {
+          clearTimeout(this.timer)
+          this.timer = null
+          return 
+        }
+        this.timer = setTimeout(() => {
+          this.searchForApiData()
+        },500)
+      }
+    }
+  },
   created() {
     this.initData()
   },
   methods: {
+    searchForApiData(){
+      const assets_id = isAssetId(this.searchKeyword ) ? this.searchKeyword : undefined
+      const assets_name = !isAssetId(this.searchKeyword ) ? this.searchKeyword : undefined
+      const wallet_id = this.store.getCurrentWalletId()
+      ListAssetsQuery(assets_name, assets_id, 1, 9999).then((res) => {
+        if(res) {
+          res.forEach(x => {
+            const asset_id = toHex(x.asset.asset_id)
+            const isAdd = this.assets.some(x=> x.asset_id === asset_id)
+            if(isAdd) {
+              return 
+            }
+            this.assets.unshift({
+              wallet_id,
+              asset_id,
+              amount: 0,
+              asset_type: x.asset.asset_type || 0,
+              name: x.asset.asset_name,
+            })
+          })
+        }
+      })
+    },
     showKeywordsName(name: string) {
       return this.searchKeyword.trim().length > 0
         ? name.toUpperCase().replace(
@@ -201,7 +241,7 @@ export default {
       .info {
         @apply w-[60%];
         .name {
-          @apply uppercase font-medium text-base flex flex-row justify-start items-center;
+          @apply uppercase font-medium text-base break-all;
         }
       }
       .b {

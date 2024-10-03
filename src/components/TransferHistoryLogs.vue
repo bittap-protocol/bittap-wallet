@@ -31,7 +31,7 @@
             $root.formatToken(
               tr.asset_id === '' ? Number(Number(tr.amount) / 10**8 ) : tr.amount,
               tr.asset_id === '' ? 8 : 0,
-              tr.asset_id === '' ? 'BTC' : $root.showAssetName(tr.asset_id)
+              tr.asset_name
             )
           }}
         </div>
@@ -67,6 +67,9 @@
         width="120"
       />
     </div>
+    <div v-if="showLoading && loading" class="lo flex flex-col justify-center items-center py-10">
+      <span class="loading loading-spinner loading-lg bg-primary"></span>
+    </div>
   </div>
 </template>
 
@@ -97,6 +100,13 @@ export default {
       required: true,
       default: function () {
         return false
+      },
+    },
+    showLoading: {
+      type: Boolean,
+      required: true,
+      default: function () {
+        return true
       },
     },
     isNft: {

@@ -1,5 +1,6 @@
 <template>
     <div class="token-info min-box">
+        
         <ColorBox :info="asset_info"></ColorBox>
         <div :class="['token-history', isBtc?'isBtc':'']">
             <TransferHistoryLogs
@@ -50,12 +51,15 @@ export default {
         }
     },
     async created(){
-        console.log('token info is created: ', [this.isBtc, this.asset_id])
-        await this.initData()
+    //    console.log('token info is created: ', [this.isBtc, this.asset_id])
+        await this.initData().finally(() => {
+            this.$root._hideLoading()
+        })
     },
     methods: {
         async initData() {
             this.loading = true
+            this.$root._showLoading('Loading data...')
             // @ts-ignore
             this.$root.setTitle('Loading...')
             const account = this.store.getActiveAccount()

@@ -38,7 +38,7 @@
         </div>
       </div>
       <div
-        v-if="loading"
+        v-show="loading"
         class="my-6 w-full flex flex-row justify-center items-center"
       >
         <div class="loading loading-spinner text-primary my-16"></div>
@@ -85,6 +85,7 @@ export default {
     },
   },
   mounted() {
+    console.log("mounted")
     this.initData()
   },
   methods: {
@@ -97,6 +98,8 @@ export default {
         console.log('getReceiveAddress res: ', res)
         this.loading = false
         return res
+      }).catch(() => {
+        this.loading = false
       })
     },
     async copyData(text: string) {

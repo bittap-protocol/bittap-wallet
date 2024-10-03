@@ -44,14 +44,22 @@
                     <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
                 </form>
                 <h3 class="font-bold text-lg">Select asset</h3>
-
+                <div class="search">
+                    <div class="box">
+                        <input type="text" class="in" placeholder="Enter asset name" v-model="searchForm.name">
+                        <button class="btn btn-primary" :disabled="searchForm.loading" @click="searchAssetForName">
+                            <span v-if="searchForm.loading" class="loading loading-spinner loading-xs"></span>
+                            <span v-else>Search</span>
+                        </button>
+                    </div>
+                </div>
                 <div
                     class="flex flex-col flex-nowrap justify-start items-center h-4/5 min-h-96 py-2 w-full overflow-y-auto overflow-x-hidden">
                     <div v-for="(acc, index) in assets" :key="'acc-'+index" class="switchItem"
                         @click="checkedToken(acc)">
-                        <div class="name-label uppercase">
-                            <span class="font-bold">{{ acc.name }}</span>
-                            <!-- ({{ acc.name }}) -->
+                        <div class="name-label">
+                            <div class="name">{{ acc.name }}</div>
+                            <div class="id">Asset_id: {{ acc.asset_id }}</div>
                         </div>
                     </div>
                 </div>
@@ -62,8 +70,8 @@
 
 <script lang="ts">
 import { useAppStore } from '@/stores/app.store';
-import { NewAssetAddress } from '@/popup/api/btc/blockStream'
-import { getQuery } from '@/popup/libs/tools'
+import { ListAssetsQuery, NewAssetAddress } from '@/popup/api/btc/blockStream'
+import { getQuery, isAssetId, toHex } from '@/popup/libs/tools'
 
 export default {
     name: 'ReceiveTaproot',
@@ -85,6 +93,10 @@ export default {
                 name: '',
                 amount: '',
                 assetsId: '',
+            },
+            searchForm:{
+                loading: false,
+                name: '',
             },
             assets: [],
             receiveAddress: '',
@@ -124,11 +136,39 @@ export default {
             })
 
         },
+        async searchAssetForName(){
+            console.log('searchAssetForName:',this.searchForm.name)
+            if(!this.searchForm.name || this.searchForm.loading) {
+                return 
+            }
+            const assets_id = isAssetId(this.searchForm.name ) ? this.searchForm.name : undefined
+            const assets_name = !isAssetId(this.searchForm.name ) ? this.searchForm.name : undefined
+            this.searchForm.loading = true
+            ListAssetsQuery(assets_name, assets_id, 1, 9999).then((res) => {
+                console.log('ListAssetsQuery res: ', res)
+                if (res) {
+                    // @ts-ignore
+                    this.assets = res.map(x => {
+                        return {
+                            asset_id: toHex(x.asset.asset_id),
+                            asset_type: x.asset.asset_type || 0,
+                            total_supply: Number(x.asset.total_supply),
+                            name: x.asset.asset_name,
+                        }
+                    })
+                }
+                this.searchForm.loading = false
+            }).finally(() => {
+                this.searchForm.loading = false
+            })
+        },
         selectAsset(){
             // @ts-ignore
             my_modal_select_asset.showModal()
             // const store = useAppStore()
-            this.store.updateAssets()
+            // this.store.updateAssets().then(res => {
+
+            // })
             // @ts-ignore
             this.assets = this.store.getAssetsListForSelect()
         },
@@ -180,17 +220,52 @@ export default {
         }
     }
     .switchItem{
-        @apply text-left w-full my-1 p-3  rounded-2xl shadow-sm ring-0 border border-gray-100 border-solid bg-gray-200 transition duration-200 ease-out hover:ease-in;
+        @apply text-left w-full flex flex-col justify-center items-center my-1 p-3  rounded-2xl shadow-sm 
+            ring-0 ring-inset border border-gray-100 border-solid bg-gray-200 transition duration-200 ease-out hover:ease-in;
+        .name-label{
+            .name{
+                @apply break-all uppercase font-bold text-base text-primary;
+            }
+            .id{
+                @apply break-all text-xs text-gray-600;
+            }
+        }
         &:hover, :focus, :active {
             @apply border-primary bg-primary cursor-pointer  shadow-sm ring-0 shadow-primary ring-primary;
-            .font-bold{
-                @apply text-white;
+            .name{
+                @apply text-white break-all;
+            }
+            .id{
+                @apply break-all text-gray-300;
             }
         }
     }
     .show{
         .receiveAddress{
             word-break: break-all;
+        }
+    }
+    #my_modal_select_asset{
+        .search{
+            .box{
+                @apply flex flex-row justify-between px-0 py-0 items-center w-full rounded-2xl ring-1 ring-inset ring-gray-300 border-[1px] border-solid border-gray-300 overflow-hidden;
+                &:has(.in:focus), &:has(.in:hover), &:has(.in:active){
+                    @apply border-primary border-[1px] border-solid;
+                }
+                .in{
+                    border-image-width:0px;
+                    padding-top: 0.5rem;
+                    padding-right: 0.75rem;
+                    padding-bottom: 0.5rem;
+                    padding-left: 0.75rem;
+                    text-indent: 10px;
+                    @apply  bg-transparent m-0 border-0 ring-0 shadow-none rounded-br-[0px] rounded-tr-[0px]  
+                    focus:ring-0 hover:right-0 focus:border-0 hover:border-0 focus:shadow-none active:shadow-none hover:border-none px-0 py-0;
+                }
+                .btn-primary{
+                    @apply border-l-0 rounded-bl-[0px] rounded-tl-[0px] rounded-none m-0 w-[100px];
+                }
+            }
         }
     }
 }

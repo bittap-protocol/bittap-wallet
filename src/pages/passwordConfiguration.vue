@@ -24,17 +24,17 @@
         <label class="input-box input-append">
           <input
             v-model="newPassword"
-            :type="showPassword ? 'text' : 'password'"
+            :type="showPassword2 ? 'text' : 'password'"
             placeholder="Enter 8-12 letters and numbers"
           />
           <div class="icon">
             <IconEyeOpen
-              v-if="showPassword"
-              @click="togglePasswordVisibility"
+              v-if="showPassword2"
+              @click="togglePasswordVisibility2"
             />
             <IconEyeClose
-              v-if="!showPassword"
-              @click="togglePasswordVisibility"
+              v-if="!showPassword2"
+              @click="togglePasswordVisibility2"
             />
           </div>
         </label>
@@ -43,17 +43,17 @@
         <label class="input-box input-append">
           <input
             v-model="confirmPassword"
-            :type="showPassword ? 'text' : 'password'"
+            :type="showPassword3 ? 'text' : 'password'"
             placeholder="Confirm the password"
           />
           <div class="icon">
             <IconEyeOpen
-              v-if="showPassword"
-              @click="togglePasswordVisibility"
+              v-if="showPassword3"
+              @click="togglePasswordVisibility3"
             />
             <IconEyeClose
-              v-if="!showPassword"
-              @click="togglePasswordVisibility"
+              v-if="!showPassword3"
+              @click="togglePasswordVisibility3"
             />
           </div>
         </label>
@@ -105,6 +105,8 @@ export default {
       newPassword: '',
       confirmPassword: '',
       showPassword: false,
+      showPassword2: false,
+      showPassword3: false,
     }
   },
   computed: {
@@ -136,6 +138,12 @@ export default {
     },
     togglePasswordVisibility() {
       this.showPassword = !this.showPassword
+    },
+    togglePasswordVisibility2() {
+      this.showPassword2 = !this.showPassword2
+    },
+    togglePasswordVisibility3() {
+      this.showPassword3 = !this.showPassword3
     },
     async changePassword() {
       if (!TestPassword(this.password)) {

@@ -75,7 +75,7 @@ import { TestUrl } from '@/popup/libs/tools'
 
 // const loadWasmTest = async () => {
 //   const wasmModule = await import('@/popup/libs/main.wasm?wasm');
-//   return new wasmModule.default(); // 假设这是正确的初始化方法
+//   return new wasmModule.default(); 
 // };
 
 // import loadWasmTest from '@/popup/libs/main.wasm?init'

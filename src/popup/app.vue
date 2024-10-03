@@ -375,7 +375,7 @@ export default {
     <div class="mask"></div>
     <div class="loading-main">
       <div class="loading loading-dots loading-lg"></div>
-      <div class="text">loading...</div>
+      <div class="text">{{ loadingText }}</div>
     </div>
   </div>
   <RouterView></RouterView>

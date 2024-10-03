@@ -232,6 +232,7 @@ export default {
       this.$emit('update:modelValue', item.gas)
     },
     initGasPrice() {
+      console.log("getGasFees 1 ",new Date().toISOString())
       this.store.getGasFees().then((res: Fees) => {
         if (!res) {
           console.error('get gas data failed', res)
@@ -250,6 +251,8 @@ export default {
             }
           }
         }
+      }).catch(error => {
+        console.error('initGasPrice getGasFees on error: ', error)
       })
     },
   },

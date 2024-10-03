@@ -1,8 +1,8 @@
 <template>
   <div class="home">
     <div
-      class="fullWhite"
       v-if="$root.fullWhite"
+      class="fullWhite"
     ></div>
     <div class="top">
       <div class="account">
@@ -192,15 +192,15 @@
               <!-- :to="ass.asset_id === 'Base'? '/': '/common/tokenInfo?asset_id='+ass.asset_id" -->
               <router-link
                 v-for="ass in assets.filter(x => x.asset_type !== 1)"
-                :key="ass.asset_id"
+                :key="'token-'+ass.asset_id"
                 class="token-item"
                 :to="'/common/tokenInfo?asset_id='+ass.asset_id"
               >
                 <div class="iconName">
                   <div class="icon">
                     <div
-                      class="icon-img"
                       v-if="ass.asset_id === 'Base'"
+                      class="icon-img"
                     >
                       <IconMdiBitcoin
                         class="icon-img text-orange-400 h-[36px] w-[36px]"
@@ -299,6 +299,8 @@
             <TransferHistoryLogs
               :loading="loading"
               :logs="historyLogs"
+              :show-loading="false"
+              :is-nft="false"
             ></TransferHistoryLogs>
           </div>
         </div>
@@ -325,7 +327,7 @@
     </div>
   </div>
   <div :class="['refreshIcon']">
-    <button @click="refreshData" class="bg-white">
+    <button class="bg-white" @click="refreshData">
       <Refresh :class="['icc', refresh ? 'refreshing' : '']"></Refresh>
     </button>
   </div>
@@ -408,7 +410,7 @@ export default {
       return this.store
         .getTransferList()
         .filter((x: TransferRow) => (x.wallet_id = this.wallet_id))
-        .sort((a: TransferRow, b: TransferRow) => a.timestamp - b.timestamp)
+        .sort((a: TransferRow, b: TransferRow) => b.timestamp - a.timestamp)
     },
   },
   // computed(() => store.getActiveAccount())

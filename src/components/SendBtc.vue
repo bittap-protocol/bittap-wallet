@@ -66,7 +66,7 @@
 </template>
 
 <script>
-import { nslookupDomainInfo, PublishTransferBtc, TransferBtc } from '@/popup/api/btc/blockStream'
+import { nslookupDomainInfo, PublishTransferBtc, TransferBtc,EstimateMaxBtc } from '@/popup/api/btc/blockStream'
 import { postToast, isValidBitcoinAddress } from '@/popup/libs/tools'
 import { useAppStore } from '@/stores/app.store'
 import { Psbt } from 'bitcoinjs-lib'
@@ -92,7 +92,8 @@ export default {
       isSubmitting: false,
       checkTimer: null,
       checkResult: null,
-      checkResultMessage: ''
+      checkResultMessage: '',
+      maxBalance: 0,
     }
   },
   watch: {
@@ -103,10 +104,16 @@ export default {
       }
     },
     'formData.amount': function (k, v) {
-      if (k != v && this.formData.amount >= this.store.currentBtcBalance) {
+      if (k != v && this.formData.amount >= this.maxBalance) {
         this.checkUpdateFormData()
       }
     },
+    'maxBalance': function (k, v) {
+      if (k != v) {
+        this.checkUpdateFormData()
+      }
+    },
+    
     'formData.recv_addr': function (k, v) {
       if(k && k != v && this.formData.recv_addr.length>=3) {
         this.nslookupDomainInformation()
@@ -116,29 +123,29 @@ export default {
   mounted() {
     // this.formData.recv_addr = 'bcrt1qtqxmmcda462t5dez4t4nnezxzfa3r862h9qyrm'
     // this.formData.amount = 0.01
+    this.maxBalance = this.store.currentBtcBalance
   },
   methods: {
     checkUpdateFormData() {
+      
       if (
         this.formData.fee_rate <= 0 ||
         this.formData.amount <= 0 ||
-        this.formData.amount < this.store.currentBtcBalance
+        this.formData.amount < this.maxBalance
       ) {
         return
       }
-      this.formData.amount = Math.max(
-        0,
-        (this.store.currentBtcBalance * 10 ** 8 -
-          Number(this.formData.fee_rate)) /
-          10 ** 8
-      )
+      this.refreshMaxBalance().then(()=> {
+        this.formData.amount = Math.max(0,this.maxBalance)
+      })
+      
     },
     nslookupDomainInformation() {
-      if(this.checkTimer) {
-        clearTimeout(this.checkTimer)
-        this.checkTimer=null
-      }
       const nsCheck = () => {
+        if(this.checkTimer) {
+          clearTimeout(this.checkTimer)
+          this.checkTimer=null
+        }
         nslookupDomainInfo(this.formData.recv_addr).then(result => {
           console.log('checkResultMessage: ', result)
           if(result.isAddress){
@@ -188,6 +195,21 @@ export default {
       )
       console.log('maxV: ', maxV)
       this.formData.amount = maxV
+      this.maxBalance = maxV
+      this.refreshMaxBalance()
+      
+    },
+    async refreshMaxBalance(){
+      const wallet_id = this.store.getCurrentWalletId()
+      return EstimateMaxBtc({
+        wallet_id,
+        min_conf: 6,
+        fee_rate: this.formData.fee_rate
+      }).then(amount => {
+        console.log('EstimateMaxBtc: ', amount, amount/(10 ** 8))
+        this.formData.amount = amount/(10 ** 8)
+        this.maxBalance = this.formData.amount
+      })
     },
     async sendConfirm() {
       this.$root._main_confirm(

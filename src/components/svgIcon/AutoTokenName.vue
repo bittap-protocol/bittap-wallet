@@ -1,17 +1,3 @@
-<script setup lang="ts">
-import { defineComponent } from 'vue'
-
-defineComponent({
-  name: 'IconAutoTokenName',
-})
-
-defineProps({
-  name: {
-    type: String,
-    required: true,
-  },
-})
-</script>
 <template>
   <svg
     class="img"
@@ -33,10 +19,50 @@ defineProps({
       x="18"
       y="22"
       fill="white"
-      :font-size="name.length > 5 ? '80%' : '100%'"
+      :font-size="computedFontSize"
       text-anchor="middle"
     >
-      {{ name && name.length > 5 ? name.substring(0, 5).toUpperCase() : name.toUpperCase() }}
+      {{ formattedName }}
     </text>
   </svg>
 </template>
+
+<script setup lang="ts">
+import { defineComponent, computed } from 'vue';
+
+defineComponent({
+  name: 'IconAutoTokenName',
+});
+
+const props = defineProps({
+  name: {
+    type: String,
+    required: true,
+  },
+});
+
+const formattedName = computed(() => {
+  if (props.name.length > 5) {
+    return props.name.substring(0, 5).toUpperCase();
+  } else {
+    return props.name.toUpperCase();
+  }
+});
+
+const minFontSize = 100;
+const maxFontSize = 80;
+const maxNameLengthForMinSize = 2;
+const maxNameLengthForMaxSize = 5;
+
+const computedFontSize = computed(() => {
+  const nameLength = props.name.length;
+  if (nameLength <= maxNameLengthForMinSize) {
+    return minFontSize + '%';
+  } else if (nameLength >= maxNameLengthForMaxSize) {
+    return maxFontSize + '%';
+  } else {
+    const scaleFactor = (maxFontSize - minFontSize) / (maxNameLengthForMaxSize - maxNameLengthForMinSize);
+    return ((nameLength - maxNameLengthForMinSize) * scaleFactor + minFontSize) + '%';
+  }
+});
+</script>

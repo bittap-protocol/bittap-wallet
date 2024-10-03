@@ -26,6 +26,10 @@ export function TestUrl(url: string) {
   return /^(http|ftp|https):\/\/[\w\-_]+/.test(url)
 }
 
+export function isAssetId(id:string):boolean {
+  return /^[0-9a-f]{64}$/.test(id)
+}
+
 /**
  * send message to browser of channel
  * @param eventType 
@@ -223,7 +227,7 @@ export async function encryptMnemonic(mnemonic: string, password: string) {
   const encoder = new TextEncoder()
   const data = encoder.encode(mnemonic)
 
-  // 使用 PBKDF2 生成加密密钥
+  // Generate the encryption key using PBKDF2
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
     encoder.encode(password),
@@ -276,7 +280,7 @@ export async function decryptMnemonic(
   const decoder = new TextDecoder()
   const iv = Buffer.from(ivHex, 'hex')
 
-  // 使用 PBKDF2 生成解密密钥
+  // Use PBKDF2 to generate the decryption key
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
     encoder.encode(password),

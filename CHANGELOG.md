@@ -19,4 +19,5 @@
 | Asset display management     |     Ok |  - |
 | Send taproot assets     |     Ok |  - |
 | Send BTC assets     |     Ok |  - |
-| Improve UI     |     in progress |  - |
+| Improve UI     |     Ok |  - |
+| SDK framework support     |     in progress |  - |

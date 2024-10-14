@@ -97,13 +97,15 @@ export default {
     searchKeyword: string
     assets: tokenInfo[]
     userAssets: tokenInfo[],
-    timer: NodeJS.Timeout|null
+    timer: NodeJS.Timeout|null,
+    searchIng: boolean,
   } {
     return {
       searchKeyword: '',
       assets: [] as tokenInfo[],
       userAssets: [] as tokenInfo[],
-      timer: null
+      timer: null,
+      searchIng: false,
     }
   },
   computed: {
@@ -120,8 +122,9 @@ export default {
         if(this.timer) {
           clearTimeout(this.timer)
           this.timer = null
-          return 
+          console.log('clear timer')
         }
+        console.log('set timer')
         this.timer = setTimeout(() => {
           this.searchForApiData()
         },500)
@@ -133,13 +136,16 @@ export default {
   },
   methods: {
     searchForApiData(){
+      this.searchIng = true
       const assets_id = isAssetId(this.searchKeyword ) ? this.searchKeyword : undefined
       const assets_name = !isAssetId(this.searchKeyword ) ? this.searchKeyword : undefined
       const wallet_id = this.store.getCurrentWalletId()
+      
       ListAssetsQuery(assets_name, assets_id, 1, 9999).then((res) => {
+        this.searchIng = false
         if(res) {
           res.forEach(x => {
-            const asset_id = toHex(x.asset.asset_id)
+            const asset_id = x.asset.asset_id
             const isAdd = this.assets.some(x=> x.asset_id === asset_id)
             if(isAdd) {
               return 
@@ -152,7 +158,13 @@ export default {
               name: x.asset.asset_name,
             })
           })
+          this.assets = this.assets.sort((a,b) => {
+              return b.amount - a.amount
+            })
+          console.log('this.assets: ', this.assets)
         }
+      }).finally(() => {
+        this.searchIng = false
       })
     },
     showKeywordsName(name: string) {
@@ -178,7 +190,7 @@ export default {
     },
     initData() {
       // @ts-ignore
-      this.$root.setTitle('Assets management')
+      this.$root.setTitle('Assets Manage')
       this.loadData()
     },
     async loadData() {

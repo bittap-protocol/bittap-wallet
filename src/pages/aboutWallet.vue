@@ -36,9 +36,17 @@
 </template>
 
 <script lang="ts">
+// @ts-ignore
 import IconArrowRight from '@/components/svgIcon/ArrowRight.vue'
+// @ts-ignore
+import { useAppStore } from '@/stores/app.store'
 export default {
   components: { IconArrowRight },
+  setup() {
+    const store = useAppStore()
+    store.setGoBackUrl('')
+    store.isGoBack()
+  },
   data() {
     return {
       // @ts-ignore

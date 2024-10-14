@@ -44,7 +44,7 @@
       </div>
       <div class="actions">
         <router-link
-          :to="'/common/send?asset_id='+info.asset_id+'&asset_type='+info.asset_type"
+          :to="'/common/send?input=yes&asset_id='+info.asset_id+'&asset_type='+info.asset_type"
           class="send"
         >
           <svg
@@ -103,7 +103,7 @@
           <div class="font-bold">Send</div>
         </router-link>
         <router-link
-          :to="'/common/receive?asset_id='+info.asset_id+'&asset_type='+info.asset_type"
+          :to="'/common/receive?input=yes&asset_id='+info.asset_id+'&asset_type='+info.asset_type"
           class="receive"
         >
           <svg

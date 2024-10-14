@@ -34,7 +34,8 @@ export default {
     const store = useAppStore()
     // const router = useRouter()
 
-    store.setGoBackUrl('/')
+    const input = getQuery('input')
+    store.setGoBackUrl(input==='yes'? '': '/')
     store.isGoBack()
     return {
       store

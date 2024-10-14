@@ -262,11 +262,11 @@
           <div v-if="activeTab === 'nft'" class="content-tab">
             <div
               v-if="!loading"
-              class="flex flex-row justify-between items-center m-5 "
+              class="flex flex-row flex-wrap gap-3 justify-between items-center m-5 "
             >
-            <template v-if="assets.filter(x => x.asset_type ===1 && x.amount >= 1).length > 0 && !loading">
+            <template v-if="assets.filter(x => x.asset_type ===1).length > 0 && !loading">
               <router-link
-                v-for="ass in assets.filter(x => x.asset_type ===1 && x.amount >= 1)"
+                v-for="ass in assets.filter(x => x.asset_type ===1 && Object.prototype.hasOwnProperty.call(x,'amount') ).sort((a,b)=>b.amount-a.amount)"
                 :key="ass.asset_id"
                 class="nft-item"
                 :to="ass.asset_id === 'Base'? '/': '/common/tokenInfo?asset_id='+ass.asset_id"
@@ -275,7 +275,7 @@
                   <div class="name">{{ ass.name }}</div>
                   <div class="info">
                     <div class="time">{{ ass.asset_type }}</div>
-                    <div class="amount">X {{ ass.amount }}</div>
+                    <div class="amount">X {{ ass.amount||0 }}</div>
                   </div>
                 </div>
               </router-link>
@@ -331,6 +331,11 @@
       <Refresh :class="['icc', refresh ? 'refreshing' : '']"></Refresh>
     </button>
   </div>
+  <div v-if="showDevLinks" class="links flex flex-row justify-between items-start p-4 gap-x-2 mb-20 text-primary">
+    <RouterLink class="no-underline" to="/common/connectionWallet">Connection</RouterLink>
+    <RouterLink class="no-underline" to="/common/sginMessage">sginMessage</RouterLink>
+    <RouterLink class="no-underline" to="/common/sginTransfer">sginTransfer</RouterLink>
+  </div>
 </template>
 
 <script lang="ts">
@@ -365,7 +370,7 @@ export default {
     const store = useAppStore()
     // @ts-ignore
     const account = computed(() => store.getActiveAccount())
-
+    const showDevLinks = ref(import.meta.env.DEV)
     // console.log('account: ', account)
     const showAddress = (address: string) => {
       return showAddressAndAssetId(address, 12, 12)
@@ -380,6 +385,7 @@ export default {
       tabs,
       showAddress,
       store,
+      showDevLinks
     }
   },
   data() {
@@ -681,17 +687,17 @@ export default {
         .nft-item{
           
           .nft-info{
-            @apply w-[150px] h-[196px] border-primary border border-solid p-0 rounded-md overflow-hidden;
+            @apply w-[150px] h-[196px] border-primary border border-solid p-0 rounded-md overflow-hidden shadow-md shadow-gray-300;
             .name{
-              @apply text-black text-xl font-semibold text-center leading-[30px] mt-[63px] mb-[68px];
+              @apply text-gray-800 drop-shadow-md px-2 text-xl font-semibold text-center leading-[30px] h-[160px] flex flex-col justify-center items-center break-all;
             }
             .info{
-              @apply flex flex-row justify-between items-center bg-[#8000FF9E];
+              @apply flex flex-row justify-end items-center bg-[#8000FF9E];
               .time{
-                @apply text-white text-left text-[10px] font-semibold leading-[35px] pl-2;
+                @apply text-white text-left text-[10px] font-semibold leading-[35px] px-2 hidden;
               }
               .amount{
-                @apply text-white text-right text-[10px] font-semibold leading-[35px] pr-2;
+                @apply text-white text-right text-[10px] font-semibold leading-[35px] px-2;
               }
             }
           }

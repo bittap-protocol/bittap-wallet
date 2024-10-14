@@ -343,20 +343,12 @@ export const useAppStore = defineStore('app', () => {
       return ListAssetsQuery(undefined, undefined, page, page_size).then((res) => {
         if (res) {
           console.log('ListAssetsQuery res: ', res)
+          // @ts-ignore
           res.forEach((x) => {
             console.log('updateAssets res: x: ', x)
-            if(x.asset) {
-              x.asset.asset_id = toHex(x.asset.asset_id)
-            }else{
-              x.asset = {
-                asset_id: toHex(x.group_anchor.asset_id),
-                group_key: x.group_key,
-                group_supply: x.group_supply,
-                asset_name: x.group_anchor.asset_name,
-                asset_type: x.group_anchor.asset_type,
-                total_supply: x.group_anchor.total_supply,
-              }
-            }
+            // eslint-disable-next-line no-self-assign
+            x.asset.asset_id = x.asset.asset_id
+            // @ts-ignore
             assetsList.value.push(x)
           })
         }
@@ -388,7 +380,7 @@ export const useAppStore = defineStore('app', () => {
       )
       if (rowInfo) {
         // @ts-ignore
-        rowInfo.total_supply += Number(row.total_supply)
+        rowInfo.total_supply += row.total_supply ? Number(row.total_supply) : 0
       } else {
         // @ts-ignore
         assetsListOk.push({

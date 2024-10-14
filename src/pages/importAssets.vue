@@ -32,7 +32,7 @@ export default {
     const store = useAppStore()
     // const router = useRouter()
 
-    store.setGoBackUrl('/')
+    store.setGoBackUrl('')
     store.isGoBack()
     return {
       store

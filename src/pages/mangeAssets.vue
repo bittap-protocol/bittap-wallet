@@ -11,7 +11,9 @@
         />
       </div>
     </div>
+    <div v-if="searchIng" class="flex flex-row justify-start items-center gap-x-1"><span class="loading loading-dots loading-xs"></span>Loading...</div>
     <div class="token">
+      
       <div
         v-for="ass in showListData"
         :key="ass.asset_id"
@@ -122,9 +124,7 @@ export default {
         if(this.timer) {
           clearTimeout(this.timer)
           this.timer = null
-          console.log('clear timer')
         }
-        console.log('set timer')
         this.timer = setTimeout(() => {
           this.searchForApiData()
         },500)
@@ -161,7 +161,7 @@ export default {
           this.assets = this.assets.sort((a,b) => {
               return b.amount - a.amount
             })
-          console.log('this.assets: ', this.assets)
+          // console.log('this.assets: ', this.assets)
         }
       }).finally(() => {
         this.searchIng = false
@@ -195,7 +195,7 @@ export default {
     },
     async loadData() {
       this.assets = await this.store.getAssetsListForSelect()
-      console.log('this.assets: ', this.assets)
+      // console.log('this.assets: ', this.assets)
       this.refreshTokenList()
       // @ts-ignore
       this.assets.push({
@@ -210,7 +210,7 @@ export default {
     },
     toggleToken(token: tokenInfo): void {
       const state = this.isAddState(token)
-      console.log('state: ', state)
+      // console.log('state: ', state)
       if (state) {
         // @ts-ignore
         this.store.removeToken(token.asset_id)

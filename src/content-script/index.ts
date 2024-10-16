@@ -16,6 +16,7 @@ import './index.scss'
 chrome.runtime.onConnect.addListener(async () => {
     console.log('chrome.runtime.onConnect==Content script: ', new Date().toLocaleString());
 })
+// @ts-ignore
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log('Content script onMessage received == Content script', message, sender, sendResponse)
 })

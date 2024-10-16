@@ -24,6 +24,7 @@
 
 <script lang="ts">
 import { ImportAsset } from '@/popup/api/btc/blockStream';
+import { postToast } from '@/popup/libs/tools';
 import { useAppStore } from '@/stores/app.store'
 
 export default {
@@ -58,19 +59,24 @@ export default {
     },
     importAsset() { 
       this.isSubmitting = true
+      // @ts-ignore
       this.$root._showLoading('In process...')
       ImportAsset(this.formData).then(res => { 
         console.log('import asset res: ', res)
         this.isSubmitting = false
+        // @ts-ignore
         this.$root._hideLoading()
+        // @ts-ignore
         this.$root._toast('Import asset success', 'success')
         setTimeout(() => {
           this.$router.push('/')
         }, 2000)
       }).catch(err => { 
         postToast(err+'','error')
+        // @ts-ignore
         console.error('on error: ', e)
         this.isSubmitting = false
+        // @ts-ignore
         this.$root._hideLoading()
       })
     }

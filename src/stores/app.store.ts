@@ -7,13 +7,13 @@ import {
   payments,
   initEccLib,
   crypto,
-  address,
+  // address,
   Signer,
   Psbt,
 } from 'bitcoinjs-lib'
 
 import { mnemonicToSeedSync, generateMnemonic, validateMnemonic } from 'bip39'
-import BIP32Factory, { BIP32Interface } from 'bip32'
+import BIP32Factory from 'bip32'
 
 import { Buffer } from 'buffer'
 
@@ -116,6 +116,19 @@ export interface Fees {
   lastTime: number
 }
 
+export interface ReceiveAddrInfo {
+  amount: number,
+  asset_id: string,
+  asset_type: string
+  asset_version: string
+  encoded: string
+  internal_key: string
+  proof_courier_addr: string
+  script_key: string
+  taproot_output_key: string
+  asset_name?: string
+}
+export type ReceiveAddrRow = ReceiveAddrInfo
 // @ts-ignore
 // import browserCrypto from 'browser-crypto';
 
@@ -267,6 +280,7 @@ export const useAppStore = defineStore('app', () => {
           const networkId = networkType.value === 0 ? 0 : 1
           const path = "m/84'/" + networkId + "'/0'"
           const childNodePrimary = rootKey.derivePath(path)
+          // @ts-ignore
           const childNodeXOnlyPubkeyPrimary = toXOnly(childNodePrimary.publicKey)
           const p2trPrimary = payments.p2tr({
             internalPubkey: childNodeXOnlyPubkeyPrimary,
@@ -292,7 +306,9 @@ export const useAppStore = defineStore('app', () => {
             acc.b84PublicKey = b84PublicKey
             acc.b1017PublicKey = b1017PublicKey
             acc.path = path
+            // @ts-ignore
             acc.wallet_id = res.data.wallet_id
+            // @ts-ignore
             acc.btcAddress = res.data.address
             acc.btcBalance = await QueryBtcBalance({ wallet_id: acc.wallet_id, btc_addr: acc.btcAddress })
             updateAssets()
@@ -342,10 +358,8 @@ export const useAppStore = defineStore('app', () => {
     const loadData = async (page= 1) => {
       return ListAssetsQuery(undefined, undefined, page, page_size).then((res) => {
         if (res) {
-          console.log('ListAssetsQuery res: ', res)
           // @ts-ignore
           res.forEach((x) => {
-            console.log('updateAssets res: x: ', x)
             // eslint-disable-next-line no-self-assign
             x.asset.asset_id = x.asset.asset_id
             // @ts-ignore
@@ -413,7 +427,6 @@ export const useAppStore = defineStore('app', () => {
       
       const assets = await getAssetsBalances()
       const asset_info = assets.find(x=>x.asset_id === asset_id)
-      console.log('assets: ',asset_id, assets, asset_info, info, currentInfo)
       if(asset_info) {
         currentInfo.asset.balance = asset_info.amount
         currentInfo.asset.asset_type = asset_info.asset_type
@@ -426,13 +439,14 @@ export const useAppStore = defineStore('app', () => {
     return currentInfo
   }
 
-  const getAssetsBalances = async () => {
+  const getAssetsBalances = async ():Promise<tokenInfo[]> => {
     const { wallet_id } = getActiveAccount()
     return QueryAssetBalance({ wallet_id }).then((res) => {
-      console.log('QueryAssetBalance res: ', res)
+      // @ts-ignore
       return res.map((x) => {
         const { amount, asset_id, asset_tag, type } = x
         return {
+          wallet_id,
           asset_id: toHex(asset_id),
           amount: amount,
           name: asset_tag,
@@ -444,21 +458,27 @@ export const useAppStore = defineStore('app', () => {
 
   const getUserAssetsBalance = async (): Promise<tokenInfo[]> => {
     const wallet_id = getCurrentWalletId()
-    const assets: tokenInfo[] = (await getAssetsBalances()) as tokenInfo[]
-    
+    const assets = await getAssetsBalances()
+    const currentTokens = getTokens()
+
     assets.forEach((row) => {
       const tokenItem = tokens.value.find(
         (token) =>
           token.wallet_id === wallet_id && token.asset_id === row.asset_id
       )
-      console.log('tokenItem: ', tokenItem)
+      // console.log('tokenItem: ', tokenItem)
       if (tokenItem) {
         tokenItem.amount = row.amount
         tokenItem.asset_type = row.asset_type || 0
       }
     })
-    const currentTokens = tokens.value.filter((x: tokenInfo) => x.wallet_id === wallet_id) 
-    console.log('tokens.value.length: ', tokens.value.length, tokens.value, currentTokens)
+    
+    // console.log('tokens.value.length: ', tokens.value.length, tokens.value, currentTokens)
+    if(currentTokens.length <= 0){
+      assets.forEach((token:tokenInfo) => {
+        addToken(token)
+      })
+    }
     return currentTokens.length >0 ? currentTokens : assets
   }
 
@@ -528,8 +548,6 @@ export const useAppStore = defineStore('app', () => {
   }
 
   const createMnemonicPhrase = () => {
-    // console.log('browserCrypto', browserCrypto)
-    // const mnemonic = entropyToMnemonic(browserCrypto.Buffer.alloc(16).toString('hex'))
     const mnemonic = generateMnemonic()
     if (!validateMnemonic(mnemonic)) {
       throw new Error('Invalid mnemonic generated!')
@@ -587,6 +605,7 @@ export const useAppStore = defineStore('app', () => {
         // console.log('phrase: %s', phrase)
         const path = "m/84'/" + networkId + "'/0'"
         const childNodePrimary = rootKey.derivePath(path)
+        // @ts-ignore
         const childNodeXOnlyPubkeyPrimary = toXOnly(childNodePrimary.publicKey)
 
         // console.log('childNodePrimary.publicKey: %s\nprivateKey: %s \ntoBase58: %s', childNodePrimary.publicKey.toString('hex'), childNodePrimary.privateKey?.toString('hex'), childNodePrimary.toBase58())
@@ -639,14 +658,13 @@ export const useAppStore = defineStore('app', () => {
         // main for b84PublicKey
         CreateWallet(b1017PublicKey, b84PublicKey)
           .then((res) => {
-            console.log('createWallet res: ', res)
+            // console.log('createWallet res: ', res)
             // @ts-ignore
             phrases.value.push({
               phrase: dePhrase,
               paths: [path],
             })
             phraseIndex = phrases.value.length - 1
-            console.log('accountList: ', accountList, accountList.value)
             const result: AccountRow = {
               phraseIndex,
               // @ts-ignore
@@ -664,7 +682,6 @@ export const useAppStore = defineStore('app', () => {
               // @ts-ignore
               btcAddress: res.data.address,
             }
-            console.log('create account result: ', result)
             // @ts-ignore
             accountList.value.push(result)
             switchActiveAccount(accountList.value.length - 1)
@@ -692,7 +709,6 @@ export const useAppStore = defineStore('app', () => {
     return psbt
   }
   const signAnchorPsbt = async (psbt: Psbt): Promise<Psbt> => {
-    console.log('signAnchorPsbt psbt: ', psbt)
 
     for (let i = 0; i < psbt.data.inputs.length; i++) {
       const input = psbt.data.inputs[i]
@@ -705,12 +721,6 @@ export const useAppStore = defineStore('app', () => {
       }
       const isTweak = path.startsWith('m/1017')
       const KeyPair = await getCurrentAccountKeyPair(
-        path,
-        isTweak,
-        isTweak ? { tweakHash: input.tapMerkleRoot } : {}
-      )
-      console.log(
-        'path: %s isTweak: ',
         path,
         isTweak,
         isTweak ? { tweakHash: input.tapMerkleRoot } : {}
@@ -743,23 +753,12 @@ export const useAppStore = defineStore('app', () => {
     if (!dePhrase || !dePhrase.phrase) {
       throw Error('Invalid dePhrase')
     }
-    console.log(
-      'getCurrentAccountKeyPair phraseIndex: %d dePhrase: %s',
-      phraseIndex,
-      dePhrase
-    )
     // @ts-ignore
     const phrase: string = await sendMessage('decryptMnemonic', dePhrase.phrase)
     if (!phrase || phrase.split(' ').length != 12) {
       throw Error('Invalid phrase')
     }
     initEccLib(ecc)
-    console.log(
-      'getCurrentAccountKeyPair path: %s phrase: ',
-      path,
-      phrase,
-      dePhrase
-    )
     const seed = mnemonicToSeedSync(phrase)
     const bip32 = BIP32Factory(ecc)
     const network = getNetwork()
@@ -768,20 +767,15 @@ export const useAppStore = defineStore('app', () => {
     if (isTweak) {
       const tweakedSigner = tweakSigner(
         childNodePrimary,
+        // @ts-ignore
         Object.assign({}, { network }, opts)
       )
-      console.log('tweakedSigner:', tweakedSigner)
       return tweakedSigner
-      // tweakSigner
-      // const tweakedChildNodePrimary = childNodePrimary.tweak(
-      //   crypto.taggedHash('TapTweak', toXOnly(childNodePrimary.publicKey)),
-      // );
-      // return tweakedChildNodePrimary
     }
     return childNodePrimary
   }
 
-  function tweakSigner(signer: Signer, opts: any = {}): Signer {
+  function tweakSigner(signer: Signer, opts = {network:undefined}): Signer {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     let privateKey: Uint8Array | undefined = signer.privateKey!
@@ -794,6 +788,7 @@ export const useAppStore = defineStore('app', () => {
 
     const tweakedPrivateKey = ecc.privateAdd(
       privateKey,
+      // @ts-ignore
       tapTweakHash(toXOnly(signer.publicKey), opts.tweakHash)
     )
     if (!tweakedPrivateKey) {
@@ -808,6 +803,7 @@ export const useAppStore = defineStore('app', () => {
   function tapTweakHash(pubKey: Buffer, h: Buffer | undefined): Buffer {
     return crypto.taggedHash(
       'TapTweak',
+      // @ts-ignore
       Buffer.concat(h ? [pubKey, h] : [pubKey])
     )
   }
@@ -823,11 +819,12 @@ export const useAppStore = defineStore('app', () => {
       accountList.value[index].name = name
     }
   }
-  const getReceiveAddress = () => {
+  const getReceiveAddress = (): Promise<ReceiveAddrInfo[]> => {
     const accountInfo = getActiveAccount()
     const { wallet_id } = accountInfo
     return QueryAddressList({ wallet_id }).then((addrs) => {
-      receiveAddressList.value = addrs.map((x) => {
+      // @ts-ignore
+      return addrs.map((x) => {
         const {
           amount,
           asset_id,
@@ -852,7 +849,6 @@ export const useAppStore = defineStore('app', () => {
           asset_name: getAssetsNameForAssetID(toHex(asset_id)),
         }
       })
-      return receiveAddressList.value
     })
   }
   const setCurrentBtcBalance = (btcBalance: number) => {
@@ -890,8 +886,13 @@ export const useAppStore = defineStore('app', () => {
     return tokens.value.filter((token) => token.wallet_id === wallet_id)
   }
   const addToken = (token: tokenInfo): void => {
-    token.wallet_id = getCurrentWalletId()
-    tokens.value.push(token)
+    token.wallet_id = token.wallet_id ? token.wallet_id : getCurrentWalletId()
+    const isFound = tokens.value.findIndex(
+      (token) => token.wallet_id === token.wallet_id && token.asset_id === token.asset_id
+    )
+    if(!isFound) {
+      tokens.value.push(token)
+    }
   }
   const removeToken = (asset_id: string): void => {
     const wallet_id = getCurrentWalletId()
@@ -944,7 +945,6 @@ export const useAppStore = defineStore('app', () => {
    * update fees
    */
   const updateGasFees = async (): Promise<Fees> => {
-    console.log("getGasFees updateGasFees", new Date().getTime())
     const feesRes = await getGas()
     feesRes.lastTime = UnixNow()
     fees.value = Object.assign({},fees.value, feesRes)
@@ -956,28 +956,22 @@ export const useAppStore = defineStore('app', () => {
    */
   const getGasFees = async (): Promise<Fees> => {
     return new Promise<Fees>((resolve, reject) => {
-      console.log("getGasFees 2", new Date().toISOString(), [RequestFeesLoading, fees.value])
       if(fees.value.lastTime <=0 || fees.value.lastTime + 30 < UnixNow()) {
-        console.log("getGasFees 3", new Date().toISOString())
         if(RequestFeesLoading === true) {
-          console.log("getGasFees 4", new Date().toISOString())
             setTimeout(() => {
               getGasFees().then(res => {
-                console.log("getGasFees 6", new Date().toISOString())
                 resolve(res)
               }).catch(e => {
                 reject(e)
               })
             }, 1000)
         }else{
-          console.log("getGasFees 5", new Date().toISOString())
           RequestFeesLoading = true
           updateGasFees().then(() => {
             resolve(fees.value)
           })
         }
       }else{
-        console.log("getGasFees 7", new Date().toISOString())
         resolve(fees.value)
       }
   })

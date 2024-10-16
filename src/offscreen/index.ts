@@ -6,4 +6,4 @@ window.console.log = (...data) => {
   })
 }
 
-console.log('console log from offscreen document')
+// console.log('console log from offscreen document')

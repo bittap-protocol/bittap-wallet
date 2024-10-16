@@ -493,7 +493,7 @@ export default {
       )
 
       this.store.updateBtcPrices().then((res) => {
-        console.log('updateBtcPrices res: ', res)
+        // console.log('updateBtcPrices res: ', res)
         // @ts-ignore
         this.btcPrice = res.USD
       })
@@ -503,7 +503,7 @@ export default {
         this.assets = await this.store.getUserAssetsBalance()
         // @ts-ignore
         this.$root.updateGlobalState()
-        console.log('this.assets: ', this.assets)
+        // console.log('this.assets: ', this.assets)
         // add balance for BTC
         // @ts-ignore
         this.assets.unshift({
@@ -520,17 +520,11 @@ export default {
       const self = this
       // @ts-ignore
       chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        console.log('Message received ==popup', message, sender, sendResponse)
+        // console.log('Message received ==popup', message, sender, sendResponse)
         switch (message.type) {
           case 'ws.message':
             // eslint-disable-next-line no-case-declarations
             const { status } = message.data.result
-            console.log(
-              'ws.message received: ',
-              message,
-              message.data.result,
-              status
-            )
             // transfer asset is finished  "ADDR_EVENT_STATUS_COMPLETED"
             if (status === 'ADDR_EVENT_STATUS_COMPLETED') {
               // @ts-ignore
@@ -540,7 +534,7 @@ export default {
             break
           case 'isUnlocked':
             hideFullscreen()
-            if (!message.data.status) {
+            if (!message.data || !message.data.status) {
               this.$router.push('/common/unlock')
             }
             break

@@ -213,7 +213,7 @@ export function encryptData(data: string, key: string): string {
  */
 export function decryptData(ciphertext: string, key: string): string {
   const bytes = AES.decrypt(ciphertext, key)
-  console.log('bytes: ', bytes, EncUtf8)
+  // console.log('bytes: ', bytes, EncUtf8)
   return bytes.toString(EncUtf8)
 }
 

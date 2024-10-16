@@ -71,12 +71,12 @@ const requestRpc = async (api, body = null, options = {}) => {
   } else {
     delete opts.body
   }
-  console.log('requestRpc start: ', new URL(fetchUrl).pathname, ' is opts: ', body)
+  // console.log('requestRpc start: ', new URL(fetchUrl).pathname, ' is opts: ', body)
   return fetch(fetchUrl, opts)
     .then((res) => res.json())
     .then((data) => {
       // const data = await res.json()
-      console.log('requestRpc then: ', new URL(fetchUrl).pathname, ' is res: ', data)
+      // console.log('requestRpc then: ', new URL(fetchUrl).pathname, ' is res: ', data)
       if (data) {
         if (data.code || data.message) {
           if(data.code === 4003) {

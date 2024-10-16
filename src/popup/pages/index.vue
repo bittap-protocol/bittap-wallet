@@ -10,9 +10,8 @@ import { useRouter } from 'vue-router'
 const store = useAppStore()
 
 store.notGoBack()
-const name = computed(() => store.name)
+// const name = computed(() => store.name)
 const count = computed(() => store.count)
-console.log('account name: ' + name, ' counts: '+ count.value)
 const router = useRouter()
 
 // store.initConfig().then( () => {

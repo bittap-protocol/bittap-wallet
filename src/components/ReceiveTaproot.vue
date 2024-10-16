@@ -106,20 +106,20 @@ export default {
             selectAssetInfo: null
         }
     },
-    watch: { 
-        'formData.amount': function(k, v) {
-            if (k != v && this.formData.amount) { 
-                this.formData.amount = Number.parseInt(this.formData.amount)+''
-            }
-         }
-    },
+    // watch: { 
+    //     'formData.amount': function(k, v) {
+    //         if (k != v && this.formData.amount) { 
+    //             this.formData.amount = Number.parseInt(this.formData.amount)+''
+    //         }
+    //      }
+    // },
     async mounted(){
-        console.log('this.asset_id: ', this.asset_id)
+        // console.log('this.asset_id: ', this.asset_id)
         if(this.asset_id) {
             // @ts-ignore
             this.$root._showLoading('Loading data...')
             const token = await this.store.getAssetsInfoForAssetID(this.asset_id)
-            console.log('token: ', token)
+            // console.log('token: ', token)
             this.formData.name = token.asset.asset_name
             this.formData.assetsId = token.asset.asset_id
             this.formData.asset_type = token.asset.asset_type
@@ -136,10 +136,10 @@ export default {
             const store = useAppStore()
             const wallet_id = store.getCurrentWalletId()
             NewAssetAddress(wallet_id, this.formData.assetsId, this.formData.amount).then(res => { 
-                const addInfo = Object.assign(this.formData, {
-                    address: res.data.address
-                })
-                console.log('addInfo:', addInfo)
+                // const addInfo = Object.assign(this.formData, {
+                //     address: res.data.address
+                // })
+                // console.log('addInfo:', addInfo)
                 // @ts-ignore
                 this.$root._toast('Create receive address success', 'success')
                 this.receiveAddress = res.data.address
@@ -147,7 +147,7 @@ export default {
 
         },
         async searchAssetForName(){
-            console.log('searchAssetForName:',this.searchForm.name)
+            // console.log('searchAssetForName:',this.searchForm.name)
             if(!this.searchForm.name || this.searchForm.loading) {
                 return 
             }
@@ -155,7 +155,7 @@ export default {
             const assets_name = !isAssetId(this.searchForm.name ) ? this.searchForm.name : undefined
             this.searchForm.loading = true
             ListAssetsQuery(assets_name, assets_id, 1, 9999).then((res) => {
-                console.log('ListAssetsQuery res: ', res)
+                // console.log('ListAssetsQuery res: ', res)
                 if (res) {
                     // @ts-ignore
                     this.assets = res.map(x => {
@@ -184,11 +184,11 @@ export default {
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         checkedToken(token: any) {
-            console.log('token: ', token)
+            // console.log('token: ', token)
             this.formData.name = token.name
             this.formData.assetsId = token.asset_id
-            this.formData.assetsType = token.asset_type
-            if(this.formData.assetsType !== 0) {
+            this.formData.asset_type = token.asset_type
+            if(this.formData.asset_type !== 0) {
                 this.formData.amount = '1'
             }
             this.selectAssetInfo = token

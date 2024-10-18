@@ -61,11 +61,7 @@
 
       <button
         class="button"
-        :disabled="
-          password.length < 8 ||
-          newPassword.length < 8 ||
-          newPassword === confirmPassword
-        "
+        :disabled="password.length <=7 || newPassword.length <=7 || newPassword === confirmPassword"
         @click="changePassword"
       >
         Change password
@@ -111,15 +107,6 @@ export default {
   },
   computed: {
     TestOk() {
-      console.log(
-        'test: ',
-        TestPassword(this.password) &&
-          TestPassword(this.newPassword) &&
-          TestPassword(this.confirmPassword),
-        this.password.length < 8,
-        this.newPassword.length < 8,
-        this.newPassword === this.confirmPassword
-      )
       return (
         TestPassword(this.password) &&
         TestPassword(this.newPassword) &&

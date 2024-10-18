@@ -1,3 +1,4 @@
+<!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <script lang="ts">
 // @ts-ignore
 import IconMdiSettings from '~icons/mdi/settings-outline'
@@ -213,8 +214,8 @@ export default {
       return Number(this.getTokenPrice(asset_id) * Number(n))
     },
     getTokenPrice(asset_id: string): number {
-      console.log('getTokenPrice asset_id: ', asset_id)
-      return 0
+      // TODO:wait for fix
+      return asset_id ? 0 : 0
     },
     formatTime(time: number, format: string = 'MM-DD HH:mm:ss'): string {
       return useDateFormat(time, format).value
@@ -271,10 +272,11 @@ export default {
         // @ts-ignore
         document.getElementById(this.custom_confirm.id).close()
       }
-
       const called =
         action.handle && typeof action.handle === 'function'
           ? action.handle
+
+          // eslint-disable-next-line @typescript-eslint/ban-types
           : function (_: any, closeModal: Function) {
               closeModal()
             }
@@ -404,23 +406,12 @@ export default {
       ></div>
       <div
         v-if="custom_confirm.actions.length > 0"
-        :class="
-          [
-            'dialog-actions',
-            custom_confirm.actionCls && custom_confirm.actionCls.length > 0
-              ? ''
-              : 'flex-row space-x-2',
-          ].concat(custom_confirm.actionCls)
-        "
+        :class="['dialog-actions', custom_confirm.actionCls && custom_confirm.actionCls.length >= 1? '': 'flex-row space-x-2',].concat(custom_confirm.actionCls)"
       >
         <button
           v-for="(action, index) in custom_confirm.actions"
           :key="'abt-' + index"
-          :class="
-            ['btn', action.cls ? '' : 'btn-outline btn-primary'].concat(
-              action.cls
-            )
-          "
+          :class="['btn', action.cls ? '' : 'btn-outline btn-primary'].concat(action.cls)"
           @click="actionClick(action)"
         >
           {{ action.name }}

@@ -51,14 +51,13 @@ const ws = {
 const clearPassword = () => {
   sessionPassword = null
   chrome.storage.session.set({ sessionPassword: '' })
-  console.log('cleared password.')
 }
 
 chrome.runtime.onInstalled.addListener(async (opt) => {
   // Check if reason is install or update. Eg: opt.reason === 'install' // If extension is installed.
   // opt.reason === 'update' // If extension is updated.
   clearPassword()
-  console.log('chrome runtime: ', opt.reason)
+
   if (opt.reason === 'install') {
     await chrome.storage.local.clear()
 
@@ -86,13 +85,14 @@ chrome.runtime.onInstalled.addListener(async (opt) => {
   // });
 })
 chrome.runtime.onConnect.addListener(async () => {
-  console.log('chrome.runtime.onConnect: ', new Date().toLocaleString())
+  // console.log('chrome.runtime.onConnect: ', new Date().toLocaleString())
   if (sessionPassword === null) {
     sendMessage('isUnlocked', { status: false })
   }
 })
+// @ts-ignore
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('Message received', message, sender, sendResponse)
+  // console.log('Message received', message, sender, sendResponse)
   switch (message.type) {
     case 'SubscribeReceiveEvents':
       ReceiveEvents(message.data)
@@ -142,7 +142,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         message.data.check,
         message.data.pwd
       )
-      console.log('decrypted: ', decrypted)
+      // console.log('decrypted: ', decrypted)
       const data = decrypted ? 'Ok' : 'No'
       // @ts-ignore
       return sendResponse({ type: 'checkPassword', data })
@@ -171,7 +171,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 function ReceiveEvents(encoded: string) {
   if (!encodes.includes(encoded)) {
     encodes.push(encoded)
-    console.log('ReceiveEvents is updated', encodes)
+    // console.log('ReceiveEvents is updated', encodes)
     ActionSubscribeReceive()
   } else {
     ActionSubscribeReceive()
@@ -186,7 +186,7 @@ function InitConfig(data: configOpt) {
   if (sessionPassword === null) {
     sendMessage('isUnlocked', { status: false })
   }
-  console.log('Config is updated', configs)
+  // console.log('Config is updated', configs)
   ActionSubscribeReceive()
 }
 
@@ -197,7 +197,7 @@ function ActionSubscribeReceive() {
     return
   }
 
-  let wc: WcClientObject = null
+  let wc: WcClientObject
   if (
     !Object.prototype.hasOwnProperty.call(ws.client, 'ActionSubscribeReceive')
   ) {

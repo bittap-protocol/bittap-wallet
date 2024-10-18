@@ -134,7 +134,7 @@ export default {
     },
     async importAccountFromWords() {
       try {
-        console.log('this.wordsForm: ', this.wordsForm)
+        // console.log('this.wordsForm: ', this.wordsForm)
 
         for (let i = 0; i < this.wordsForm.length; i++) {
           // @ts-ignore

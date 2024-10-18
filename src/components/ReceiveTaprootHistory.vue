@@ -2,7 +2,7 @@
   <div class="w-full px-3">
     <div class="history-list">
       <div
-        v-for="row in store.receiveAddressList.reverse()"
+        v-for="row in historyList"
         :key="row.taproot_output_key"
         class="item"
       >
@@ -44,7 +44,7 @@
         <div class="loading loading-spinner text-primary my-16"></div>
       </div>
       <div
-        v-if="!loading && store.receiveAddressList.length <= 0"
+        v-if="!loading && historyList.length <= 0"
         class="no-result w-full"
       >
         <div class="flex flex-row justify-center items-center m-5">
@@ -61,7 +61,7 @@
 
 <script lang="ts">
 import { showAddressAndAssetId } from '@/popup/libs/tools'
-import { useAppStore } from '@/stores/app.store'
+import { useAppStore, ReceiveAddrRow } from '@/stores/app.store'
 // @ts-ignore
 import IconCopy from '@/components/svgIcon/Copy.vue'
 
@@ -74,18 +74,12 @@ export default {
   },
   data() {
     return {
-      historyList: [],
+      historyList: [] as Array<ReceiveAddrRow>,
       loading: true,
     }
   },
-  computed: {
-    account() {
-      const store = useAppStore()
-      return store.getActiveAccount()
-    },
-  },
   mounted() {
-    console.log("mounted")
+    // console.log("mounted")
     this.initData()
   },
   methods: {
@@ -94,10 +88,10 @@ export default {
     },
     async initData() {
       this.loading = true
-      await this.store.getReceiveAddress().then((res) => {
+      this.store.getReceiveAddress().then((res) => {
         console.log('getReceiveAddress res: ', res)
+        this.historyList = res.reverse()
         this.loading = false
-        return res
       }).catch(() => {
         this.loading = false
       })

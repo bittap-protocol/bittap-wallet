@@ -104,7 +104,7 @@ export default {
     },
     showLoading: {
       type: Boolean,
-      required: true,
+      required: false,
       default: function () {
         return true
       },

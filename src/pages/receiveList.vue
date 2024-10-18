@@ -10,18 +10,12 @@ import { useAppStore } from '@/stores/app.store'
 
 export default {
   setup() {
-    
     const store = useAppStore()
     // const router = useRouter()
-
-    store.setGoBackUrl('/')
+    store.setGoBackUrl('')
     store.isGoBack()
     return {
-
-    }
-  },
-  data() {
-    return {
+      store
     }
   },
   created() {

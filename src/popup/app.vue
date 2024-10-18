@@ -1,10 +1,11 @@
+<!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <script lang="ts">
 // @ts-ignore
-import IconMdiSettings from '~icons/mdi/settings-outline'
+import IconMdiSettings from '@/components/svgIcon/MdiSettingsOutline.vue'
 // @ts-ignore
-import IconMdiInformationSlabCircleOutline from '~icons/mdi/information-slab-circle-outline'
+import IconMdiInformationSlabCircleOutline from '@/components/svgIcon/MdiInformationSlabCircleOutline.vue'
 // @ts-ignore
-import IconMdiSuccessCircle from '~icons/mdi/success-circle'
+import IconMdiSuccessCircle from '@/components/svgIcon/MdiSuccessCircle.vue'
 // @ts-ignore
 import IconBack from '@/components/svgIcon/IconBack.vue'
 
@@ -45,7 +46,7 @@ export default {
       // console.log('goBackUrl.value: ', goBackUrl.value)
       goBackUrl.value ? router.push(goBackUrl.value) : window.history.go(-1)
     }
-    // console.log('router.currentRoute.value.fullPath: ', router.currentRoute.value.fullPath)
+    console.log('router.currentRoute.value.fullPath: ', router.currentRoute.value.fullPath)
     const isHome = computed(() =>
       ['/', '/popup'].includes(router.currentRoute.value.fullPath)
     )
@@ -213,8 +214,8 @@ export default {
       return Number(this.getTokenPrice(asset_id) * Number(n))
     },
     getTokenPrice(asset_id: string): number {
-      console.log('getTokenPrice asset_id: ', asset_id)
-      return 0
+      // TODO:wait for fix
+      return asset_id ? 0 : 0
     },
     formatTime(time: number, format: string = 'MM-DD HH:mm:ss'): string {
       return useDateFormat(time, format).value
@@ -271,10 +272,11 @@ export default {
         // @ts-ignore
         document.getElementById(this.custom_confirm.id).close()
       }
-
       const called =
         action.handle && typeof action.handle === 'function'
           ? action.handle
+
+          // eslint-disable-next-line @typescript-eslint/ban-types
           : function (_: any, closeModal: Function) {
               closeModal()
             }
@@ -304,7 +306,7 @@ export default {
             to="/common/setting"
             class="btn btn-circle btn-sm bg-gray-100 border-none"
           >
-            <IconMdiSettings class="text-gray-600"></IconMdiSettings>
+            <IconMdiSettings class="text-gray-600 size-6"></IconMdiSettings>
           </router-link>
         </div>
       </div>
@@ -358,11 +360,11 @@ export default {
       <div class="break-all w-72 whitespace-normal">
         <IconMdiInformationSlabCircleOutline
           v-if="toastData.type === 'info'"
-          class="mr-1"
+          class="mr-1 size-5"
         />
         <IconMdiSuccessCircle
           v-if="toastData.type === 'success'"
-          class="mr-1"
+          class="mr-1 size-5"
         />
         <span v-html="toastData.text"></span>
       </div>
@@ -404,23 +406,12 @@ export default {
       ></div>
       <div
         v-if="custom_confirm.actions.length > 0"
-        :class="
-          [
-            'dialog-actions',
-            custom_confirm.actionCls && custom_confirm.actionCls.length > 0
-              ? ''
-              : 'flex-row space-x-2',
-          ].concat(custom_confirm.actionCls)
-        "
+        :class="['dialog-actions', custom_confirm.actionCls && custom_confirm.actionCls.length >= 1? '': 'flex-row space-x-2',].concat(custom_confirm.actionCls)"
       >
         <button
           v-for="(action, index) in custom_confirm.actions"
           :key="'abt-' + index"
-          :class="
-            ['btn', action.cls ? '' : 'btn-outline btn-primary'].concat(
-              action.cls
-            )
-          "
+          :class="['btn', action.cls ? '' : 'btn-outline btn-primary'].concat(action.cls)"
           @click="actionClick(action)"
         >
           {{ action.name }}

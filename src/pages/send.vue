@@ -19,6 +19,7 @@
 </template>
 
 <script lang="ts">
+import { getQuery } from '@/popup/libs/tools';
 import { useAppStore } from '@/stores/app.store'
 
 export default {
@@ -26,8 +27,8 @@ export default {
     
     const store = useAppStore()
     // const router = useRouter()
-
-    store.setGoBackUrl('/')
+    const input = getQuery('input')
+    store.setGoBackUrl(input==='yes'? '': '/')
     store.isGoBack()
     return {
       store
@@ -43,7 +44,13 @@ export default {
     }
   },
   created() {
+    const asset_id = getQuery('asset_id')
     
+    // const asset_type = Number(getQuery('asset_type'))
+    // console.log('asset_id: %s asset_type: %s', asset_id, asset_type)
+    if(asset_id) {
+      this.activeTab = 'taproot'
+    }
     this.initData()
   },
   methods: {

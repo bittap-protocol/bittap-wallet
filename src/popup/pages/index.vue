@@ -1,8 +1,5 @@
 <script setup lang="ts">
 
-// @ts-ignore
-import IconMdiInformationSlabCircleOutline from '~icons/mdi/information-slab-circle-outline';
-
 import { useAppStore } from '@/stores/app.store'
 import { useRouter } from 'vue-router'
 
@@ -10,9 +7,8 @@ import { useRouter } from 'vue-router'
 const store = useAppStore()
 
 store.notGoBack()
-const name = computed(() => store.name)
+// const name = computed(() => store.name)
 const count = computed(() => store.count)
-console.log('account name: ' + name, ' counts: '+ count.value)
 const router = useRouter()
 
 // store.initConfig().then( () => {

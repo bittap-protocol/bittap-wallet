@@ -11,8 +11,8 @@
         {{ showCate }}
       </div>
       <div class="arrow">
-        <span>{{ modelValue }} SATS</span>
-        <IconamoonArrowDown2Fill></IconamoonArrowDown2Fill>
+        <span>{{ modelValue }} sat/vB</span>
+        <IconamoonArrowDown2Fill class="size-6"></IconamoonArrowDown2Fill>
       </div>
     </button>
     <div class="sb hidden">
@@ -24,7 +24,7 @@
         placeholder="Custom gas fee"
         @input="$emit('update:modelValue', Number($event.target.value))"
       />
-      <div class="badge badge-primary sat">Sats</div>
+      <div class="badge badge-primary sat">sat/vB</div>
     </div>
   </div>
 
@@ -76,7 +76,7 @@
               <Medium v-if="item.name === 'Medium'"></Medium>
               <div class="info">
                 <div class="name">{{ item.name }}</div>
-                <div class="gas">{{ item.gas }} sat</div>
+                <div class="gas">{{ item.gas }} sat/vB</div>
               </div>
             </div>
 
@@ -95,13 +95,13 @@
           v-if="tabActive === 'Custom'"
           class="custom"
         >
-          <div class="name">SATS</div>
+          <div class="name">sat/vB</div>
           <input
             v-model="formDataGas"
             class="field"
             type="number"
             min="1"
-            placeholder="Enter sats"
+            placeholder="Enter sat/vB"
           />
         </div>
       </div>
@@ -119,7 +119,8 @@
 
 <script lang="ts">
 // @ts-ignore
-import IconamoonArrowDown2Fill from '~icons/iconamoon/arrow-down-2-fill'
+
+import IconamoonArrowDown2Fill from '@/components/svgIcon/IconamoonArrowDown2Fill.vue'
 import { randomInt } from '@/popup/libs/tools'
 // @ts-ignore
 import Fast from './svgIcon/Fast.vue'

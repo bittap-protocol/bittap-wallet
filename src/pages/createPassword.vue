@@ -1,6 +1,4 @@
 <script lang="ts">
-// @ts-ignore
-// import IconMdiWarningOctagonOutline from '~icons/mdi/warning-octagon-outline';
 
 // @ts-ignore
 import IconEyeOpen from '@/components/svgIcon/EyeOpen.vue'
@@ -31,7 +29,7 @@ export default {
     const isClear = ref(getQuery('clear') === 'all')
 
     const isImported = ref(importWords ? importWords.split('|') : [])
-    console.log('setup params: ', location.href, isImported.value)
+    // console.log('setup params: ', location.href, isImported.value)
     const showPassword = ref(false)
     const disabledVisible = ref(true)
     const formData = reactive({
@@ -59,10 +57,6 @@ export default {
     })
 
     const validateForm = () => {
-      console.log('check:', [
-        TestPassword(formData.password),
-        formData.password,
-      ])
       formErrors.value.passwordError = !TestPassword(formData.password)
         ? 'The password must be 8 to 12 characters'
         : ''
@@ -71,7 +65,6 @@ export default {
         formData.password !== formData.passwordConfirm
           ? 'Passwords do not match.'
           : ''
-      console.log('formData.agree: ', [formData.agree])
       formErrors.value.termsError = !formData.agree
         ? 'You must agree to the terms.'
         : ''
@@ -130,7 +123,7 @@ export default {
     }
     // @ts-ignore
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      console.log('Message received ==password', message, sender, sendResponse)
+      // console.log('Message received ==password', message, sender, sendResponse)
       sendResponse()
     })
     return {

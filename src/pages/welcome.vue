@@ -18,8 +18,7 @@
 </template>
 
 <script setup>
-// @ts-ignore
-// import IconMdiAdd from '~icons/mdi/add';
+
 import IconLogo from '@/components/svgIcon/logo.vue'
 import IconCreateWallet from '@/components/svgIcon/CreateWallet.vue'
 import IconImportWallet from '@/components/svgIcon/ImportWallet.vue'

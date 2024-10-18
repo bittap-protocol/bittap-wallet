@@ -98,7 +98,6 @@ export default {
   },
   watch: {
     'formData.fee_rate': function (k, v) {
-      console.log('formData.fee_rate on change: ', k, v)
       if (k != v) {
         this.checkUpdateFormData()
       }
@@ -147,7 +146,6 @@ export default {
           this.checkTimer=null
         }
         nslookupDomainInfo(this.formData.recv_addr).then(result => {
-          console.log('checkResultMessage: ', result)
           if(result.isAddress){
             this.checkResultMessage = result.data ? 'TNA Domin: <span class="text-primary">8888.btc</span>' : ''
           }else{
@@ -160,29 +158,6 @@ export default {
       }, 500)
     },
     setMax() {
-      console.log('this.store.currentBtcBalance * 10 ** 8: ', [
-        this.store.currentBtcBalance * 10 ** 8,
-        Number(this.formData.fee_rate),
-        this.store.currentBtcBalance * 10 ** 8 -
-          Number(this.formData.fee_rate),
-        Number(
-          Number(
-            (this.store.currentBtcBalance * 10 ** 8 -
-              Number(this.formData.fee_rate)) /
-              10 ** 8
-          ).toFixed(6)
-        ),
-        Math.max(
-          0,
-          Number(
-            Number(
-              (this.store.currentBtcBalance * 10 ** 8 -
-                Number(this.formData.fee_rate)) /
-                10 ** 8
-            ).toFixed(6)
-          )
-        ),
-      ])
       const maxV = Math.max(
         0,
         Number(
@@ -193,7 +168,6 @@ export default {
           ).toFixed(6)
         )
       )
-      console.log('maxV: ', maxV)
       this.formData.amount = maxV
       this.maxBalance = maxV
       this.refreshMaxBalance()
@@ -206,7 +180,6 @@ export default {
         min_conf: 6,
         fee_rate: this.formData.fee_rate
       }).then(amount => {
-        console.log('EstimateMaxBtc: ', amount, amount/(10 ** 8))
         this.formData.amount = amount/(10 ** 8)
         this.maxBalance = this.formData.amount
       })
@@ -234,7 +207,8 @@ export default {
     async send() {
       this.isSubmitting = true
       this.$root._showLoading('In process...')
-      const trycatchFun = (e) => {
+      
+      const trycatchFun = (err) => {
         postToast(err + '', 'error')
         console.error('TransferBtc on error: ', err)
         this.isSubmitting = false
@@ -260,7 +234,6 @@ export default {
             final_psbt: tx.toBuffer().toString('base64'),
           })
             .then((res) => {
-              console.log('PublishTransferBtc res: ', res)
               this.isSubmitting = false
               this.$root._hideLoading()
               this.$root._toast('Submit Success', 'success')

@@ -210,7 +210,7 @@ export default {
     },
     toggleToken(token: tokenInfo): void {
       const state = this.isAddState(token)
-      // console.log('state: ', state)
+      console.log('state: ', state)
       if (state) {
         // @ts-ignore
         this.store.removeToken(token.asset_id)

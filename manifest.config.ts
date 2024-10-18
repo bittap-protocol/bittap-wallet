@@ -31,6 +31,7 @@ export default defineManifest(async (env) => ({
   background: {
     service_worker: 'src/background/index.ts',
   },
+  
   content_scripts: [
     {
       all_frames: false,

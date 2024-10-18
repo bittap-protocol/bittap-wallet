@@ -1,6 +1,4 @@
 <script lang="ts">
-// @ts-ignore
-// import IconMdiWarningOctagonOutline from '~icons/mdi/warning-octagon-outline';
 
 // @ts-ignore
 import IconEyeOpen from '@/components/svgIcon/EyeOpen.vue'

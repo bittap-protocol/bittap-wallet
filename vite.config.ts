@@ -3,7 +3,6 @@ import vue from '@vitejs/plugin-vue'
 import { dirname, relative } from 'path'
 import AutoImport from 'unplugin-auto-import/vite'
 import IconsResolver from 'unplugin-icons/resolver'
-import Icons from 'unplugin-icons/vite'
 import Components from 'unplugin-vue-components/vite'
 import { VueRouterAutoImports } from 'unplugin-vue-router'
 import VueRouter from 'unplugin-vue-router/vite'
@@ -119,11 +118,11 @@ export default defineConfig({
     }),
 
     // https://github.com/antfu/unplugin-icons
-    Icons({
-      autoInstall: true,
-      compiler: 'vue3',
-      scale: 1.5,
-    }),
+    // Icons({
+    //   autoInstall: true,
+    //   compiler: 'vue3',
+    //   scale: 1.5,
+    // }),
 
     // rewrite assets to use relative path
     {

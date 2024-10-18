@@ -1,11 +1,11 @@
 <!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <script lang="ts">
 // @ts-ignore
-import IconMdiSettings from '~icons/mdi/settings-outline'
+import IconMdiSettings from '@/components/svgIcon/MdiSettingsOutline.vue'
 // @ts-ignore
-import IconMdiInformationSlabCircleOutline from '~icons/mdi/information-slab-circle-outline'
+import IconMdiInformationSlabCircleOutline from '@/components/svgIcon/MdiInformationSlabCircleOutline.vue'
 // @ts-ignore
-import IconMdiSuccessCircle from '~icons/mdi/success-circle'
+import IconMdiSuccessCircle from '@/components/svgIcon/MdiSuccessCircle.vue'
 // @ts-ignore
 import IconBack from '@/components/svgIcon/IconBack.vue'
 
@@ -46,7 +46,7 @@ export default {
       // console.log('goBackUrl.value: ', goBackUrl.value)
       goBackUrl.value ? router.push(goBackUrl.value) : window.history.go(-1)
     }
-    // console.log('router.currentRoute.value.fullPath: ', router.currentRoute.value.fullPath)
+    console.log('router.currentRoute.value.fullPath: ', router.currentRoute.value.fullPath)
     const isHome = computed(() =>
       ['/', '/popup'].includes(router.currentRoute.value.fullPath)
     )
@@ -306,7 +306,7 @@ export default {
             to="/common/setting"
             class="btn btn-circle btn-sm bg-gray-100 border-none"
           >
-            <IconMdiSettings class="text-gray-600"></IconMdiSettings>
+            <IconMdiSettings class="text-gray-600 size-6"></IconMdiSettings>
           </router-link>
         </div>
       </div>
@@ -360,11 +360,11 @@ export default {
       <div class="break-all w-72 whitespace-normal">
         <IconMdiInformationSlabCircleOutline
           v-if="toastData.type === 'info'"
-          class="mr-1"
+          class="mr-1 size-5"
         />
         <IconMdiSuccessCircle
           v-if="toastData.type === 'success'"
-          class="mr-1"
+          class="mr-1 size-5"
         />
         <span v-html="toastData.text"></span>
       </div>

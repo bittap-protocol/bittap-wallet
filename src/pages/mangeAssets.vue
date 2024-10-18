@@ -70,7 +70,7 @@
 
 <script lang="ts">
 // @ts-ignore
-import IconMdiBitcoin from '~icons/mdi/bitcoin'
+import IconMdiBitcoin from '@/components/svgIcon/MdiBitcoin.vue'
 // @ts-ignore
 import { tokenInfo, useAppStore } from '@/stores/app.store'
 // @ts-ignore
@@ -78,7 +78,7 @@ import IconSearch from '@/components/svgIcon/Search.vue'
 // @ts-ignore
 import IconAutoTokenName from '@/components/svgIcon/AutoTokenName.vue'
 
-import { isAssetId, showAddressAndAssetId, toHex } from '@/popup/libs/tools'
+import { isAssetId, showAddressAndAssetId } from '@/popup/libs/tools'
 import { ListAssetsQuery } from '@/popup/api/btc/blockStream'
 
 export default {

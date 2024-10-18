@@ -457,6 +457,9 @@ export const useAppStore = defineStore('app', () => {
   }
 
   const getUserAssetsBalance = async (): Promise<tokenInfo[]> => {
+    if(accountList.value.length <= 0){
+      return []
+    }
     const wallet_id = getCurrentWalletId()
     const assets = await getAssetsBalances()
     const currentTokens = getTokens()

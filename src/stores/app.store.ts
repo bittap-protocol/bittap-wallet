@@ -457,6 +457,9 @@ export const useAppStore = defineStore('app', () => {
   }
 
   const getUserAssetsBalance = async (): Promise<tokenInfo[]> => {
+    if(accountList.value.length <= 0){
+      return []
+    }
     const wallet_id = getCurrentWalletId()
     const assets = await getAssetsBalances()
     const currentTokens = getTokens()
@@ -886,10 +889,12 @@ export const useAppStore = defineStore('app', () => {
     return tokens.value.filter((token) => token.wallet_id === wallet_id)
   }
   const addToken = (token: tokenInfo): void => {
+    console.log('token: ', token)
     token.wallet_id = token.wallet_id ? token.wallet_id : getCurrentWalletId()
-    const isFound = tokens.value.findIndex(
-      (token) => token.wallet_id === token.wallet_id && token.asset_id === token.asset_id
+    const isFound = tokens.value.some(
+      (o) => o.wallet_id === token.wallet_id && o.asset_id === token.asset_id
     )
+    console.log('isFound: ', isFound)
     if(!isFound) {
       tokens.value.push(token)
     }

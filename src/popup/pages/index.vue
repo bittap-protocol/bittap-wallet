@@ -1,8 +1,5 @@
 <script setup lang="ts">
 
-// @ts-ignore
-import IconMdiInformationSlabCircleOutline from '~icons/mdi/information-slab-circle-outline';
-
 import { useAppStore } from '@/stores/app.store'
 import { useRouter } from 'vue-router'
 

@@ -340,10 +340,10 @@
 
 <script lang="ts">
 // @ts-ignore
-// import IconMdiContentCopy from '~icons/mdi/content-copy';
-import IconMdiBitcoin from '~icons/mdi/bitcoin'
+
+import IconMdiBitcoin from '@/components/svgIcon/MdiBitcoin.vue'
 // @ts-ignore
-import IconMdiAdd from '~icons/mdi/add'
+import IconMdiAdd from '@/components/svgIcon/MdiAdd.vue'
 
 import TransferHistoryLogs from '@/components/TransferHistoryLogs.vue'
 // @ts-ignore

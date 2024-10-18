@@ -71,7 +71,7 @@
                 <div class="arrow">
                   <IconMdiCheck
                     v-if="activeAccountIndex === index"
-                    class="pl-1 icon active"
+                    class="pl-1 icon active  size-9"
                   ></IconMdiCheck>
                 </div>
               </div>
@@ -100,9 +100,7 @@
 
 <script lang="ts">
 // @ts-ignore
-import IconMdiCheck from '~icons/mdi/check'
-// // @ts-ignore
-// import IconMdiArrowDownDrop from '~icons/mdi/arrow-down-drop'
+import IconMdiCheck from '@/components/svgIcon/MynauiCheck.vue'
 
 import { useAppStore } from '@/stores/app.store'
 

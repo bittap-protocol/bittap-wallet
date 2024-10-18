@@ -24,13 +24,14 @@ export default defineManifest(async (env) => ({
     "128": "icon_128X128.png",
     // "256": "icon_256X256.png",
   },
-  // key: 'ekgmcbpgglflmgcfajnglpbcbdccnnje',
+  key: 'ekgmcbpgglflmgcfajnglpbcbdccnnge',
   action: {
     default_popup: 'src/popup/index.html',
   },
   background: {
     service_worker: 'src/background/index.ts',
   },
+  
   content_scripts: [
     {
       all_frames: false,
@@ -39,11 +40,17 @@ export default defineManifest(async (env) => ({
       run_at: 'document_start',
     },
   ],
+  cross_origin_embedder_policy: {
+      "value": "require-corp"
+  },
+  "cross_origin_opener_policy": {
+      "value": "same-origin"
+    },
   content_security_policy: {
     // extension_pages: "script-src 'self' 'wasm-eval'; object-src 'self';",
-    extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
+    extension_pages: "script-src 'self' 'wasm-unsafe-eval' http://localhost:* http://127.0.0.1:*; object-src 'self'; script-src-elem 'self' http://localhost:* http://127.0.0.1:*;",
     // extension_pages: "script-src 'self'; object-src 'self';",
-    sandbox: "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'wasm-eval' 'unsafe-eval'; child-src 'self';"
+    sandbox: "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'wasm-eval' 'unsafe-eval' http://localhost:* http://127.0.0.1:*; child-src 'self'; script-src-elem 'self' 'unsafe-inline' http://localhost:* http://127.0.0.1:*;"
   },
   externally_connectable: {
     "matches": ["https://*/*"],
@@ -51,7 +58,7 @@ export default defineManifest(async (env) => ({
   },
   minimum_chrome_version: "88",
   host_permissions: ['*://*/*'],
-  options_page: 'src/options/index.html',
-  permissions: ['storage','clipboardWrite'],
+  // options_page: 'src/options/index.html',
+  permissions: ['storage','clipboardWrite',"scripting","activeTab"],
   web_accessible_resources: [],
 }))

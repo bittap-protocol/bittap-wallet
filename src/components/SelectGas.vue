@@ -12,7 +12,7 @@
       </div>
       <div class="arrow">
         <span>{{ modelValue }} sat/vB</span>
-        <IconamoonArrowDown2Fill></IconamoonArrowDown2Fill>
+        <IconamoonArrowDown2Fill class="size-6"></IconamoonArrowDown2Fill>
       </div>
     </button>
     <div class="sb hidden">
@@ -119,7 +119,8 @@
 
 <script lang="ts">
 // @ts-ignore
-import IconamoonArrowDown2Fill from '~icons/iconamoon/arrow-down-2-fill'
+
+import IconamoonArrowDown2Fill from '@/components/svgIcon/IconamoonArrowDown2Fill.vue'
 import { randomInt } from '@/popup/libs/tools'
 // @ts-ignore
 import Fast from './svgIcon/Fast.vue'

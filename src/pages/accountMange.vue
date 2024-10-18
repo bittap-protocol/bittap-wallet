@@ -121,12 +121,18 @@
 
 <script lang="ts">
 // eslint-disable no-unused-vars
-import IconMdiAccountAdd from '~icons/mdi/account-add'
-import IconMdiApplicationImport from '~icons/mdi/application-import'
-import IconMdiAccountBoxEditOutline from '~icons/mdi/account-box-edit-outline'
-import IconMdiPasswordReset from '~icons/mdi/password-reset'
-import IconMdiCloudKey from '~icons/mdi/cloud-key'
-import IconMdiContentSave from '~icons/mdi/content-save'
+// @ts-ignore
+import IconMdiAccountAdd from '@/components/svgIcon/MdiAccountAdd.vue'
+// @ts-ignore
+import IconMdiApplicationImport from '@/components/svgIcon/MdiApplicationImport.vue'
+// @ts-ignore
+import IconMdiAccountBoxEditOutline from '@/components/svgIcon/MdiAccountBoxEditOutline.vue'
+// @ts-ignore
+import IconMdiPasswordReset from '@/components/svgIcon/MdiPasswordReset.vue'
+// @ts-ignore
+import IconMdiCloudKey from '@/components/svgIcon/MdiCloudKey.vue'
+// @ts-ignore
+import IconMdiContentSave from '@/components/svgIcon/MdiContentSave.vue'
 // @ts-ignore
 import IconBackup from '@/components/svgIcon/Backup.vue'
 

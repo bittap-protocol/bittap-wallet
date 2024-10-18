@@ -7,7 +7,7 @@
             to="/common/accountMange"
             class="flex flex-row justify-start items-center"
           >
-            <IconMdiAccount class="mr-2"></IconMdiAccount>
+            <IconMdiAccount class="mr-2 size-5"></IconMdiAccount>
             Account management
           </router-link>
         </div>
@@ -16,7 +16,7 @@
             to="/common/networkConfiguration"
             class="flex flex-row justify-start items-center"
           >
-            <IconMdiWideAreaNetwork class="mr-2"></IconMdiWideAreaNetwork>
+            <IconMdiWideAreaNetwork class="mr-2 size-5"></IconMdiWideAreaNetwork>
             Network configuration
           </router-link>
         </div>
@@ -26,7 +26,7 @@
             @click="lockWallet"
             class="flex flex-row justify-start items-center"
           >
-            <IconMdiPasswordOutline class="mr-2"></IconMdiPasswordOutline>
+            <IconMdiPasswordOutline class="mr-2 size-5"></IconMdiPasswordOutline>
             Lock wallet
           </a>
         </div>
@@ -35,7 +35,7 @@
             to="/common/passwordConfiguration"
             class="flex flex-row justify-start items-center"
           >
-            <IconMdiPasswordReset class="mr-2"></IconMdiPasswordReset>
+            <IconMdiPasswordReset class="mr-2 size-5"></IconMdiPasswordReset>
             Password configuration
           </router-link>
         </div>
@@ -45,7 +45,7 @@
             @click="$root._toast('Coming soon...')"
             class="flex flex-row justify-start items-center"
           >
-            <IconBackup class="mr-2"></IconBackup>
+            <IconBackup class="mr-2 size-5"></IconBackup>
             Backup Proof of Transaction
           </a>
         </div>
@@ -54,7 +54,7 @@
             to="/common/aboutWallet"
             class="flex flex-row justify-start items-center"
           >
-            <IconMdiAboutCircleOutline class="mr-2"></IconMdiAboutCircleOutline>
+            <IconMdiAboutCircleOutline class="mr-2 size-5"></IconMdiAboutCircleOutline>
             About BitTap
           </router-link>
         </div>
@@ -65,15 +65,15 @@
 
 <script lang="ts">
 // @ts-ignore
-import IconMdiAccount from '~icons/mdi/account'
+import IconMdiAccount from '@/components/svgIcon/MdiAccount.vue'
 // @ts-ignore
-import IconMdiAboutCircleOutline from '~icons/mdi/about-circle-outline'
+import IconMdiAboutCircleOutline from '@/components/svgIcon/MdiAboutCircleOutline.vue'
 // @ts-ignore
-import IconMdiPasswordOutline from '~icons/mdi/password-outline'
+import IconMdiPasswordOutline from '@/components/svgIcon/MdiPasswordOutline.vue'
 // @ts-ignore
-import IconMdiWideAreaNetwork from '~icons/mdi/wide-area-network'
+import IconMdiWideAreaNetwork from '@/components/svgIcon/MdiWideAreaNetwork.vue'
 // @ts-ignore
-import IconMdiPasswordReset from '~icons/mdi/password-reset'
+import IconMdiPasswordReset from '@/components/svgIcon/MdiPasswordReset.vue'
 // @ts-ignore
 import IconBackup from '@/components/svgIcon/Backup.vue'
 

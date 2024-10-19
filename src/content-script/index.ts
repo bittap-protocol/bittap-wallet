@@ -34,7 +34,7 @@ const channelName = 'BittapWallet'
 
 // 创建一个 <script> 标签并加载外部 JS 文件
 const script = document.createElement('script');
-script.src = chrome.runtime.getURL('src/content-script/injected.js'); // 引入外部脚本
+script.src = chrome.runtime.getURL('injected.js'); // 引入外部脚本
 (document.head || document.documentElement).appendChild(script);
 script.onload = () => {
   console.log('成功注入脚本:', script)

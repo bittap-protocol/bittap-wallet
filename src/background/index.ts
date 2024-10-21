@@ -11,6 +11,8 @@ import {
   TestPassword,
 } from '@/popup/libs/tools'
 
+import { createWindow, Settings, WindowOptions } from './utils'
+
 let sessionPassword: string | null = null
 
 chrome.storage.session.get(['sessionPassword'], (result) => {
@@ -53,6 +55,20 @@ const clearPassword = () => {
   chrome.storage.session.set({ sessionPassword: '' })
 }
 
+// const getExtensionsId = () => {
+//   // @ts-ignore
+//   if(chrome.runtime){ // 方法一
+//       return chrome.runtime?.id || '-1';
+//   }else if(chrome.i18n){ // 方法二
+//       return chrome.i18n.getMessage("@@extension_id") || '-1';
+//   }
+//   return '-1'
+// }
+
+// window.addEventListener('message', (message) => {
+//   console.log('background window on message: ', message)
+// })
+
 chrome.runtime.onInstalled.addListener(async (opt) => {
   // Check if reason is install or update. Eg: opt.reason === 'install' // If extension is installed.
   // opt.reason === 'update' // If extension is updated.
@@ -79,22 +95,28 @@ chrome.runtime.onInstalled.addListener(async (opt) => {
   chrome.runtime.onStartup.addListener(() => {
     clearPassword()
   })
-
+  // console.log('chrome.runtime.onInstalled: ', new Date().toLocaleString(),getExtensionsId())
+  
   // WebAssembly.instantiateStreaming(fetch(myWasmModule), go.importObject).then(result => {
   //   go.run(result.instance);
   // });
 })
-chrome.runtime.onConnect.addListener(async () => {
-  // console.log('chrome.runtime.onConnect: ', new Date().toLocaleString())
+const checkUnlockSate = ()=>{
   if (sessionPassword === null) {
     sendMessage('isUnlocked', { status: false })
+    throw new Error('Wallet is unlock')
   }
+}
+chrome.runtime.onConnect.addListener(async () => {
+  // console.log('chrome.runtime.onConnect: ', new Date().toLocaleString())
+  checkUnlockSate()
 })
 // @ts-ignore
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  // console.log('Message received', message, sender, sendResponse)
+  console.log('Message received on background('+message.type+'): ', message, sender, sendResponse)
   switch (message.type) {
     case 'SubscribeReceiveEvents':
+      checkUnlockSate()
       ReceiveEvents(message.data)
       break
     case 'InitConfig':
@@ -107,6 +129,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         data: { status: sessionPassword ? true : false },
       })
     case 'getPassword':
+      checkUnlockSate()
       // @ts-ignore
       return sendResponse({ type: 'getPassword', data: sessionPassword })
     case 'setPassword':
@@ -115,6 +138,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // @ts-ignore
       return sendResponse({ type: 'setPassword' })
     case 'resetPassword':
+      checkUnlockSate()
       const { newPassword, phrases } = message.data
       // @ts-ignore
       const oldPassword: string = sessionPassword
@@ -143,10 +167,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         message.data.pwd
       )
       // console.log('decrypted: ', decrypted)
-      const data = decrypted ? 'Ok' : 'No'
+      let data = decrypted ? 'Ok' : 'No'
       // @ts-ignore
       return sendResponse({ type: 'checkPassword', data })
     case 'encryptMnemonic':
+      checkUnlockSate()
       const encryptedMnemonic: string = encryptData(
         message.data,
         // @ts-ignore
@@ -155,6 +180,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // @ts-ignore
       return sendResponse({ type: 'encryptMnemonic', data: encryptedMnemonic })
     case 'decryptMnemonic':
+      checkUnlockSate()
       const decryptedMnemonic: string = decryptData(
         message.data,
         // @ts-ignore
@@ -162,6 +188,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       )
       // @ts-ignore
       return sendResponse({ type: 'decryptMnemonic', data: decryptedMnemonic })
+    case 'connectionWallet':
+      // @ts-ignore
+      let { type, requestId } = message.data.data
+      const winOpts: WindowOptions = {
+        // @ts-ignore
+        left: sender.tab?.width - 380 || 960
+      }
+      try{
+        checkUnlockSate()
+        // chrome.windows.create({height:640, width: 320, left: window.screen.width/2+160,top: 200, url: '/common/connectionWallet', type: 'popup'})
+        createWindow(Settings.BASE_URL + Settings.CONNECTION_WALLET, winOpts).then(res => {
+          console.log('createWindow res: ', res)
+        })
+      }catch(err) {
+        if(err instanceof Error && err.message === 'Wallet is unlock'){
+          createWindow(Settings.BASE_URL + Settings.UNLOCK_WALLET+'?redirect='+Settings.CONNECTION_WALLET, winOpts)
+        }
+      }
+      return sendResponse()
     default:
       break
   }
@@ -237,7 +282,7 @@ function ActionSubscribeReceive() {
     }
     wc.subAll = () => {
       while (encodes.length > 0) {
-        let enc = encodes.pop()
+        const enc = encodes.pop()
         // wc.send({
         //   filter_addr: enc,
         //   // start_timestamp:  new Date('2024-04-20').getTime() * 1000
@@ -289,8 +334,6 @@ function ActionSubscribeReceive() {
     wc.subAll()
   }, 15000)
 }
-
-console.log('hello world from background')
 
 self.onerror = function (message, source, lineno, colno, error) {
   console.info(

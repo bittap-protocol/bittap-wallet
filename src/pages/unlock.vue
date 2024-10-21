@@ -55,7 +55,7 @@ import IconLogo from '@/components/svgIcon/logo.vue'
 import IconEyeOpen from '@/components/svgIcon/EyeOpen.vue'
 // @ts-ignore
 import IconEyeClose from '@/components/svgIcon/EyeClose.vue'
-import { TestPassword, hideFullscreen, sendMessage } from '@/popup/libs/tools'
+import { TestPassword, hideFullscreen, sendMessage, getQuery } from '@/popup/libs/tools'
 
 export default {
   components: {
@@ -65,7 +65,8 @@ export default {
   },
   setup() {
     const store = useAppStore()
-    return { store }
+    const redirect = getQuery('redirect')
+    return { store, redirect }
   },
   data() {
     return {
@@ -84,7 +85,7 @@ export default {
     window.addEventListener('keydown', this.onKeyDownFunction, true)
     console.log('import.meta.env.MODE:', import.meta.env.DEV)
     if (import.meta.env.DEV) {
-      this.password = 'Abc123456##'
+      this.password = 'Abc12345'
     }
     // postToast('Success', 'success', 500000)
   },
@@ -114,7 +115,12 @@ export default {
         capture: true,
       })
       hideFullscreen()
-      this.$router.push('/')
+      if(this.redirect && this.$router.hasRoute(this.redirect)){
+        this.$router.push(this.redirect)
+      }else{
+        this.$router.push('/')
+      }
+      
     },
     initData() {
       // console.log('this.store', this.$pinia)

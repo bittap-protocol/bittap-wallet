@@ -28,7 +28,7 @@
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue"
-  ],
+, "src/content-script/injected.js"  ],
   "references": [
     {
       "path": "./tsconfig.node.json"

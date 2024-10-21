@@ -1,9 +1,12 @@
-import extension from 'extensionizer';
-import { nanoid } from 'nanoid';
+import { sendMessage } from '@/popup/libs/tools';
+// import extension from 'extensionizer';
+// import { nanoid } from 'nanoid';
 // import './index.scss'
 // const channelName = nanoid();
 
-const channelName = 'BittapWallet'
+const channelName = 'bittap.jssdk.event'
+const REQUEST_TAGET = 'BITTAPWALLET'
+const RESPONSE_TAGET =  'BITTAPWALLET_RESPONSE'
 
 
 // const src = chrome.runtime.getURL('src/content-script/iframe/index.html')
@@ -34,7 +37,7 @@ const channelName = 'BittapWallet'
 
 // 创建一个 <script> 标签并加载外部 JS 文件
 const script = document.createElement('script');
-script.src = chrome.runtime.getURL('src/content-script/injected.js'); // 引入外部脚本
+script.src = chrome.runtime.getURL('injected.js'); // 引入外部脚本
 (document.head || document.documentElement).appendChild(script);
 script.onload = () => {
   console.log('成功注入脚本:', script)
@@ -73,13 +76,27 @@ script.onload = () => {
 //   }
 // }
 
+window.bittapSdk = {a:1}
+
+window.addEventListener('message', (event) => {
+  console.log('Content script onmessage received == Content script', JSON.stringify(event.data), window)
+  if(event.data && event.data.target && event.data.target === REQUEST_TAGET && event.data.channel && event.data.channel === channelName){
+    sendMessage(event.data.data.type, event.data)
+  }
+})
+
+const sendResponseMessage = (data:any) => {
+  return window.postMessage({channel:channelName , data:data|{}, target: RESPONSE_TAGET},'*')
+}
+
 chrome.runtime.onConnect.addListener(async () => {
     console.log('chrome.runtime.onConnect==Content script: ', new Date().toLocaleString());
+    // @ts-ignore
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      console.log('Content script onMessage received == Content script', message, sender, sendResponse)
+    })
 })
-// @ts-ignore
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log('Content script onMessage received == Content script', message, sender, sendResponse)
-})
+
 
 self.onerror = function (message, source, lineno, colno, error) {
   console.info(

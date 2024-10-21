@@ -147,6 +147,17 @@ export default {
         },
         false
       )
+      const channelName = 'bittap.jssdk.event'
+      // @ts-ignore
+      chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            console.log('Home center chrome.runtime.onMessage:', message, sender)
+            const { type, event, data } = message
+            if(channelName === type){
+              // const { type , data, requestId } = data
+              console.log('Home center chrome.runtime.onMessage json :', type, event, data)
+            }
+            sendResponse()
+      })
       // console.log('store: ', this.$store)
       // const store = useAppStore()
       // // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -251,7 +262,7 @@ export default {
         },
         opts
       )
-      console.log('ConfirmOptions:', [id, actionCls, cls, showClose])
+      // console.log('ConfirmOptions:', [id, actionCls, cls, showClose])
       this.custom_confirm.id = id
       // @ts-ignore
       this.custom_confirm.actionCls = actionCls

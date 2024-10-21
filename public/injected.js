@@ -1,80 +1,61 @@
-// @ts-ignore
 window.BittapWalletInjected = {
-    queue:[],
+    queues:[],
     channelName: 'bittap.jssdk.event',
+    REQUEST_TAGET: 'BITTAPWALLET',
+    RESPONSE_TAGET: 'BITTAPWALLET_RESPONSE',
     init(){
-        chrome.extension.onMessage.addListener((message, sender, sendResponse) => {
-            console.log('Content-script chrome.extension.onMessage:', message)
-            const jsonData = message && JSON.parse(message)
-            if(jsonData) {
-                // @ts-ignore
-                const { type, data, requestId, event } = jsonData
-                console.log('Content-script chrome.extension.onMessage json :', type, data, requestId)
-                if(type && requestId){
-                    const queue = BittapWalletInjected.getRequestQueueInfo(requestId)
-                    queue.callback && queue.callback({ type,event, data, requestId })
-                    BittapWalletInjected.removeQueueItem(requestId)
-                }
-            }
-        })
+        // const res = chrome.runtime.connect('ekgmcbpgglflmgcfajnglpbcbdccnnge', {name: 'bittap-wallet'})
+        // console.log('res: ', res)
         // @ts-ignore
-        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            console.log('Content-script chrome.runtime.onMessage:', message)
-            const jsonData = message && JSON.parse(message)
-            if(jsonData) {
-                // @ts-ignore
-                const { type , data, requestId, event } = jsonData
-                console.log('Content-script chrome.runtime.onMessage json :', type, data, requestId)
-                if(type && requestId){
-                    const queue = BittapWalletInjected.getRequestQueueInfo(requestId)
-                    queue.callback && queue.callback({ type ,event, data, requestId })
-                    BittapWalletInjected.removeQueueItem(requestId)
+        window.addEventListener('message',(message, sender) => {
+            console.log('BittapWalletInjected 1 window.addEventListener(message):', JSON.stringify(message), sender)
+            if(message.data) {
+                if(event.data && event.data.target && event.data.target === window.BittapWalletInjected.RESPONSE_TAGET && event.data.channel && event.data.channel === window.BittapWalletInjected.channelName){
+                    const { type , data, requestId, event } = message.data.data
+                    console.log('BittapWalletInjected 2 window.addEventListener(message):', type, data, requestId, event, message.data.data)
+                    if(type && requestId){
+                        const queue = window.BittapWalletInjected.getRequestQueueInfo(requestId)
+                        queue.callback && queue.callback({ type ,event, data, requestId })
+                        window.BittapWalletInjected.removeQueueItem(requestId)
+                    }
                 }
             }
-            // @ts-ignore
-            sendResponse({ result: true })
         });
     },
-    getExtensionsId(){
-        if(!!chrome.runtime){ // 方法一
-            return chrome.runtime?.id || '-1';
-        }else if(chrome.i18n){ // 方法二
-            return chrome.i18n.getMessage("@@extension_id") || '-1';
-        }
-        return '-1'
-    },
-    sendMessage(type, data){
-        
-        console.log('chrome.runtime.getManifest: ', chrome.runtime.getManifest)
-        return chrome.runtime.sendMessage(BittapWalletInjected.getExtensionsId(), { type:type,  data: data })
+    sendMessage(data){
+        return window.postMessage({channel:window.BittapWalletInjected.channelName , data, target: window.BittapWalletInjected.REQUEST_TAGET, siteInfo: {title: document.title, host: window.location.hostname, href: window.location.href}},'*')
     },
     sendRequestJsBridge (queue)  {
         if(!queue) {
             throw new Error('queue is empty')
         }
-        if(!Object.prototype.hasOwnProperty.call(queue,'requestId')) {
-            throw new Error('requestId is empty')
-        }
         if(!Object.prototype.hasOwnProperty.call(queue,'type')) {
             throw new Error('type is empty')
         }
         queue.time = Date.now()
-        queue.requestId = queue.time + Math.random().toString(36).substr(2, 9)
-        queues.value.push(queue)
-        BittapWalletInjected.sendMessage(BittapWalletInjected.channelName, queue)
+        queue.requestId = window.BittapWalletInjected.getRequestId()
+        window.BittapWalletInjected.queues.push(queue)
+        window.BittapWalletInjected.sendMessage({
+            type: queue.type,
+            data: queue.data,
+            requestId: queue.requestId,
+        })
+    },
+    getRequestId(){
+        return Date.now() + Math.random().toString(36).substr(2, 9)
+    },
+    getRequestQueue() {
+        return queues
     },
     getRequestQueueInfo(requestId) {
-        const queue = queues.value.find((queue) => queue.requestId === requestId)
+        const queue = window.BittapWalletInjected.queues.find((queue) => queue.requestId === requestId)
         return queue
     },
     removeQueueItem(){
-        const queue = queues.value.find((queue) => queue.requestId === requestId)
-        queues.value.splice(queue, 1)
+        const queueINdex = window.BittapWalletInjected.queues.findIndex((queue) => queue.requestId === requestId)
+        window.BittapWalletInjected.queues.splice(queueINdex, 1)
     },
 
 };
 
-
-
-
-console.log('Injected object has been added to the window!');
+console.log('Bittap Wallet Injected');

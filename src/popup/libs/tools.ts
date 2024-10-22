@@ -5,6 +5,21 @@ import AES from 'crypto-js/aes'
 // @ts-ignore
 import EncUtf8 from 'crypto-js/enc-utf8'
 
+
+export const channelName = 'bittap.jssdk.event'
+export const REQUEST_TARGET = 'BITTAPWALLET_REQUEST'
+export const RESPONSE_TARGET =  'BITTAPWALLET_RESPONSE'
+export const REQUEST_CURRENT_SITE =  'REQUEST_CURRENT_SITE'
+
+export const CURRENT_USER_ASSETS =  'CURRENT_USER_ASSETS'
+
+export interface SiteInfo {
+  host: string
+  href: string
+  icon: string
+  title: string
+}
+
 /**
  * verify password
  * @param {String} pwd password
@@ -88,7 +103,7 @@ export function sendMessage(
   return (
     chrome.runtime
       // @ts-ignore
-      .sendMessage(null, { type: type, data: data })
+      .sendMessage({ type: type, data: data })
       .then((r) => (r && r.data) || '')
   )
 }
@@ -328,6 +343,20 @@ export async function saveEncryptedMnemonic(
       resolve(true)
     })
   })
+}
+
+export async function getLocalStoreKey(key:string) {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(key, (result) => {
+      resolve(result && Object.prototype.hasOwnProperty.call(result, key) ? result[key] : null)
+    })
+  })
+}
+
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function saveLocalStoreKey(key:string, value:any) {
+    return chrome.storage.local.set({[key]:value})
 }
 
 /**

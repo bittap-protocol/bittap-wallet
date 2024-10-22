@@ -66,7 +66,10 @@ export default {
   setup() {
     const store = useAppStore()
     const redirect = getQuery('redirect')
-    return { store, redirect }
+    const requestId = getQuery('requestId')
+    const networkType = getQuery('networkType')
+    const host = getQuery('host')
+    return { store, redirect, requestId, networkType, host }
   },
   data() {
     return {
@@ -116,7 +119,7 @@ export default {
       })
       hideFullscreen()
       if(this.redirect && this.$router.hasRoute(this.redirect)){
-        this.$router.push(this.redirect)
+        this.$router.push(this.redirect+'?requestId='+this.requestId+'&networkType='+this.networkType+'&host='+this.host)
       }else{
         this.$router.push('/')
       }

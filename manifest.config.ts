@@ -59,7 +59,7 @@ export default defineManifest(async (env) => ({
   minimum_chrome_version: "88",
   host_permissions: ['*://*/*'],
   // options_page: 'src/options/index.html',
-  permissions: ['storage','clipboardWrite',"scripting","activeTab"],
+  permissions: ['storage','clipboardWrite',"scripting","activeTab",'tabs'],
   web_accessible_resources: [
     {
       "resources": ["injected.js"],

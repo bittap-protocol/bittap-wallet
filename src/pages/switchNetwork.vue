@@ -24,23 +24,22 @@
                 </div>
                 <div class="card place-items-center p-4">
                     <span class="text-base font-bold mb-3" :alt="'Connect with '+siteInfo.title">
-                        Connect with {{ siteInfo.host }}
+                        Switch network with {{ siteInfo.host }}
                     </span>
                     <span class="font-bold">
-                        Select the account to use on this site
+                        The current program requires switching networks
                     </span>
-                    <span>Only connect with sites you trust</span>
+                    <span>This will change the current wallet network</span>
                 </div>
-                <div class="min-h-[300px] mb-12 overflow-y-auto w-full">
-                    <div v-for="(acc, index) in accounts" :key="acc.btcAddress" class="flex w-full bg-purple-200 rounded-md h-25 p-4 mb-1" @click="accountActive = index">
-                        <div class="card place-content-center font-bold">
-                            <IconCheck v-if="accountActive === index" class="size-6"></IconCheck>
-                            <div v-else class="size-6"></div>
-                        </div>
-                        <div class="card place-content-left pl-2">
-                            <div class="font-bold">{{ acc.name }}</div>
-                            <div>{{ $root._showMinMaxString(acc.btcAddress,5,5) }}</div>
-                        </div>
+                <div class="min-h-[300px] mb-12 overflow-y-auto w-full flex flex-row justify-center items-center gap-x-5">
+                    <div class="origin">
+                        <div class="network-icon rounded-full w-20 bg-gray-50 shadow-md border border-solid border-neutral h-20 flex flex-col justify-center items-center">{{ currentNetwork }}</div>
+                    </div>
+                    <div class="icon">
+                        <TablerArrowRightToArc class="size-10" />
+                    </div>
+                    <div class="newNetwork">
+                        <div class="network-icon rounded-full w-20 bg-gray-50 shadow-2xl bg-primary text-white font-bold border border-solid border-primary h-20 flex flex-col justify-center items-center">{{ newNetwork }}</div>
                     </div>
                 </div>
                 <div class="flex px-4 h-12 justify-between items-center fixed z-10 left-0 bottom-0 w-full bg-white">
@@ -48,13 +47,13 @@
                         class="border border-primary text-primary font-bold px-8 py-2 rounded-xl hover:bg-primary/20"
                         @click="rejectProvide"
                     >
-                        Cancel
+                        Reject
                     </button>
                     <button
                         class="border border-primary bg-primary text-white px-8 py-2 font-bold rounded-xl hover:bg-primary/80"
                         @click="resolveProvide"
                     >
-                        Connect
+                        Switch network
                     </button>
                 </div>
             </div>
@@ -64,15 +63,16 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import IconCheck from '@/components/svgIcon/MynauiCheck.vue'
+import TablerArrowRightToArc from '@/components/svgIcon/TablerArrowRightToArc.vue'
+// @ts-ignore
 import { ref } from 'vue'
 import { useAppStore } from '@/stores/app.store'
-import { getLocalStoreKey, REQUEST_CURRENT_SITE, SiteInfo, sendMessage,getQuery } from '@/popup/libs/tools';
+import { getLocalStoreKey, REQUEST_CURRENT_SITE, SiteInfo, sendMessage,getQuery, showLoading, hideLoading } from '@/popup/libs/tools';
 const store = useAppStore()
-const accountActive = ref(store.activeAccount)
 
 const requestId = getQuery('requestId')
 const networkType = getQuery('networkType')
+const host = getQuery('host')
 
 const siteInfo = ref({
     host: "",
@@ -80,48 +80,52 @@ const siteInfo = ref({
     icon: "",
     title: ""
 } as SiteInfo)
-// @ts-ignore
-getLocalStoreKey(REQUEST_CURRENT_SITE).then((siteInfoItem:SiteInfo) => {
-    console.log('siteInfoItem: ', siteInfoItem)
-    siteInfo.value.host = siteInfoItem.host
-    siteInfo.value.href = siteInfoItem.href
-    siteInfo.value.icon = siteInfoItem.icon
-    siteInfo.value.title = siteInfoItem.title
-    const site = store.getSiteInfo( new URL(siteInfoItem.href).host)
-    console.log('site: ', site)
-    if(site){
-        setTimeout(() => {
-            resolveProvide()
-        },500)
-    }
-})
-const accounts = computed(() => store.accountList)
+const siteRow = store.getSiteInfo(host)
+if(siteRow){
+    siteInfo.value.host = siteRow.host
+    siteInfo.value.href = [siteRow.protocol, siteRow.host].join('//')
+    // @ts-ignore
+    siteInfo.value.icon = siteRow.icon
+    siteInfo.value.title = siteRow.title
+}else{
+    setTimeout(() => {
+        rejectProvide()
+    },4)
+}
+
+
 const netWorkTypes = [
     'mainnet',
     'regtest',
     'testnet'
 ]
-if(networkType && netWorkTypes.includes(networkType)){
-    store.changeNetWork(netWorkTypes.findIndex(o => o === networkType))
+
+const oldNetworkType = store.getNetWorkType()
+// console.log('oldNetworkType: ', oldNetworkType)
+const currentNetwork = ref(netWorkTypes[oldNetworkType])
+const newNetwork = ref(networkType)
+if(currentNetwork.value === newNetwork.value){
+    setTimeout(() => {
+        rejectProvide()
+    },4)
 }
 
 const rejectProvide = async () => {
-    await sendMessage('RejectConnectionWallet', {
+    await sendMessage('RejectResult', {
         requestId
     })
     setTimeout(() => {
         window.close()
-    }, 300)
+    }, 100)
 }
 const resolveProvide = async () => {
-    store.switchActiveAccount(accountActive.value)
-    const { btcAddress, name } = store.getActiveAccount()
-    await sendMessage('ResolveConnectionWallet', {
-        requestId,
-        account: { btcAddress, name },
-        network: netWorkTypes[store.getNetWorkType()]
+    showLoading('Switch network...')
+    await store.changeNetWork(netWorkTypes.findIndex(o => o === networkType)).finally(() => {
+        hideLoading()
     })
-    store.addSite(siteInfo.value.title, siteInfo.value.href, siteInfo.value.icon)
+    await sendMessage('ResolveResult', {
+        requestId,
+    })
     window.close()
 }
 </script>

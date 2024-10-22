@@ -9,18 +9,21 @@ import {
   encryptData,
   decryptData,
   TestPassword,
+  REQUEST_CURRENT_SITE,
+  saveLocalStoreKey,
+  getLocalStoreKey,
+  channelName,
+  REQUEST_TARGET,
+  RESPONSE_TARGET,
 } from '@/popup/libs/tools'
 
-import { createWindow, Settings, WindowOptions } from './utils'
+import { createWindow, getCurrentAssets, Settings, WindowOptions } from './utils'
 
 let sessionPassword: string | null = null
 
-chrome.storage.session.get(['sessionPassword'], (result) => {
-  // Restore the password saved in the message
-  if (result.sessionPassword && TestPassword(result.sessionPassword)) {
-    sessionPassword = result.sessionPassword
-  }
-})
+
+
+
 
 interface configOpt {
   activeAccount: number
@@ -37,7 +40,69 @@ interface WcClient {
   subAll(): unknown
 }
 
+interface RequestItem {
+  type: string
+  data: unknown,
+  requestId: string,
+}
+
 type WcClientObject = WcClient | null
+
+const SdkRequestQueue:Array<RequestItem> = []
+
+const findQueue = (requestId: string) =>{
+  console.log('SdkRequestQueue: ', requestId, SdkRequestQueue)
+  return SdkRequestQueue.find(item => item.requestId === requestId)
+}
+const removeQueue = (requestId: string) => {
+  const index = SdkRequestQueue.findIndex(item => item.requestId === requestId)
+  if (index!== -1) {
+    console.log('Queue remove: ', index, SdkRequestQueue[index])
+    SdkRequestQueue.splice(index, 1)
+  }
+}
+
+chrome.storage.session.get(['sessionPassword'], (result) => {
+  // Restore the password saved in the message
+  if (result.sessionPassword && TestPassword(result.sessionPassword)) {
+    sessionPassword = result.sessionPassword
+  }
+})
+
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+const sendChannelResponseMessage = (requestId:string, data:any) => {
+  const queue = findQueue(requestId)
+  if(queue) {
+    const sendMsg = {
+      data:{
+        data,
+        requestId: requestId,
+        type: queue.type,
+      },
+      target: RESPONSE_TARGET,
+      channel: channelName
+    }
+    console.log('sendChannelResponseMessage: ', sendMsg)
+    chrome.tabs.query({ active: true,  }, (tabs) => {
+      console.log('tabs: ', tabs)
+      // if (tabs[0]) {
+        tabs.forEach(tab => {
+          // @ts-ignore
+          chrome.tabs.sendMessage(tab.id, sendMsg, (response) => {
+            console.log('Response from content script:', response);
+            
+          });
+        })
+        removeQueue(requestId)
+      // }
+    });
+  }else{
+    removeQueue(requestId)
+    return false
+  }
+}
+
 
 const encodes: string[] = []
 const configs: configOpt = {
@@ -46,9 +111,13 @@ const configs: configOpt = {
   networkRpcUrl: '',
   networkRpcToken: '',
 }
+
+
 const ws = {
   client: {},
 }
+
+
 
 const clearPassword = () => {
   sessionPassword = null
@@ -103,25 +172,82 @@ chrome.runtime.onInstalled.addListener(async (opt) => {
 })
 const checkUnlockSate = ()=>{
   if (sessionPassword === null) {
-    sendMessage('isUnlocked', { status: false })
-    throw new Error('Wallet is unlock')
+    try {
+      sendMessage('isUnlocked', { status: false })
+    } catch (error) {
+      console.warn('checkUnlockSate send state on error: ', error)
+    }
+    return false
+  } else {
+    return true
   }
 }
 chrome.runtime.onConnect.addListener(async () => {
   // console.log('chrome.runtime.onConnect: ', new Date().toLocaleString())
   checkUnlockSate()
 })
+
+
+
+const openWindowGoToUrl = (url:string, requestId:string, sender:chrome.runtime.MessageSender) => {
+  let openerWin:chrome.windows.Window
+  const queue = findQueue(requestId)
+  if(!queue){
+    return false
+  }
+  const winOpts: WindowOptions = {
+    // @ts-ignore
+    left: sender.tab?.width - 380 || 960,
+  }
+
+  const addRemovedListenerWindow = async (windowId:number)=>{
+    if(windowId === openerWin.id){
+      const queueTask = findQueue(requestId)
+      if(queueTask) {
+        await sendChannelResponseMessage(requestId, {})
+      }
+    }
+  }
+  // @ts-ignore
+  const extParams = '&host='+new URL(sender.tab?.url).host
+  if(!checkUnlockSate()){
+    const [path, query] = url.split('?')
+    console.log('path, query:')
+    createWindow(Settings.BASE_URL + Settings.UNLOCK_WALLET+'?redirect='+path+'&'+query+extParams, winOpts).then(res => {
+      // @ts-ignore
+      openerWin = res
+      chrome.windows.onRemoved.addListener(addRemovedListenerWindow)
+    })
+  }else{   
+    createWindow(Settings.BASE_URL + url+extParams, winOpts).then(res => {
+      // @ts-ignore
+      openerWin = res
+      chrome.windows.onRemoved.addListener(addRemovedListenerWindow)
+    })
+  }
+}
 // @ts-ignore
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   console.log('Message received on background('+message.type+'): ', message, sender, sendResponse)
+  if(message.data && message.data.channel && message.data.channel === channelName &&  message.data.target){
+    if(message.data.target === REQUEST_TARGET){
+      SdkRequestQueue.push(message.data.data)
+      console.log('SdkRequestQueue on Request: ', SdkRequestQueue.length, SdkRequestQueue[SdkRequestQueue.length-1])
+    }
+  }
   switch (message.type) {
     case 'SubscribeReceiveEvents':
-      checkUnlockSate()
+      if(!checkUnlockSate()){
+        return false
+      }
       ReceiveEvents(message.data)
       break
     case 'InitConfig':
       InitConfig(message.data)
       break
+    case 'getQueue':
+      // @ts-ignore
+      return sendResponse({ type: 'getQueue', data: findQueue(message.data) })
     case 'isUnlocked':
       // @ts-ignore
       return sendResponse({
@@ -129,7 +255,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         data: { status: sessionPassword ? true : false },
       })
     case 'getPassword':
-      checkUnlockSate()
+      if(!checkUnlockSate()){
+        return false
+      }
       // @ts-ignore
       return sendResponse({ type: 'getPassword', data: sessionPassword })
     case 'setPassword':
@@ -138,7 +266,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // @ts-ignore
       return sendResponse({ type: 'setPassword' })
     case 'resetPassword':
-      checkUnlockSate()
+      if(!checkUnlockSate()){
+        return false
+      }
       const { newPassword, phrases } = message.data
       // @ts-ignore
       const oldPassword: string = sessionPassword
@@ -157,7 +287,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         data: { status: true, phrases },
       })
     case 'clearPassword':
-      clearPassword()
+      if(!checkUnlockSate()){
+        return false
+      }
       // @ts-ignore
       return sendResponse({ type: 'setPassword' })
     case 'checkPassword':
@@ -167,11 +299,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         message.data.pwd
       )
       // console.log('decrypted: ', decrypted)
-      let data = decrypted ? 'Ok' : 'No'
+      const result = decrypted ? 'Ok' : 'No'
       // @ts-ignore
-      return sendResponse({ type: 'checkPassword', data })
+      return sendResponse({ type: 'checkPassword', data:result })
     case 'encryptMnemonic':
-      checkUnlockSate()
+      if(!checkUnlockSate()){
+        return false
+      }
       const encryptedMnemonic: string = encryptData(
         message.data,
         // @ts-ignore
@@ -180,7 +314,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // @ts-ignore
       return sendResponse({ type: 'encryptMnemonic', data: encryptedMnemonic })
     case 'decryptMnemonic':
-      checkUnlockSate()
+      if(!checkUnlockSate()){
+        return false
+      }
       const decryptedMnemonic: string = decryptData(
         message.data,
         // @ts-ignore
@@ -190,27 +326,45 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return sendResponse({ type: 'decryptMnemonic', data: decryptedMnemonic })
     case 'connectionWallet':
       // @ts-ignore
-      let { type, requestId } = message.data.data
-      const winOpts: WindowOptions = {
-        // @ts-ignore
-        left: sender.tab?.width - 380 || 960
-      }
-      try{
-        checkUnlockSate()
-        // chrome.windows.create({height:640, width: 320, left: window.screen.width/2+160,top: 200, url: '/common/connectionWallet', type: 'popup'})
-        createWindow(Settings.BASE_URL + Settings.CONNECTION_WALLET, winOpts).then(res => {
-          console.log('createWindow res: ', res)
-        })
-      }catch(err) {
-        if(err instanceof Error && err.message === 'Wallet is unlock'){
-          createWindow(Settings.BASE_URL + Settings.UNLOCK_WALLET+'?redirect='+Settings.CONNECTION_WALLET, winOpts)
-        }
-      }
+      const { type, requestId } = message.data.data
+      const networkType = message.data.data.data.network
+      // @ts-ignore
+      message.data.siteInfo.icon = message.data.siteInfo.icon || sender.tab?.favIconUrl
+      console.log('connectionWallet data: ', type, requestId, networkType, message.data, message.data.siteInfo)
+      await saveLocalStoreKey(REQUEST_CURRENT_SITE, message.data.siteInfo)
+      const siteInfo = await getLocalStoreKey(REQUEST_CURRENT_SITE)
+      console.log('createWindow siteInfo: ', siteInfo)
+      openWindowGoToUrl(Settings.CONNECTION_WALLET+'?requestId='+requestId+'&networkType='+networkType, requestId, sender)
+      return sendResponse();
+
+    case 'RejectConnectionWallet':
+      await sendChannelResponseMessage(message.data.requestId, {})
+      return sendResponse()
+    case 'ResolveConnectionWallet':
+      const { account, network } = message.data
+      await sendChannelResponseMessage(message.data.requestId, {
+        account, network
+      })
+      return sendResponse()
+    case 'getCurrentAssets': 
+      await sendChannelResponseMessage(message.data.data.requestId, await getCurrentAssets())
+      return sendResponse()
+    case 'switchNetwork':
+      openWindowGoToUrl(Settings.SWITCH_NETWORK+'?requestId='+message.data.data.requestId+'&networkType='+message.data.data.data.network, message.data.data.requestId,sender)
+      return sendResponse()
+    case 'RejectResult':
+      await sendChannelResponseMessage(message.data.requestId, {})
+      return sendResponse()
+    case 'ResolveResult':
+      const sendData = message.data
+      delete sendData.requestId
+      await sendChannelResponseMessage(message.data.requestId, sendData)
       return sendResponse()
     default:
       break
   }
   sendResponse()
+  return true;
 })
 
 function ReceiveEvents(encoded: string) {

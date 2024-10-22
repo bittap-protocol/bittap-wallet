@@ -128,7 +128,16 @@ export interface ReceiveAddrInfo {
   taproot_output_key: string
   asset_name?: string
 }
+
+export interface SiteInfoRow {
+  icon?:string,
+  title: string,
+  host: string,
+  protocol:string
+}
+
 export type ReceiveAddrRow = ReceiveAddrInfo
+
 // @ts-ignore
 // import browserCrypto from 'browser-crypto';
 
@@ -189,6 +198,8 @@ export const useAppStore = defineStore('app', () => {
   )
   const receiveAddressList = useStorage('receiveAddressList', [])
 
+  const siteList:RemovableRef<SiteInfoRow[]> = useStorage('siteList', [])
+
   const getRpcToken = ()=>{
     if(networkRpcTokenExpiredTime.value < UnixNow() ){
       networkRpcToken.value = ''
@@ -245,18 +256,18 @@ export const useAppStore = defineStore('app', () => {
 
   const changeNetWork = async (nt: number, url = '', token = '') => {
     if (![0, 1, 2].includes(nt)) {
-      throw 'Network type not support'
+      throw new Error('Network type not support')
     }
     if (nt === 1) {
       if (url === '') {
-        throw 'Custom url must be specified'
+        throw new Error('Custom url must be specified')
       }
       networkRpcUrl.value = url
       networkRpcToken.value = token
     }
-    // if (nt === 1) {
-    //   networkRpcUrl.value = LocalNetUrl
-    // }
+    if (nt === 0) {
+      networkRpcUrl.value = MainNetUrl
+    }
     if (nt === 2) {
       networkRpcUrl.value = TestNetUrl
     }
@@ -299,7 +310,7 @@ export const useAppStore = defineStore('app', () => {
             childNodeScript.neutered().toBase58(),
             'vpub'
           )
-          CreateWallet(b1017PublicKey, b84PublicKey)
+          await CreateWallet(b1017PublicKey, b84PublicKey)
           .then(async (res) => {
             // @ts-ignore
             acc.address =  p2trPrimary.address
@@ -981,6 +992,32 @@ export const useAppStore = defineStore('app', () => {
       }
   })
   }
+  const getSiteInfo = (host:string)=>{
+    return siteList.value.find(site => site.host === host)
+  }
+  const addSite = (title:string,href:string,icon:string = '') => {
+    const urlInfo = new URL(href)
+    if(getSiteInfo(urlInfo.host)){
+      return false
+    }
+    const site: SiteInfoRow = {
+      title,
+      icon,
+      host: urlInfo.host,
+      protocol: urlInfo.protocol
+    }
+    site.icon = icon?icon: site.protocol+'//'+site.host+'/favicon.ico'
+    siteList.value.push(site)
+    return true
+  }
+  const removeSite = (host:string) => {
+    if(getSiteInfo(host)){
+      const index = siteList.value.findIndex(site => site.host === host)
+      if(index>-1) {
+        siteList.value.splice(index, 1)
+      }
+    }
+  }
 
   return {
     count,
@@ -1040,6 +1077,9 @@ export const useAppStore = defineStore('app', () => {
     getRpcToken,
     setRpcToken,
     getGasFees,
-    updateGasFees
+    updateGasFees,
+    getSiteInfo,
+    addSite,
+    removeSite
   }
 })

@@ -1,8 +1,8 @@
 window.BittapWalletInjected = {
     queues:[],
     channelName: 'bittap.jssdk.event',
-    REQUEST_TAGET: 'BITTAPWALLET',
-    RESPONSE_TAGET: 'BITTAPWALLET_RESPONSE',
+    REQUEST_TARGET: 'BITTAPWALLET_REQUEST',
+    RESPONSE_TARGET: 'BITTAPWALLET_RESPONSE',
     init(){
         // const res = chrome.runtime.connect('ekgmcbpgglflmgcfajnglpbcbdccnnge', {name: 'bittap-wallet'})
         // console.log('res: ', res)
@@ -10,12 +10,19 @@ window.BittapWalletInjected = {
         window.addEventListener('message',(message, sender) => {
             console.log('BittapWalletInjected 1 window.addEventListener(message):', JSON.stringify(message), sender)
             if(message.data) {
-                if(event.data && event.data.target && event.data.target === window.BittapWalletInjected.RESPONSE_TAGET && event.data.channel && event.data.channel === window.BittapWalletInjected.channelName){
-                    const { type , data, requestId, event } = message.data.data
-                    console.log('BittapWalletInjected 2 window.addEventListener(message):', type, data, requestId, event, message.data.data)
+                if(event.data && event.data.target && event.data.target === window.BittapWalletInjected.RESPONSE_TARGET && event.data.channel && event.data.channel === window.BittapWalletInjected.channelName){
+                    const { type , data } = message.data.data
+                    const requestId = message.data.data.requestId
+                    console.log('BittapWalletInjected 2 window.addEventListener(message):', type, data, requestId)
                     if(type && requestId){
                         const queue = window.BittapWalletInjected.getRequestQueueInfo(requestId)
-                        queue.callback && queue.callback({ type ,event, data, requestId })
+                        console.log('queue: ', queue)
+                        if(!queue){
+                            return false
+                        }
+                        if(Object.prototype.hasOwnProperty.call(queue,'callback')){
+                            queue.callback && queue.callback({ type, data, requestId })
+                        }
                         window.BittapWalletInjected.removeQueueItem(requestId)
                     }
                 }
@@ -23,7 +30,17 @@ window.BittapWalletInjected = {
         });
     },
     sendMessage(data){
-        return window.postMessage({channel:window.BittapWalletInjected.channelName , data, target: window.BittapWalletInjected.REQUEST_TAGET, siteInfo: {title: document.title, host: window.location.hostname, href: window.location.href}},'*')
+        return window.postMessage({
+            channel:window.BittapWalletInjected.channelName , 
+            data, 
+            target: window.BittapWalletInjected.REQUEST_TARGET, 
+            siteInfo: {
+                title: document.title, 
+                host: window.location.hostname, 
+                href: window.location.href, 
+                icon: window.location.protocol+"//"+window.location.host + "/favicon.ico"
+            }
+        },'*')
     },
     sendRequestJsBridge (queue)  {
         if(!queue) {
@@ -51,9 +68,11 @@ window.BittapWalletInjected = {
         const queue = window.BittapWalletInjected.queues.find((queue) => queue.requestId === requestId)
         return queue
     },
-    removeQueueItem(){
-        const queueINdex = window.BittapWalletInjected.queues.findIndex((queue) => queue.requestId === requestId)
-        window.BittapWalletInjected.queues.splice(queueINdex, 1)
+    removeQueueItem(requestId){
+        const queueIndex = window.BittapWalletInjected.queues.findIndex((queue) => queue.requestId === requestId)
+        if(queueIndex > -1) {
+            window.BittapWalletInjected.queues.splice(queueIndex, 1)
+        }
     },
 
 };

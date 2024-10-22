@@ -333,8 +333,8 @@
   </div>
   <div v-if="showDevLinks" class="links flex flex-row justify-between items-start p-4 gap-x-2 mb-20 text-primary">
     <RouterLink class="no-underline" to="/common/connectionWallet">Connection</RouterLink>
-    <RouterLink class="no-underline" to="/common/sginMessage">sginMessage</RouterLink>
-    <RouterLink class="no-underline" to="/common/sginTransfer">sginTransfer</RouterLink>
+    <RouterLink class="no-underline" to="/common/signMessage">signMessage</RouterLink>
+    <RouterLink class="no-underline" to="/common/signTransfer">signTransfer</RouterLink>
   </div>
 </template>
 
@@ -355,7 +355,7 @@ import { TransferRow, useAppStore } from '@/stores/app.store'
 // import { getBalance, getBTCUSDTPrice } from '@/popup/api/btc/blockStream'
 
 import { QueryBtcBalance } from '@/popup/api/btc/blockStream'
-import { hideFullscreen, showAddressAndAssetId } from '@/popup/libs/tools'
+import { CURRENT_USER_ASSETS, hideFullscreen, saveLocalStoreKey, showAddressAndAssetId } from '@/popup/libs/tools'
 // import { postToast } from '@/popup/libs/tools';
 // import Import from './svgIcon/Import.vue';
 
@@ -512,6 +512,20 @@ export default {
           name: 'BTC',
           asset_type: 'base',
         })
+        saveLocalStoreKey(CURRENT_USER_ASSETS,JSON.parse(JSON.stringify(this.assets.map(x => {
+          return {
+            // @ts-ignore
+            asset_name: x.name,
+            // @ts-ignore
+            amount: x.amount,
+            // @ts-ignore
+            decimal: x.asset_type === 'base' ? 8 : 0,
+            // @ts-ignore
+            type: x.asset_type === 'base' ? 0 : x.asset_id,
+            // @ts-ignore
+            asset_id: x.asset_id,
+          }
+        }))))
       })
       this.loading = false
     },

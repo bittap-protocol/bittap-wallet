@@ -1,7 +1,7 @@
 
 <script setup lang="ts">
 // eslint-disable-next-line vue/no-v-html
-import { AnchorVirtualPsbt, DecodeAssetsAddress, EstimateTxFee, PublishTransfer, PublishTransferBtc, PublishTransferBtcV2, TransferAssets, TransferBtc } from '@/popup/api/btc/blockStream';
+import { AnchorVirtualPsbt, DecodeAssetsAddress, EstimateTxFee, PublishTransfer, PublishTransferBtcV2, TransferAssets, TransferBtc } from '@/popup/api/btc/blockStream';
 import { sendMessage, RequestItem, getQuery, SiteInfo, showLoading, hideLoading, RequestSignTransaction, TxsStatus, toHex } from '@/popup/libs/tools';
 import { useAppStore } from '@/stores/app.store'
 import { Psbt } from 'bitcoinjs-lib'
@@ -274,15 +274,15 @@ if(queueInfo){
 
               <div class="flex pt-6 mb-0.5 justify-between">
                     <button
-                        @click="rejectProvide"
                         class="border border-purple-500 text-purple-500 font-bold px-8 py-1 rounded-2xl"
+                        @click="rejectProvide"
                     >
                         Reject
                     </button>
                     <button
                         :disabled="isLoading"
-                        @click="resolveProvide"
                         class="border border-purple-500 bg-purple-500 text-white font-bold px-8 rounded-2xl"
+                        @click="resolveProvide"
                     >
                         Confirm
                     </button>

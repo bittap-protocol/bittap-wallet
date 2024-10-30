@@ -25,7 +25,8 @@ const activeAccount = computed(() => store.getActiveAccount())
 <template>
   <div class="text-center mx-0 flex flex-col gap-y-2">
     <div class="min-box">
-      <div v-if="count > 0 && activeAccount && !activeAccount.backup"
+      <div
+v-if="count > 0 && activeAccount && !activeAccount.backup"
         class="flex flex-row justify-between items-center m-2 mt-0 bg-red-100 rounded-2xl px-[12px] pr-[7px] py-[8px] mx-4 text-red-600">
         <div class="tips flex flex-row items-center justify-start">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">

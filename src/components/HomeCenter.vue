@@ -350,7 +350,7 @@ import { TransferRow, useAppStore } from '@/stores/app.store'
 // import { getBalance, getBTCUSDTPrice } from '@/popup/api/btc/blockStream'
 
 import { QueryBtcBalance } from '@/popup/api/btc/blockStream'
-import { CURRENT_USER_ASSETS, hideFullscreen, saveLocalStoreKey, showAddressAndAssetId } from '@/popup/libs/tools'
+import { hideFullscreen, showAddressAndAssetId } from '@/popup/libs/tools'
 // import { postToast } from '@/popup/libs/tools';
 // import Import from './svgIcon/Import.vue';
 
@@ -446,10 +446,7 @@ export default {
     async refreshData() {
       this.refresh = true
       this.initAccount()
-        .then(() => {
-          this.refresh = false
-        })
-        .catch((e) => {
+        .finally(() => {
           this.refresh = false
         })
     },

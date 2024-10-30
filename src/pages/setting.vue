@@ -23,8 +23,8 @@
         <div class="item">
           <a
             href="###"
-            @click="lockWallet"
             class="flex flex-row justify-start items-center"
+            @click="lockWallet"
           >
             <IconMdiPasswordOutline class="mr-2 size-5"></IconMdiPasswordOutline>
             Lock wallet
@@ -42,8 +42,8 @@
         <div class="item">
           <a
             href="javascript:void(0)"
-            @click="$root._toast('Coming soon...')"
             class="flex flex-row justify-start items-center"
+            @click="$root._toast('Coming soon...')"
           >
             <IconBackup class="mr-2 size-5"></IconBackup>
             Backup Proof of Transaction

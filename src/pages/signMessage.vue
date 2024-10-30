@@ -87,18 +87,18 @@ const resolveProvide = async () => {
                 <div
                     class="card bg-purple-200 rounded-md h-25 py-2 pl-2 mb-1 h-[280px] break-all"
                 >
-                    <textarea readonly v-model="signMessage" class="w-full h-full bg-transparent border-none border-0 resize-none hover:border-0 focus:border-0 active:border-0 focus-within:border-0 focus:ring-0"></textarea>
+                    <textarea v-model="signMessage" readonly class="w-full h-full bg-transparent border-none border-0 resize-none hover:border-0 focus:border-0 active:border-0 focus-within:border-0 focus:ring-0"></textarea>
                 </div>
                 <div class="flex pt-6 mb-0.5 justify-between">
                     <button
-                        @click="rejectProvide"
                         class="border border-purple-500 text-purple-500 font-bold px-8 py-1 rounded-2xl"
+                        @click="rejectProvide"
                     >
                         Cancel
                     </button>
                     <button
-                        @click="resolveProvide"
                         class="border border-purple-500 bg-purple-500 text-white font-bold px-8 rounded-2xl"
+                        @click="resolveProvide"
                     >
                         Signature
                     </button>

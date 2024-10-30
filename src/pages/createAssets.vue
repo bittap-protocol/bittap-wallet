@@ -42,7 +42,7 @@
           </div>
         </span>
       </div>
-      <textarea rows="5" v-model="formData.des" type="text" placeholder="A short description of the asset, including item information and a description of the purpose of the currency" class="field" />
+      <textarea v-model="formData.des" rows="5" type="text" placeholder="A short description of the asset, including item information and a description of the purpose of the currency" class="field" />
     </label>
 
     <label class="form-control w-full max-w-xs">
@@ -145,7 +145,7 @@ export default {
         // asset_meta: {
         //   data: this.formData.file
         // }
-      }).then(res => {
+      }).then(() => {
         AssetsFinalize()
         // @ts-ignore
         this.$root._toast('Success', 'success')

@@ -69,8 +69,8 @@
         <div class="actions">
           <button
             v-if="acc.phraseIndex >= 0"
-            @click="backupWords(index)"
             class="btn btn-text btn-block flex flex-row justify-center items-center"
+            @click="backupWords(index)"
           >
             <IconMdiCloudKey class="size-6"></IconMdiCloudKey>
             Backup mnemonics

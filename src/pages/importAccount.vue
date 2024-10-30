@@ -25,8 +25,8 @@
                 <input
                   v-model="wordsForm[index]"
                   type="text"
-                  @paste="handlePaste"
                   class="inline px-1 w-[65px] mr-1"
+                  @paste="handlePaste"
                 />
               </div>
             </div>

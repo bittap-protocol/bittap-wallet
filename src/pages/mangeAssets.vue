@@ -32,10 +32,8 @@
           <IconAutoTokenName :name="ass.name"></IconAutoTokenName>
         </div>
         <div class="info">
-          <div
-            class="name"
-            v-html="showKeywordsName(ass.name)"
-          ></div>
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <div class="name" v-html="showKeywordsName(ass.name)"></div>
           <div class="id">
             {{ ass.asset_type === 'base' ? '' : showAssetId(ass.asset_id) }}
           </div>

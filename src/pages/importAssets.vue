@@ -5,14 +5,16 @@
          <div class="label">
               <span class="label-text">Asset id</span>
           </div>
-          <input v-model="formData.asset_id" type="text" placeholder="Enter asset id"
+          <input
+v-model="formData.asset_id" type="text" placeholder="Enter asset id"
                   class="field" />
       </div>
       <div class="form-control">
          <div class="label">
               <span class="label-text">Universe host</span>
           </div>
-          <input v-model="formData.universe_host" type="text" placeholder="Enter universe host"
+          <input
+v-model="formData.universe_host" type="text" placeholder="Enter universe host"
                   class="field" />
       </div>
       <div class="actions">

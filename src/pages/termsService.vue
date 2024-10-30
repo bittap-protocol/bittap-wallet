@@ -7,10 +7,10 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
+// import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app.store'
 const store = useAppStore()
-const router = useRouter()
+// const router = useRouter()
 
 store.setGoBackUrl('/')
 store.isGoBack()

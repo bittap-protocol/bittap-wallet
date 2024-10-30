@@ -1,4 +1,3 @@
-
 import { CURRENT_USER_ASSETS, CURRENT_USER_WALLET_ID, getLocalStoreKey } from '@/popup/libs/tools';
 import { DecodeAssetsAddress, ListAssetsQuery, NewAssetAddress } from '@/popup/api/btc/blockStream';
 
@@ -15,9 +14,9 @@ export const Settings = {
 }
 
 export enum CreateType {
-    normal='normal', 
-    popup='popup', 
-    panel='panel'
+    normal='normal',
+    popup='popup',
+    panel='panel',
 }
 
 export interface WindowOptions {
@@ -32,13 +31,15 @@ export interface WindowOptions {
 }
 
 
+export interface AssetInfoItem {
+    asset_name: string,
+    asset_id: string,
+    total_supply: number,
+    asset_type:number,
+}
+
 export interface AssetInfo{ 
-    asset: {
-        asset_name: string
-        asset_id: string
-        total_supply: number
-        asset_type: number
-    },
+    asset: AssetInfoItem,
     total_proofs: number
 }
 
@@ -96,7 +97,7 @@ export async function createInvoice({ asset_id, amount }: { asset_id: string, am
 
 
 
-export async function searchAssets({asset_name, asset_id, page_num=1, page_size=10  }: { asset_name?:string, asset_id?:string, page_num?:number, page_size?:number}): Promise<any>{
+export async function searchAssets({asset_name, asset_id, page_num=1, page_size=10  }: { asset_name?:string, asset_id?:string, page_num?:number, page_size?:number}): Promise<AssetInfoItem[]>{
     // @ts-ignore
     return await ListAssetsQuery(asset_name, asset_id, page_num, page_size).then(res => {
         return res.map((row:AssetInfo) => {

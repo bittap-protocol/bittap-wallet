@@ -381,6 +381,7 @@ export default {
           v-if="toastData.type === 'success'"
           class="mr-1 size-5"
         />
+        <!-- eslint-disable-next-line vue/no-v-html -->
         <span v-html="toastData.text"></span>
       </div>
     </div>
@@ -417,10 +418,8 @@ export default {
       >
         {{ custom_confirm.title }}
       </h3>
-      <div
-        class="message"
-        v-html="custom_confirm.message"
-      ></div>
+      <!-- eslint-disable-next-line vue/no-v-html -->
+      <div class="message" v-html="custom_confirm.message"></div>
       <div
         v-if="custom_confirm.actions.length > 0"
         :class="['dialog-actions', custom_confirm.actionCls && custom_confirm.actionCls.length >= 1? '': 'flex-row space-x-2',].concat(custom_confirm.actionCls)"

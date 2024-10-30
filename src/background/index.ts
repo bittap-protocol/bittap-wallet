@@ -19,6 +19,8 @@ import {
   RESPONSE_TARGET,
   setNetworkConfiguration,
   CURRENT_USER_WALLET_ID,
+  netWorkTypes,
+  AccountChangeInfo,
 } from '@/popup/libs/tools'
 
 import { createInvoice, createWindow, getCurrentAssets, Settings, WindowOptions, searchAssets } from './utils'
@@ -77,19 +79,18 @@ const scanTransaction = async () => {
   const { bitcoin: { transactions } } = mempoolJS({
     hostname: 'mempool.space'
   });
-  const requestId = 'onListenTransaction'
+  const handlerName = 'onListenTransaction'
   for(let i = 0; i< pendingList.length; i++){
     const task = pendingList[i]
     const txStatusResult = await transactions.getTxStatus({ txid: task.txid });
     console.log(task.txid, txStatusResult);
     if(txStatusResult.confirmed){
-      await sendMessage('ResolveResult', {
-          requestId,
-          status: TxsStatus.confirmed,
-          block_height: txStatusResult.block_height,
-          block_hash: txStatusResult.block_hash,
-          block_time: txStatusResult.block_time,
-          txid: task.txid,
+      broadcastMessage(handlerName, {
+        status: TxsStatus.confirmed,
+        block_height: txStatusResult.block_height,
+        block_hash: txStatusResult.block_hash,
+        block_time: txStatusResult.block_time,
+        txid: task.txid,
       })
     }
   }
@@ -97,6 +98,31 @@ const scanTransaction = async () => {
 
 }
 
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const broadcastMessage = (handlerName:string, data:any) => {
+  SdkRequestQueue.filter(x => x.requestId === handlerName).forEach((queue) => {
+    chrome.tabs.query({ active: true }, (tabs) => {
+      const sendMsg = {
+        data:{
+          data,
+          requestId: handlerName,
+          type: handlerName,
+          client_id: queue.client_id,
+        },
+        target: RESPONSE_TARGET,
+        channel: channelName
+      }
+      tabs.forEach(tab => {
+        // @ts-ignore
+        chrome.tabs.sendMessage(tab.id, sendMsg, (response) => {
+          console.log('Response from content script:', response);
+        });
+      })
+    });
+  })
+  sendMessage('broadcast-'+handlerName, data)
+}
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
 const sendChannelResponseMessage = (requestId:string, data:any) => {
@@ -481,6 +507,41 @@ function ReceiveEvents(encoded: string) {
 }
 
 function InitConfig(data: configOpt) {
+  let sendHandler = false
+  // const { account, network } = res.data
+  // this._currentAccount.btcAddress = account.btcAddress
+  // this._currentAccount.name = account.name
+  // this._currentWorkTypeName = network
+
+  const accountChangeData:AccountChangeInfo = {
+    account: {
+      // @ts-ignore
+      btcAddress: configs.activeAccount.btcAddress,
+      // @ts-ignore
+      name: configs.activeAccount.name,
+    },
+    network: netWorkTypes[configs.networkType]
+  }
+  const sendHandlerCall = (sendData:AccountChangeInfo) => {
+    setTimeout(() => {
+      broadcastMessage('onAccountChange', sendData)
+    }, 500)
+  }
+  if(Object.prototype.hasOwnProperty.call(data, 'networkType') && data.networkType !== configs.networkType){
+    sendHandler = true
+    accountChangeData.network = netWorkTypes[data.networkType]
+  }
+  if(Object.prototype.hasOwnProperty.call(data, 'activeAccount') && data.activeAccount !== configs.activeAccount) {
+    sendHandler = true
+    // @ts-ignore
+    accountChangeData.account.btcAddress = data.activeAccount.btcAddress
+    // @ts-ignore
+    accountChangeData.account.name = data.activeAccount.name
+    
+  }
+  if(sendHandler) {
+    sendHandlerCall(accountChangeData)
+  }
   Object.keys(data).forEach((key) => {
     // @ts-ignore
     configs[key] = data[key]
@@ -489,7 +550,6 @@ function InitConfig(data: configOpt) {
     sendMessage('isUnlocked', { status: false })
   }
   // console.log('Config is updated', configs)
-  configs.networkType
   setNetworkConfiguration(configs.networkType, configs.networkRpcUrl)
   saveLocalStoreKey(CURRENT_USER_WALLET_ID, configs.currentInfo.wallet_id)
 }

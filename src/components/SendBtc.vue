@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-v-html -->
 <template>
   <div class="send">
     <label class="form-control w-full max-w-xs">

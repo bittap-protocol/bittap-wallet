@@ -34,9 +34,9 @@ export default defineManifest(async (env) => ({
   
   content_scripts: [
     {
-      all_frames: false,
+      all_frames: true,
       js: ['src/content-script/index.ts'],
-      matches: ['*://*/*'],
+      matches: ['<all_urls>'],
       run_at: 'document_start',
     },
   ],
@@ -59,6 +59,11 @@ export default defineManifest(async (env) => ({
   minimum_chrome_version: "88",
   host_permissions: ['*://*/*'],
   // options_page: 'src/options/index.html',
-  permissions: ['storage','clipboardWrite',"scripting","activeTab"],
-  web_accessible_resources: [],
+  permissions: ['storage','clipboardWrite',"scripting","activeTab",'tabs'],
+  web_accessible_resources: [
+    {
+      "resources": ["injected.js"],
+      matches: ['<all_urls>'],
+    },
+  ],
 }))

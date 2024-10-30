@@ -1,9 +1,12 @@
-import extension from 'extensionizer';
-import { nanoid } from 'nanoid';
+import { sendMessage, channelName, REQUEST_TARGET, RESPONSE_TARGET } from '@/popup/libs/tools';
+
+
+
+// import extension from 'extensionizer';
+// import { nanoid } from 'nanoid';
 // import './index.scss'
 // const channelName = nanoid();
 
-const channelName = 'BittapWallet'
 
 
 // const src = chrome.runtime.getURL('src/content-script/iframe/index.html')
@@ -34,7 +37,7 @@ const channelName = 'BittapWallet'
 
 // 创建一个 <script> 标签并加载外部 JS 文件
 const script = document.createElement('script');
-script.src = chrome.runtime.getURL('src/content-script/injected.js'); // 引入外部脚本
+script.src = chrome.runtime.getURL('injected.js'); // 引入外部脚本
 (document.head || document.documentElement).appendChild(script);
 script.onload = () => {
   console.log('成功注入脚本:', script)
@@ -42,44 +45,36 @@ script.onload = () => {
 };
 
 
-// alert('content script')
-// @ts-ignore
-// document.BitTapWallet = {
-//   sendRequestJsBridge:function(){
-//     console.log('argrs: ', JSON.stringify([], arguments))
-//   },
-// }
+
+window.addEventListener('message', (event) => {
+  console.log('Content script onmessage received == Content script', JSON.stringify(event.data), window)
+  if(event.data && event.data.target && event.data.channel && event.data.channel === channelName){
+    if(event.data.target === REQUEST_TARGET){
+      sendMessage(event.data.data.type, event.data)
+    }
+  }
+})
 
 
-// class BittapWalletTools {
-//   constructor() {
-//     this.channel = new BroadcastChannel(channelName)
-//     this.channel.onmessage = this.onmessage.bind(this)
-//   }
-//   injectScript(){
-//     const container = document.head || document.documentElement;
-//     const scriptTag = document.createElement('script');
-//     scriptTag.setAttribute('async', 'false');
-//     scriptTag.setAttribute('channel', channelName);
-//     scriptTag.src = extension.runtime.getURL('pageProvider.js');
-//     container.insertBefore(scriptTag, container.children[0]);
-//     container.removeChild(scriptTag);
-//   }
-
-//   onmessage(event) {
-//     console.log('Content script onmessage received == Content script', event)
-//     const { data } = event
-//     const { type, payload } = data
-//   }
-// }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sendResponseMessage = (data:any) => {
+  return window.postMessage({channel:channelName , data, target: RESPONSE_TARGET},'*')
+}
 
 chrome.runtime.onConnect.addListener(async () => {
     console.log('chrome.runtime.onConnect==Content script: ', new Date().toLocaleString());
 })
 // @ts-ignore
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log('Content script onMessage received == Content script', message, sender, sendResponse)
+  console.log('Content script onMessage received == Content script', message, sender, sendResponse)
+  if(message.target && message.target === RESPONSE_TARGET && message.channel && message.channel === channelName){
+    console.log('Content script onMessage is RESPONSE_TARGET : ',message )
+    sendResponseMessage(message.data)
+  }
+  sendResponse()
+  return true;
 })
+
 
 self.onerror = function (message, source, lineno, colno, error) {
   console.info(

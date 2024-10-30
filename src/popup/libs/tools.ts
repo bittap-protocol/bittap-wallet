@@ -4,6 +4,82 @@ import { Buffer } from 'buffer'
 import AES from 'crypto-js/aes'
 // @ts-ignore
 import EncUtf8 from 'crypto-js/enc-utf8'
+import { useStorage } from '@vueuse/core'
+
+
+export const netWorkTypes = [
+  'mainnet',
+  'regtest',
+  'testnet'
+]
+
+export enum TxsStatus {
+  // Transaction status is pending.
+  pending = "pending",
+  // Transaction status is confirmed.
+  confirmed = "confirmed",
+  // Transaction status is failed.
+  failed = "failed",
+}
+
+export const MainNetUrl = 'https://mainnet.bittap.org'
+export const TestNetUrl = 'https://testnet.onebits.org'
+export const LocalNetUrl = 'https://devapi.onebits.org'
+
+
+export const channelName = 'bittap.jssdk.event'
+export const REQUEST_TARGET = 'BITTAPWALLET_REQUEST'
+export const RESPONSE_TARGET =  'BITTAPWALLET_RESPONSE'
+export const REQUEST_CURRENT_SITE =  'REQUEST_CURRENT_SITE'
+
+export const CURRENT_USER_ASSETS =  'CURRENT_USER_ASSETS'
+export const CURRENT_USER_INDEX =  'CURRENT_USER_INDEX'
+export const CURRENT_USER_WALLET_ID =  'CURRENT_USER_WALLET_ID'
+
+
+export const networkType = useStorage('networkType', 2)
+export const networkRpcUrl = useStorage('networkRpcUrl',TestNetUrl)
+export const networkRpcToken = useStorage('networkRpcToken', '')
+export const networkRpcTokenExpiredTime = useStorage('networkRpcTokenExpiredTime', -1)
+
+
+export interface RequestItem {
+  type: string
+  data: never,
+  requestId: string,
+  client_id: string
+}
+
+export interface RequestSignTransaction{
+  recv_addr: string
+  // Amount to transfer.
+  amount?: number
+  // Minimum confirmations required.
+  min_conf?: number
+    // Fee rate.
+  fee_rate?: number
+  // network fee
+  networkFee?: number,
+  receive_addr?: string,
+}
+
+
+export interface SiteInfo {
+  host: string
+  href: string
+  icon: string
+  title: string
+}
+
+export interface CurrentUserAssetsItem {
+  asset_id: string
+  amount: number
+  name: string
+  asset_type: string|number
+  timestamp?: number
+}
+
+export type CurrentUserAssetsBalance = CurrentUserAssetsItem[]
 
 /**
  * verify password
@@ -28,6 +104,42 @@ export function TestUrl(url: string) {
 
 export function isAssetId(id:string):boolean {
   return /^[0-9a-f]{64}$/.test(id)
+}
+
+export function getNetWorkType () {
+  const nt = networkType.value || 0
+  if (nt < 0 || nt > 2) {
+    return 0
+  }
+  return nt
+}
+
+export function getNetWorkConfig(): { netType: number, url: string, token: string } {
+  
+  return {
+    netType: networkType.value,
+    url: networkRpcUrl.value,
+    token: networkRpcToken.value,
+  }
+}
+
+export function setNetworkConfiguration(netType:number, url:string):void {
+  networkType.value = netType
+  networkRpcUrl.value = url
+  console.log('setNetworkConfiguration:', netType, url)
+}
+
+export function setRpcToken(rpcToken:string):void {
+  networkRpcToken.value = rpcToken
+  networkRpcTokenExpiredTime.value = UnixNow() + 3600
+}
+
+export function getRpcToken():string {
+  if(networkRpcTokenExpiredTime.value < UnixNow() ){
+    networkRpcToken.value = ''
+    return networkRpcToken.value
+  }
+  return networkRpcToken.value.toString()
 }
 
 /**
@@ -84,11 +196,11 @@ export function hideFullscreen() {
 export function sendMessage(
   type: string,
   data: unknown
-): Promise<unknown | string | boolean> {
+): Promise<unknown | string | boolean | never> {
   return (
     chrome.runtime
       // @ts-ignore
-      .sendMessage(null, { type: type, data: data })
+      .sendMessage({ type: type, data: data })
       .then((r) => (r && r.data) || '')
   )
 }
@@ -188,6 +300,7 @@ export function convertXpubToOther(xpub: string, targetFormat: string) {
   try {
     let data = bs58check.decode(xpub.trim())
     data = data.slice(4)
+    // @ts-ignore
     data = Buffer.concat([Buffer.from(prefixes.get(targetFormat), 'hex'), data])
     return bs58check.encode(data)
   } catch (err) {
@@ -328,6 +441,21 @@ export async function saveEncryptedMnemonic(
       resolve(true)
     })
   })
+}
+
+export async function getLocalStoreKey(key:string) {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(key, (result) => {
+      resolve(result && Object.prototype.hasOwnProperty.call(result, key) ? result[key] : null)
+    })
+  })
+}
+
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function saveLocalStoreKey(key:string, value:any) {
+  console.log('chrome.storage.local.set {[key]:value}: ', {[key]:value})
+    return chrome.storage.local.set({[key]:value})
 }
 
 /**

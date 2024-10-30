@@ -56,6 +56,7 @@ declare module 'vue' {
     SendBtc: typeof import('./components/SendBtc.vue')['default']
     SendTaproot: typeof import('./components/SendTaproot.vue')['default']
     Slow: typeof import('./components/svgIcon/Slow.vue')['default']
+    TablerArrowRightToArc: typeof import('./components/svgIcon/TablerArrowRightToArc.vue')['default']
     TransferHistoryLogs: typeof import('./components/TransferHistoryLogs.vue')['default']
   }
 }

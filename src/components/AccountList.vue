@@ -128,6 +128,7 @@ export default {
     }
     const showDialog = () => {
       // visiableDialog.value = true
+      store.updateAllAccountsBtcBalance()
       // @ts-ignore
       my_modal_select_account.showModal()
     }
@@ -137,7 +138,7 @@ export default {
       // @ts-ignore
       my_modal_select_account.close()
     }
-    store.updateAllAccountsBtcBalance()
+    store.updateCurrentAccountAssets()
     return {
       showDialog,
       selectAccount,

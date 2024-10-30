@@ -274,7 +274,7 @@
                 <div class="nft-info">
                   <div class="name">{{ ass.name }}</div>
                   <div class="info">
-                    <div class="time">{{ ass.asset_type }}</div>
+                    <div class="time">{{ ass.timestamp && ass.timestamp>0 ? $root.formatTime(ass.timestamp * 1000) : ' ' }}</div>
                     <div class="amount">X {{ ass.amount||0 }}</div>
                   </div>
                 </div>
@@ -330,11 +330,6 @@
     <button class="bg-white" @click="refreshData">
       <Refresh :class="['icc', refresh ? 'refreshing' : '']"></Refresh>
     </button>
-  </div>
-  <div v-if="showDevLinks" class="links flex flex-row justify-between items-start p-4 gap-x-2 mb-20 text-primary">
-    <RouterLink class="no-underline" to="/common/connectionWallet">Connection</RouterLink>
-    <RouterLink class="no-underline" to="/common/signMessage">signMessage</RouterLink>
-    <RouterLink class="no-underline" to="/common/signTransfer">signTransfer</RouterLink>
   </div>
 </template>
 
@@ -497,36 +492,12 @@ export default {
         // @ts-ignore
         this.btcPrice = res.USD
       })
-      await this.store.updateAssets().then(async () => {
-        this.store.updateListTransfers()
-        // @ts-ignore
-        this.assets = await this.store.getUserAssetsBalance()
-        // @ts-ignore
-        this.$root.updateGlobalState()
-        // console.log('this.assets: ', this.assets)
-        // add balance for BTC
-        // @ts-ignore
-        this.assets.unshift({
-          asset_id: 'Base',
-          amount: this.accountInfo.balance,
-          name: 'BTC',
-          asset_type: 'base',
-        })
-        saveLocalStoreKey(CURRENT_USER_ASSETS,JSON.parse(JSON.stringify(this.assets.map(x => {
-          return {
-            // @ts-ignore
-            asset_name: x.name,
-            // @ts-ignore
-            amount: x.amount,
-            // @ts-ignore
-            decimal: x.asset_type === 'base' ? 8 : 0,
-            // @ts-ignore
-            type: x.asset_type === 'base' ? 0 : x.asset_id,
-            // @ts-ignore
-            asset_id: x.asset_id,
-          }
-        }))))
-      })
+      this.store.updateAssets()
+      this.store.updateListTransfers()
+      // @ts-ignore
+      await this.$root.updateGlobalState()
+      // @ts-ignore
+      this.assets = this.$root.assets
       this.loading = false
     },
     listenReceiveAllMessage() {
@@ -656,7 +627,7 @@ export default {
             rgba(0, 123, 255, 0.85) 0%,
             #8000ff 100%
           );
-          border-image-slice: 10%;
+          // border-image-slice: 30%;
           transition: all 0.5s;
         }
       }
@@ -700,9 +671,9 @@ export default {
               @apply text-gray-800 drop-shadow-md px-2 text-xl font-semibold text-center leading-[30px] h-[160px] flex flex-col justify-center items-center break-all;
             }
             .info{
-              @apply flex flex-row justify-end items-center bg-[#8000FF9E];
+              @apply flex flex-row justify-between items-center bg-[#8000FF9E];
               .time{
-                @apply text-white text-left text-[10px] font-semibold leading-[35px] px-2 hidden;
+                @apply text-white text-left text-[10px] font-semibold leading-[35px] px-2;
               }
               .amount{
                 @apply text-white text-right text-[10px] font-semibold leading-[35px] px-2;

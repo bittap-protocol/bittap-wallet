@@ -67,12 +67,39 @@ import TablerArrowRightToArc from '@/components/svgIcon/TablerArrowRightToArc.vu
 // @ts-ignore
 import { ref } from 'vue'
 import { useAppStore } from '@/stores/app.store'
-import { getLocalStoreKey, REQUEST_CURRENT_SITE, SiteInfo, sendMessage,getQuery, showLoading, hideLoading } from '@/popup/libs/tools';
+import { SiteInfo, sendMessage,getQuery, showLoading, hideLoading, netWorkTypes, RequestItem, LocalNetUrl } from '@/popup/libs/tools';
 const store = useAppStore()
 
 const requestId = getQuery('requestId')
 const networkType = getQuery('networkType')
 const host = getQuery('host')
+
+
+const rejectProvide = async (rejectMessage?:string) => {
+    await sendMessage('RejectResult', {
+        requestId,
+        rejectMessage
+    })
+    setTimeout(() => {
+        window.close()
+    }, 200)
+}
+const resolveProvide = async () => {
+    showLoading('Switch network...')
+    await store.changeNetWork(netWorkTypes.findIndex(o => o === networkType), rpcUrl.value).finally(async () => {
+        await store.getUserAssetsBalance()
+        store.initConfig()
+        hideLoading()
+        sendMessage('ResolveResult', {
+            requestId,
+        })
+    }).catch((error) => {
+        console.error('store.changeNetWork on error: ', error)
+        rejectProvide(error+'')
+    })
+    
+    window.close()
+}
 
 const siteInfo = ref({
     host: "",
@@ -80,6 +107,7 @@ const siteInfo = ref({
     icon: "",
     title: ""
 } as SiteInfo)
+const rpcUrl = ref('')
 const siteRow = store.getSiteInfo(host)
 if(siteRow){
     siteInfo.value.host = siteRow.host
@@ -93,12 +121,14 @@ if(siteRow){
     },4)
 }
 
+const queueInfo:RequestItem = (await sendMessage('getQueue', requestId)) as RequestItem
+console.log('queueInfo: ', queueInfo)
+if(queueInfo && networkType === 'regtest'){
+    // @ts-ignore
+    rpcUrl.value = queueInfo.data?.url || LocalNetUrl
+}
 
-const netWorkTypes = [
-    'mainnet',
-    'regtest',
-    'testnet'
-]
+
 
 const oldNetworkType = store.getNetWorkType()
 // console.log('oldNetworkType: ', oldNetworkType)
@@ -106,27 +136,9 @@ const currentNetwork = ref(netWorkTypes[oldNetworkType])
 const newNetwork = ref(networkType)
 if(currentNetwork.value === newNetwork.value){
     setTimeout(() => {
-        rejectProvide()
+        rejectProvide('Network not changed.')
     },4)
 }
 
-const rejectProvide = async () => {
-    await sendMessage('RejectResult', {
-        requestId
-    })
-    setTimeout(() => {
-        window.close()
-    }, 100)
-}
-const resolveProvide = async () => {
-    showLoading('Switch network...')
-    await store.changeNetWork(netWorkTypes.findIndex(o => o === networkType)).finally(() => {
-        hideLoading()
-    })
-    await sendMessage('ResolveResult', {
-        requestId,
-    })
-    window.close()
-}
 </script>
 <style scoped></style>

@@ -2,9 +2,9 @@
 // import mempoolJS from "@mempool/mempool.js";
 
 // @ts-ignore
-import { useAppStore } from '@/stores/app.store'
+// import { useAppStore } from '@/stores/app.store'
 
-import { postToast, toHex, hideLoading, isValidBitcoinAddress, isAssetId } from '../../libs/tools.ts'
+import { postToast, toHex, hideLoading, isValidBitcoinAddress, isAssetId, getNetWorkConfig, getRpcToken, setRpcToken, getNetWorkType } from '../../libs/tools.ts'
 
 // Request method
 const OptionMethod = {
@@ -22,13 +22,13 @@ let globalTokenRequested = false
  * @returns {Promise<Object>}
  */
 const requestRpc = async (api, body = null, options = {}) => {
-  const store = useAppStore()
-  let rpcToken = store.getRpcToken()
-  const { netType, url } = store.getNetWorkConfig()
+  // const store = useAppStore()
+  let rpcToken = getRpcToken()
+  const { netType, url } = getNetWorkConfig()
   if (netType === 0) {
-    throw 'Not currently supported'
+    throw new Error('Not currently supported')
   }
-  // console.log('netType, url: ', netType, url, import.meta.env.VITE_API_KEY)
+  console.log('netType, url: ', netType, url, import.meta.env.VITE_API_KEY)
   const fetchUrl = [url, api].join('').replace('//', '/')
   const opts = Object.assign({}, options, {
     method: options.method || 'GET',
@@ -40,8 +40,8 @@ const requestRpc = async (api, body = null, options = {}) => {
   const getGlobalRpcToken = async () => {
     globalTokenRequested = true
     const { token } = await getApiToken(import.meta.env.VITE_API_KEY)
-    store.setRpcToken(token)
-    rpcToken = store.getRpcToken()
+    setRpcToken(token)
+    rpcToken = getRpcToken()
     globalTokenRequested = false
   }
   if(!api.startsWith('/api/auth?')) {
@@ -53,7 +53,7 @@ const requestRpc = async (api, body = null, options = {}) => {
         return new Promise((resolve, reject) => {
           setTimeout(() => {
             requestRpc(api, body, options).then(resolve).catch(reject)
-          },500)
+          },1000)
         })
       }
     }
@@ -71,26 +71,29 @@ const requestRpc = async (api, body = null, options = {}) => {
   } else {
     delete opts.body
   }
-  // console.log('requestRpc start: ', new URL(fetchUrl).pathname, ' is opts: ', body)
+  console.log('requestRpc start: ', new URL(fetchUrl).pathname, ' is opts: ', body)
   return fetch(fetchUrl, opts)
     .then((res) => res.json())
     .then((data) => {
-      // const data = await res.json()
-      // console.log('requestRpc then: ', new URL(fetchUrl).pathname, ' is res: ', data)
+      console.log('requestRpc then: ', new URL(fetchUrl).pathname, ' is res: ', data)
       if (data) {
         if (data.code || data.message) {
           if(data.code === 4003) {
-            store.setRpcToken('')
+            setRpcToken('')
             return requestRpc(api, body, options).then(resolve).catch(reject)
           }
-          postToast('FetchError: ' + data.message, 'error', 3000)
-          hideLoading()
+          if(!window){
+            throw new Error('FetchError: ' + data.message)
+          }else{
+            postToast('FetchError: ' + data.message, 'error', 3000)
+            hideLoading()
+          }
           throw 'FetchError: ' + data.message
         } else {
           return data
         }
       } else {
-        throw 'Request failed'
+        throw new Error('Request failed')
       }
     })
 }
@@ -276,7 +279,7 @@ export async function PublishTransfer(data) {
  * First step to transfer BTC to an address. 
  *  Psbt will be returned in response for user's sign.
  * @param {Object} data 
- * @returns Promise
+ * @returns Promise<string>
  */
 export async function TransferBtc(data) {
   const asset = Object.assign({}, data)
@@ -315,6 +318,24 @@ export async function PublishTransferBtc(data) {
   return requestRpc('/api/publish-transfer-btc', asset, { method: 'POST' })
 }
 
+/**
+ * Second step to transfer BTC to an address. 
+ * This will accept the user's signed psbt to broadcast in BTC network.
+ * @param {*} data 
+ * @returns Promise
+ */
+export async function PublishTransferBtcV2(data) {
+  const asset = Object.assign({}, data)
+  if (!asset.wallet_id) {
+    throw 'wallet_id is required'
+  }
+  if (!asset.final_psbt) {
+    throw 'final_psbt is required'
+  }
+  return requestRpc('/api/publish-transfer-btc-v2', asset, { method: 'POST' })
+}
+
+
 
 /**
  * Decode a Taproot Assets address.
@@ -337,11 +358,13 @@ export async function DecodeAssetsAddress(data) {
       proof_courier_addr,
       script_key,
       taproot_output_key,
+      asset_name
     } = res.data
     return {
       amount,
       asset_id: toHex(asset_id),
       encoded,
+      asset_name,
       internal_key: internal_key,
       proof_courier_addr,
       script_key: script_key,
@@ -368,6 +391,25 @@ export async function EstimateMaxBtc(data) {
   }
   return requestRpc('/api/estimate-max-btc', params, { method: 'POST' }).then(res => res.data.amount)
 }
+/**
+ * Estimate tx fee
+ * @param {Object} data 
+ * @returns Promise<number>
+ */
+export async function EstimateTxFee(data) {
+  const params = Object.assign({}, data)
+  if (!params.wallet_id) {
+    throw 'wallet_id is required'
+  }
+  if (!params.type) {
+    throw 'type is required'
+  }
+  if (!params.fee_rate) {
+    throw 'fee_rate is required'
+  }
+  return requestRpc('/api/estimate-tx-fee', params, { method: 'POST' }).then(res => res.data.tx_fee)
+}
+
 
 /**
  * Import a Taproot Asset from other universe.
@@ -583,8 +625,8 @@ export async function validateAddress(p2trAddress) {
 
 // get current gas price
 export async function getGas() {
-  const store = useAppStore()
-  const testnet = store.getNetWorkType() === 0 ? '': '/testnet'
+  // const store = useAppStore()
+  const testnet = getNetWorkType() === 0 ? '': '/testnet'
   try {
     const response = await fetch('https://mempool.space'+testnet+'/api/v1/fees/recommended')
     const data = await response.json()
@@ -599,8 +641,8 @@ export async function getGas() {
 export async function nslookupDomainInfo(domainOrAddress) {
   const isAddress = isValidBitcoinAddress(domainOrAddress)
   
-  const store = useAppStore()
-  const testnet = store.getNetWorkType() === 0 ? '': ''
+  // const store = useAppStore()
+  const testnet = getNetWorkType() === 0 ? '': ''
   const result = { isAddress, data: null, }
   if(!isAddress){
     const response = await fetch('https://tna-btc.com'+testnet+'/api/tapnames/profile?name='+domainOrAddress)

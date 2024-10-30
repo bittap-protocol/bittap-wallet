@@ -6,6 +6,7 @@ import * as ecc from 'tiny-secp256k1'
 import {
   payments,
   initEccLib,
+
   crypto,
   // address,
   Signer,
@@ -27,7 +28,11 @@ import {
   QueryBtcBalance,
   getGas,
 } from '@/popup/api/btc/blockStream'
-import { sendMessage, convertXpubToOther, toHex, UnixNow } from '@/popup/libs/tools'
+import { 
+  sendMessage, convertXpubToOther, toHex, UnixNow, saveLocalStoreKey, CURRENT_USER_INDEX, CURRENT_USER_WALLET_ID,
+  networkRpcToken, networkRpcUrl,networkType, MainNetUrl, TestNetUrl, LocalNetUrl, setRpcToken, getRpcToken, getNetWorkConfig,
+  CURRENT_USER_ASSETS, setNetworkConfiguration
+ } from '@/popup/libs/tools'
 
 export interface Account {
   address: string
@@ -93,6 +98,8 @@ export interface tokenInfo {
   amount: number
   name: string
   asset_type: string|number
+  timestamp?: number
+  block_height?: number
 }
 
 export interface TransferRow {
@@ -152,9 +159,6 @@ export type ReceiveAddrRow = ReceiveAddrInfo
 // import bip39 from 'bip39'
 // @ts-ignore
 // import bitcoin from '~/popup/bitcoinjs-lib.js'
-const MainNetUrl = 'https://mainnet.bittap.org'
-const TestNetUrl = 'https://testnet.onebits.org'
-const LocalNetUrl = 'https://devapi.onebits.org'
 
 let RequestFeesLoading = false
 
@@ -182,13 +186,7 @@ export const useAppStore = defineStore('app', () => {
   const phrases: RemovableRef<PhraseRow[]> = useStorage('phrases', [])
   const fees: RemovableRef<Fees> = useStorage('mempoolFees', {"fastestFee":0,"halfHourFee":0,"hourFee":0,"economyFee":0,"minimumFee":0, lastTime: -1})
 
-  const networkType = useStorage('networkType', 2) // default network:  0 mainnet / 1 local / 2 Testnet
-  const networkRpcUrl = useStorage(
-    'networkRpcUrl',
-    TestNetUrl
-  )
-  const networkRpcToken = useStorage('networkRpcToken', '')
-  const networkRpcTokenExpiredTime = useStorage('networkRpcTokenExpiredTime', -1)
+  
   const currentBtcBalance = useStorage('currentBtcBalance', 0)
 
   const assetsList = useStorage('assetsList', [])
@@ -200,18 +198,6 @@ export const useAppStore = defineStore('app', () => {
 
   const siteList:RemovableRef<SiteInfoRow[]> = useStorage('siteList', [])
 
-  const getRpcToken = ()=>{
-    if(networkRpcTokenExpiredTime.value < UnixNow() ){
-      networkRpcToken.value = ''
-      return networkRpcToken.value
-    }
-    return networkRpcToken.value.toString()
-  }
-  const setRpcToken = (rpcToken:string):void=>{
-    // console.log('setRpcToken', networkRpcToken.value, rpcToken, new Date().toLocaleDateString())
-    networkRpcToken.value = rpcToken
-    networkRpcTokenExpiredTime.value = UnixNow() + 3600
-  }
   const initConfig = () => {
     if (!networkRpcUrl.value) {
       return 
@@ -245,15 +231,7 @@ export const useAppStore = defineStore('app', () => {
     }
     return nt
   }
-
-  const getNetWorkConfig = () => {
-    return {
-      netType: getNetWorkType(),
-      url: networkRpcUrl.value,
-      token: networkRpcToken.value,
-    }
-  }
-
+  
   const changeNetWork = async (nt: number, url = '', token = '') => {
     if (![0, 1, 2].includes(nt)) {
       throw new Error('Network type not support')
@@ -264,6 +242,9 @@ export const useAppStore = defineStore('app', () => {
       }
       networkRpcUrl.value = url
       networkRpcToken.value = token
+    }
+    if(nt === networkType.value){
+      return 
     }
     if (nt === 0) {
       networkRpcUrl.value = MainNetUrl
@@ -283,34 +264,34 @@ export const useAppStore = defineStore('app', () => {
           throw Error('Invalid phrase')
         }
         initEccLib(ecc)
-          const seed = mnemonicToSeedSync(phrase)
-          const bip32 = BIP32Factory(ecc)
-          const network =
-            networkType.value === 0 ? networks.bitcoin : networks.testnet
-          const rootKey = bip32.fromSeed(seed, network)
-          const networkId = networkType.value === 0 ? 0 : 1
-          const path = "m/84'/" + networkId + "'/0'"
-          const childNodePrimary = rootKey.derivePath(path)
-          // @ts-ignore
-          const childNodeXOnlyPubkeyPrimary = toXOnly(childNodePrimary.publicKey)
-          const p2trPrimary = payments.p2tr({
-            internalPubkey: childNodeXOnlyPubkeyPrimary,
-            network: network,
-          })
-          const path2 = "m/1017'/" + networkId + "'/212'"
-          const childNodeScript = rootKey.derivePath(path2)
-          if (!p2trPrimary.address || !p2trPrimary.output) {
-            throw 'error creating p2tr'
-          }
-          const b84PublicKey = convertXpubToOther(
-            childNodePrimary.neutered().toBase58(),
-            'vpub'
-          )
-          const b1017PublicKey = convertXpubToOther(
-            childNodeScript.neutered().toBase58(),
-            'vpub'
-          )
-          await CreateWallet(b1017PublicKey, b84PublicKey)
+        const seed = mnemonicToSeedSync(phrase)
+        const bip32 = BIP32Factory(ecc)
+        const network =
+          networkType.value === 0 ? networks.bitcoin : networks.testnet
+        const rootKey = bip32.fromSeed(seed, network)
+        const networkId = networkType.value === 0 ? 0 : 1
+        const path = "m/84'/" + networkId + "'/0'"
+        const childNodePrimary = rootKey.derivePath(path)
+        // @ts-ignore
+        const childNodeXOnlyPubkeyPrimary = toXOnly(childNodePrimary.publicKey)
+        const p2trPrimary = payments.p2tr({
+          internalPubkey: childNodeXOnlyPubkeyPrimary,
+          network: network,
+        })
+        const path2 = "m/1017'/" + networkId + "'/212'"
+        const childNodeScript = rootKey.derivePath(path2)
+        if (!p2trPrimary.address || !p2trPrimary.output) {
+          throw 'error creating p2tr'
+        }
+        const b84PublicKey = convertXpubToOther(
+          childNodePrimary.neutered().toBase58(),
+          'vpub'
+        )
+        const b1017PublicKey = convertXpubToOther(
+          childNodeScript.neutered().toBase58(),
+          'vpub'
+        )
+        await CreateWallet(b1017PublicKey, b84PublicKey)
           .then(async (res) => {
             // @ts-ignore
             acc.address =  p2trPrimary.address
@@ -321,14 +302,18 @@ export const useAppStore = defineStore('app', () => {
             acc.wallet_id = res.data.wallet_id
             // @ts-ignore
             acc.btcAddress = res.data.address
-            acc.btcBalance = await QueryBtcBalance({ wallet_id: acc.wallet_id, btc_addr: acc.btcAddress })
+            if( acc.btcBalance as number <= 0){
+              acc.btcBalance = await QueryBtcBalance({ wallet_id: acc.wallet_id, btc_addr: acc.btcAddress })
+            }
             updateAssets()
           })
       }catch (err) {
         console.error(`switch account for ${i} on error: `, err)
+        throw err
       }
     }
     networkType.value = nt
+    setNetworkConfiguration(networkType.value, networkRpcUrl.value)
     initConfig()
   }
 
@@ -365,7 +350,7 @@ export const useAppStore = defineStore('app', () => {
       : accountList.value[index]
   }
   const updateAssets = async () => {
-    const page_size = 10
+    const page_size = 30
     const loadData = async (page= 1) => {
       return ListAssetsQuery(undefined, undefined, page, page_size).then((res) => {
         if (res) {
@@ -381,7 +366,7 @@ export const useAppStore = defineStore('app', () => {
       })
     }
     assetsList.value = []
-    for(let i = 1; i<=3;i++){
+    for(let i = 1; i<=1;i++){
       const re = await loadData(i)
       // console.log('re: ', re)
       if(re.length % page_size !== 0) {
@@ -455,13 +440,14 @@ export const useAppStore = defineStore('app', () => {
     return QueryAssetBalance({ wallet_id }).then((res) => {
       // @ts-ignore
       return res.map((x) => {
-        const { amount, asset_id, asset_tag, type } = x
+        const { amount, asset_id, asset_tag, type, timestamp, block_height } = x
         return {
           wallet_id,
           asset_id: toHex(asset_id),
           amount: amount,
           name: asset_tag,
           asset_type: type,
+          timestamp, block_height
         }
       })
     })
@@ -471,19 +457,21 @@ export const useAppStore = defineStore('app', () => {
     if(accountList.value.length <= 0){
       return []
     }
-    const wallet_id = getCurrentWalletId()
+    const ac = getActiveAccount()
     const assets = await getAssetsBalances()
     const currentTokens = getTokens()
+    await updateCurrentAccountAssets()
 
     assets.forEach((row) => {
       const tokenItem = tokens.value.find(
         (token) =>
-          token.wallet_id === wallet_id && token.asset_id === row.asset_id
+          token.wallet_id === ac.wallet_id && token.asset_id === row.asset_id
       )
       // console.log('tokenItem: ', tokenItem)
       if (tokenItem) {
         tokenItem.amount = row.amount
         tokenItem.asset_type = row.asset_type || 0
+        tokenItem.timestamp = row.timestamp
       }
     })
     
@@ -493,7 +481,32 @@ export const useAppStore = defineStore('app', () => {
         addToken(token)
       })
     }
-    return currentTokens.length >0 ? currentTokens : assets
+    const results = currentTokens.length >0 ? currentTokens : assets
+
+    results.unshift({
+      asset_id: 'Base',
+      amount: ac.btcBalance as number,
+      name: 'BTC',
+      asset_type: 'base',
+      timestamp: 0
+    })
+    await saveLocalStoreKey(CURRENT_USER_ASSETS,JSON.parse(JSON.stringify(results.map(x => {
+      return {
+        // @ts-ignore
+        asset_name: x.name,
+        // @ts-ignore
+        amount: x.amount,
+        // @ts-ignore
+        decimal: x.asset_type === 'base' ? 8 : 0,
+        // @ts-ignore
+        type: x.asset_type === 'base' ? 0 : x.asset_type,
+        // @ts-ignore
+        asset_id: x.asset_id,
+        // @ts-ignore
+        timestamp: x.timestamp
+      }
+    }))))
+    return results
   }
 
   const getCurrentWalletForAssetBalance = async (
@@ -526,9 +539,13 @@ export const useAppStore = defineStore('app', () => {
     activeAccount.value = index
     transferList.value = []
     receiveAddressList.value = []
+    saveLocalStoreKey(CURRENT_USER_INDEX, index)
+    saveLocalStoreKey(CURRENT_USER_WALLET_ID, getCurrentWalletId())
     setCurrentBtcBalance(0)
+    
     sendMessage('switchActiveAccount', { oldIndex, newIndex:index })
     initConfig()
+    return updateCurrentAccountAssets()
   }
 
   const AuthenticationPassword = async (pwd: string): Promise<boolean> => {
@@ -695,6 +712,7 @@ export const useAppStore = defineStore('app', () => {
               wallet_id: res.data.wallet_id,
               // @ts-ignore
               btcAddress: res.data.address,
+              btcBalance: 0
             }
             // @ts-ignore
             accountList.value.push(result)
@@ -789,6 +807,46 @@ export const useAppStore = defineStore('app', () => {
     return childNodePrimary
   }
 
+  const signMessage = async (_msg:string): Promise<string> => {
+    const child = await getCurrentAccountKeyPair(PathKey.m44, false)
+
+    const BITCOIN_MESSAGE_PREFIX = "\x18Bitcoin Signed Message:\n";
+
+    function hashMessage(message:string) {
+      const prefix = BITCOIN_MESSAGE_PREFIX + message.length;
+      const messageBuffer = Buffer.from(message, 'utf8');
+      const prefixBuffer = Buffer.from(prefix, 'utf8');
+      
+      // @ts-ignore
+      const totalBuffer = Buffer.concat([prefixBuffer, messageBuffer]);
+      
+      return crypto.hash256(totalBuffer);
+    }
+    const network = getNetwork()
+
+    const messageHash = hashMessage(_msg);
+
+    const ECPair = ECPairFactory(ecc)
+    // @ts-ignore
+    const keyPair = ECPair.fromPrivateKey(child.privateKey, {
+      network
+    });
+    
+    // @ts-ignore
+    const signature = keyPair.sign(messageHash).toString('hex');
+
+    const verifySignature = Buffer.from(signature, 'hex');
+    const publicPair = ECPair.fromPublicKey(child.publicKey, {
+      network
+    });
+    // @ts-ignore
+    if(!publicPair.verify(messageHash, verifySignature)){
+      throw new Error('Invalid signature!')
+    }
+    // @ts-ignore
+    return signature
+  }
+
   function tweakSigner(signer: Signer, opts = {network:undefined}): Signer {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -842,6 +900,7 @@ export const useAppStore = defineStore('app', () => {
         const {
           amount,
           asset_id,
+          asset_name,
           asset_type,
           asset_version,
           encoded,
@@ -860,7 +919,7 @@ export const useAppStore = defineStore('app', () => {
           proof_courier_addr,
           script_key: toHex(script_key),
           taproot_output_key: toHex(taproot_output_key),
-          asset_name: getAssetsNameForAssetID(toHex(asset_id)),
+          asset_name,
         }
       })
     })
@@ -869,6 +928,12 @@ export const useAppStore = defineStore('app', () => {
     currentBtcBalance.value = btcBalance
     const ac = getActiveAccount()
     ac.btcBalance = btcBalance
+  }
+
+  const updateCurrentAccountAssets = async () => {
+    const ac = getActiveAccount()
+    currentBtcBalance.value = await QueryBtcBalance({ wallet_id: ac.wallet_id, btc_addr: ac.btcAddress })
+    
   }
 
   const updateAllAccountsBtcBalance = async ():Promise<void> => {
@@ -1072,6 +1137,7 @@ export const useAppStore = defineStore('app', () => {
     getAssetsNameForAssetID,
     getAssetsInfoForAssetID,
     updateAllAccountsBtcBalance,
+    updateCurrentAccountAssets,
     getNetWorks,
     getNetWorkType,
     getRpcToken,
@@ -1080,6 +1146,7 @@ export const useAppStore = defineStore('app', () => {
     updateGasFees,
     getSiteInfo,
     addSite,
-    removeSite
+    removeSite,
+    signMessage
   }
 })

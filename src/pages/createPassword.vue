@@ -222,7 +222,7 @@ export default {
           Click to agree to our
           <a
             target="_blank"
-            href="https://www.baidu.com"
+            href="https://doc.bittap.org/wallet-product/privacy-policy"
             class="no-underline text-primary pl-1"
           >
             Terms of Service

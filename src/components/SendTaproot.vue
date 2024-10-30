@@ -19,7 +19,7 @@
             <div class="symbol">
               <strong class="text-white">Asset</strong>
               <div class="v">
-                {{ showInfo.name }}
+                {{ showInfo.asset_name || 'Unknown' }}
               </div>
             </div>
             <div class="amount">
@@ -52,7 +52,7 @@
         :disabled="
           formData.to.length <= 60 ||
           isSubmitting ||
-          showInfo.name === 'Unknown' ||
+          showInfo.asset_name === 'Unknown' ||
           store.currentBtcBalance * 10 ** 8 <= formData.gas ||
           assetBalance <= 0
         "
@@ -105,7 +105,7 @@ export default {
         taproot_output_key: '', // <bytes>
         proof_courier_addr: '', // <string>
         asset_version: '', // <AssetVersion>
-        name: 'Unknown',
+        asset_name: 'Unknown',
       },
     }
   },
@@ -125,7 +125,7 @@ export default {
       if (this.assetBalance < Number(this.showInfo.amount)) {
         this.$root._toast(
           'The "' +
-            this.showInfo.name.toUpperCase() +
+            this.showInfo.asset_name.toUpperCase() +
             '" asset balance is insufficient',
           'warning',
           5000
@@ -142,7 +142,6 @@ export default {
     showAddressInfo() {
       console.log(' this.formData: ', this.formData)
       DecodeAssetsAddress({ addr: this.formData.to }).then((res) => {
-        res.name = this.store.getAssetsNameForAssetID(res.asset_id)
         this.showInfo = res
         this.getAssetBalance()
       })

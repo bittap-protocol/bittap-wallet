@@ -233,7 +233,7 @@ export default {
             wallet_id,
             final_psbt: tx.toBuffer().toString('base64'),
           })
-            .then((res) => {
+            .then(() => {
               this.isSubmitting = false
               this.$root._hideLoading()
               this.$root._toast('Submit Success', 'success')

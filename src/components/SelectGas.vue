@@ -1,7 +1,7 @@
 <template>
-  <div class="select-gas">
+  <div :class="['select-gas', isWindow?'is-window':'']">
     <div class="box">
-      <div class="label">Gas:</div>
+      <div class="label">{{ isWindow ? 'NetworkFee' : 'Gas:' }}</div>
     </div>
     <button
       class="checkBtn"
@@ -12,7 +12,9 @@
       </div>
       <div class="arrow">
         <span>{{ modelValue }} sat/vB</span>
-        <IconamoonArrowDown2Fill class="size-6"></IconamoonArrowDown2Fill>
+        <span v-if="isWindow">({{ $root.formatAssets($root._BTC2Number(networkFee), 8, 'BTC') }} )</span>
+        <IconamoonArrowDown2Fill class="size-6" v-if="!isWindow"></IconamoonArrowDown2Fill>
+        {{ isWindow? '&nbsp;&gt;' : '' }}
       </div>
     </button>
     <div class="sb hidden">
@@ -140,6 +142,12 @@ export default {
   },
   props: {
     modelValue: Number,
+    isWindow: Boolean,
+    networkFee: {
+      type: Number,
+      required: false,
+      default: function(){ return 0 }
+    },
   },
   emits: ['update:modelValue'],
   setup(){
@@ -242,6 +250,7 @@ export default {
         for (const [key, value] of Object.entries(res)) {
           const r = this.categories.find((x) => x.key === key)
           if (r) {
+            console.log('getGasFees 2 ',new Date().toISOString(), r)
             // @ts-ignore
             r.gas = value
             if (Number(this.formDataGas) === 0 && key === 'halfHourFee' && this.selectedCate === '') {
@@ -277,13 +286,18 @@ export default {
       @apply flex flex-row flex-nowrap justify-center items-center;
     }
   }
+  &.is-window{
+    .checkBtn{
+      @apply p-2 mb-0.5  bg-purple-200 rounded-md;
+    }
+  }
 }
 .dialog {
   @apply w-11/12 rounded-xl bg-white px-4 py-2;
-  height: 500px;
+  height: 450px;
   .cb {
     @apply flex flex-col flex-nowrap justify-start items-center py-3 w-full overflow-y-auto overflow-x-hidden;
-    height: 400px;
+    height: 350px;
     .tabs {
       @apply mb-4 w-full;
       .tab-active {

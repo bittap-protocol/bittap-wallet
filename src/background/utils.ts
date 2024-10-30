@@ -1,8 +1,6 @@
-// import { RemovableRef, useStorage } from '@vueuse/core'
-import { createPinia } from 'pinia'
-import { createApp } from 'vue'
-import { useAppStore } from '@/stores/app.store'
-import { CURRENT_USER_ASSETS, getLocalStoreKey } from '@/popup/libs/tools';
+
+import { CURRENT_USER_ASSETS, CURRENT_USER_WALLET_ID, getLocalStoreKey } from '@/popup/libs/tools';
+import { DecodeAssetsAddress, ListAssetsQuery, NewAssetAddress } from '@/popup/api/btc/blockStream';
 
 
 
@@ -11,8 +9,8 @@ export const Settings = {
     BASE_URL: '/src/popup/index.html#',
     UNLOCK_WALLET: '/common/unlock',
     CONNECTION_WALLET: '/common/connectionWallet',
-    SIGN_MESSAGE: '/common/sginMessage',
-    SIGN_TRANSFER: '/common/sginTransfer',
+    SIGN_MESSAGE: '/common/signMessage',
+    SIGN_TRANSFER: '/common/signTransfer',
     SWITCH_NETWORK: '/common/switchNetwork',
 }
 
@@ -34,25 +32,43 @@ export interface WindowOptions {
 }
 
 
+export interface AssetInfo{ 
+    asset: {
+        asset_name: string
+        asset_id: string
+        total_supply: number
+        asset_type: number
+    },
+    total_proofs: number
+}
+
 export function getTabId():number{
     return Math.floor(Math.random()*10**4)+10000;
 }
 
-export async function createWindow(url:string, opts:WindowOptions= {}){
-    const createData = Object.assign({}, {
-        url,
-        top: 300,
-        left: 360,
-        width: 360,
-        height: 560,
-        type: CreateType.popup,
-        focused: true,
-        // setSelfAsOpener: true,
-        // tabId: 0,
 
-    }, opts)
-    console.log('create options: ', createData)
-    return chrome.windows.create(createData)
+export async function createWindow(url:string, opts:WindowOptions= {}, openerWin = null){
+    // @ts-ignore
+    if(!openerWin || !openerWin.id){
+        const createData = Object.assign({}, {
+            url,
+            top: 300,
+            left: 360,
+            width: 360,
+            height: 558,
+            // height: 660,
+            type: CreateType.popup,
+            focused: true,
+            // setSelfAsOpener: true,
+            // tabId: 0,
+
+        }, opts)
+        console.log('create options: ', createData)
+        return chrome.windows.create(createData)
+    }else{
+        // @ts-ignore
+        return chrome.windows.update(openerWin.id, { focused: true })
+    }
 }
 export function getCurrentActiveUserInfo(){
     // try{
@@ -70,3 +86,27 @@ export async function getCurrentAssets(){
     console.log('getCurrentAssets result: ', result)
     return result
 }
+
+export async function createInvoice({ asset_id, amount }: { asset_id: string, amount: string}){
+    const wallet_id:string = (await getLocalStoreKey(CURRENT_USER_WALLET_ID)) as string 
+    console.log('createInvoice wallet_id: ', wallet_id, asset_id, amount)
+    // @ts-ignore
+    return await DecodeAssetsAddress({addr: await NewAssetAddress(wallet_id, asset_id, amount).then(res => res.data.address)})
+}
+
+
+
+export async function searchAssets({asset_name, asset_id, page_num=1, page_size=10  }: { asset_name?:string, asset_id?:string, page_num?:number, page_size?:number}): Promise<any>{
+    // @ts-ignore
+    return await ListAssetsQuery(asset_name, asset_id, page_num, page_size).then(res => {
+        return res.map((row:AssetInfo) => {
+            return {
+                asset_name: row.asset.asset_name,
+                asset_id: row.asset.asset_id,
+                total_supply: row.asset.total_supply,
+                asset_type: row.asset.asset_type,
+            }
+        })
+    })
+}
+

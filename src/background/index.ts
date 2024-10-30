@@ -9,20 +9,23 @@ import {
   encryptData,
   decryptData,
   TestPassword,
+  TxsStatus,
   REQUEST_CURRENT_SITE,
   saveLocalStoreKey,
   getLocalStoreKey,
+  RequestItem,
   channelName,
   REQUEST_TARGET,
   RESPONSE_TARGET,
+  setNetworkConfiguration,
+  CURRENT_USER_WALLET_ID,
 } from '@/popup/libs/tools'
 
-import { createWindow, getCurrentAssets, Settings, WindowOptions } from './utils'
+import { createInvoice, createWindow, getCurrentAssets, Settings, WindowOptions, searchAssets } from './utils'
+
+import mempoolJS from "@mempool/mempool.js";
 
 let sessionPassword: string | null = null
-
-
-
 
 
 interface configOpt {
@@ -30,25 +33,22 @@ interface configOpt {
   networkType: 0 | 1
   networkRpcUrl: string
   networkRpcToken: string
+  currentInfo: {
+    wallet_id: string
+  }
 }
 
-interface WcClient {
-  ws: WebSocket
-  putMsg: unknown
-  send(data: unknown): unknown
-  sendJSON(data: unknown): unknown
-  subAll(): unknown
-}
 
-interface RequestItem {
-  type: string
-  data: unknown,
-  requestId: string,
+interface ResponseTransactionStatus {
+  txid: string,
+  status: TxsStatus,
 }
-
-type WcClientObject = WcClient | null
 
 const SdkRequestQueue:Array<RequestItem> = []
+
+
+const ListenTransactionQueue:Array<ResponseTransactionStatus> = []
+const ListenSleepTime = 1000*30
 
 const findQueue = (requestId: string) =>{
   console.log('SdkRequestQueue: ', requestId, SdkRequestQueue)
@@ -69,6 +69,34 @@ chrome.storage.session.get(['sessionPassword'], (result) => {
   }
 })
 
+const scanTransaction = async () => {
+  const pendingList:ResponseTransactionStatus[] = ListenTransactionQueue.filter(item => item.status === TxsStatus.pending)
+  if(pendingList.length <= 0){
+    return 
+  }
+  const { bitcoin: { transactions } } = mempoolJS({
+    hostname: 'mempool.space'
+  });
+  const requestId = 'onListenTransaction'
+  for(let i = 0; i< pendingList.length; i++){
+    const task = pendingList[i]
+    const txStatusResult = await transactions.getTxStatus({ txid: task.txid });
+    console.log(task.txid, txStatusResult);
+    if(txStatusResult.confirmed){
+      await sendMessage('ResolveResult', {
+          requestId,
+          status: TxsStatus.confirmed,
+          block_height: txStatusResult.block_height,
+          block_hash: txStatusResult.block_hash,
+          block_time: txStatusResult.block_time,
+          txid: task.txid,
+      })
+    }
+  }
+  
+
+}
+
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
 const sendChannelResponseMessage = (requestId:string, data:any) => {
@@ -79,22 +107,23 @@ const sendChannelResponseMessage = (requestId:string, data:any) => {
         data,
         requestId: requestId,
         type: queue.type,
+        client_id: queue.client_id,
       },
       target: RESPONSE_TARGET,
       channel: channelName
     }
     console.log('sendChannelResponseMessage: ', sendMsg)
-    chrome.tabs.query({ active: true,  }, (tabs) => {
+    removeQueue(requestId)
+    chrome.tabs.query({ active: true }, (tabs) => {
       console.log('tabs: ', tabs)
       // if (tabs[0]) {
         tabs.forEach(tab => {
           // @ts-ignore
           chrome.tabs.sendMessage(tab.id, sendMsg, (response) => {
             console.log('Response from content script:', response);
-            
           });
         })
-        removeQueue(requestId)
+        
       // }
     });
   }else{
@@ -110,11 +139,9 @@ const configs: configOpt = {
   networkType: 0,
   networkRpcUrl: '',
   networkRpcToken: '',
-}
-
-
-const ws = {
-  client: {},
+  currentInfo: {
+    wallet_id: ''
+  }
 }
 
 
@@ -187,10 +214,11 @@ chrome.runtime.onConnect.addListener(async () => {
   checkUnlockSate()
 })
 
-
+// @ts-ignore
+let openerWin:chrome.windows.Window = null
 
 const openWindowGoToUrl = (url:string, requestId:string, sender:chrome.runtime.MessageSender) => {
-  let openerWin:chrome.windows.Window
+  
   const queue = findQueue(requestId)
   if(!queue){
     return false
@@ -200,35 +228,65 @@ const openWindowGoToUrl = (url:string, requestId:string, sender:chrome.runtime.M
     left: sender.tab?.width - 380 || 960,
   }
 
-  const addRemovedListenerWindow = async (windowId:number)=>{
-    if(windowId === openerWin.id){
-      const queueTask = findQueue(requestId)
-      if(queueTask) {
-        await sendChannelResponseMessage(requestId, {})
-      }
+  const addRemovedListenerWindow = async ()=>{
+    // @ts-ignore
+    openerWin = null
+    const queueTask = findQueue(requestId)
+    if(queueTask) {
+      await sendChannelResponseMessage(requestId, {
+        rejectResult: true,
+        rejectMessage: 'Account cancelled'
+      })
     }
+  }
+  const ReceiveDisConnectionHanlder = () => {
+    // @ts-ignore
+    chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+      switch (message.type) {
+        case 'DisConnection':
+          if(openerWin){
+            // @ts-ignore
+            await chrome.windows.remove(openerWin.id)
+          }
+          sendResponse()
+          break
+      }
+      return true
+    })
   }
   // @ts-ignore
   const extParams = '&host='+new URL(sender.tab?.url).host
   if(!checkUnlockSate()){
     const [path, query] = url.split('?')
     console.log('path, query:')
-    createWindow(Settings.BASE_URL + Settings.UNLOCK_WALLET+'?redirect='+path+'&'+query+extParams, winOpts).then(res => {
+    // @ts-ignore
+    createWindow(Settings.BASE_URL + Settings.UNLOCK_WALLET+'?redirect='+path+'&'+query+extParams, winOpts, openerWin).then(res => {
       // @ts-ignore
       openerWin = res
       chrome.windows.onRemoved.addListener(addRemovedListenerWindow)
+      ReceiveDisConnectionHanlder()
     })
-  }else{   
-    createWindow(Settings.BASE_URL + url+extParams, winOpts).then(res => {
+  }else{
+    // @ts-ignore
+    createWindow(Settings.BASE_URL + url+extParams, winOpts, openerWin).then(res => {
       // @ts-ignore
       openerWin = res
       chrome.windows.onRemoved.addListener(addRemovedListenerWindow)
+      ReceiveDisConnectionHanlder()
     })
   }
 }
+let taskTimer:  NodeJS.Timeout | null = null
 // @ts-ignore
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   console.log('Message received on background('+message.type+'): ', message, sender, sendResponse)
+  if(taskTimer){
+    clearInterval(taskTimer)
+    taskTimer = null
+  }
+  taskTimer = setInterval(async () => {
+    await scanTransaction()
+  }, ListenSleepTime)
   if(message.data && message.data.channel && message.data.channel === channelName &&  message.data.target){
     if(message.data.target === REQUEST_TARGET){
       SdkRequestQueue.push(message.data.data)
@@ -338,7 +396,10 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       return sendResponse();
 
     case 'RejectConnectionWallet':
-      await sendChannelResponseMessage(message.data.requestId, {})
+      await sendChannelResponseMessage(message.data.requestId, {
+        rejectResult: true,
+        rejectMessage: 'Account cancelled'
+      })
       return sendResponse()
     case 'ResolveConnectionWallet':
       const { account, network } = message.data
@@ -349,15 +410,60 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     case 'getCurrentAssets': 
       await sendChannelResponseMessage(message.data.data.requestId, await getCurrentAssets())
       return sendResponse()
+    case 'createInvoice': 
+      await sendChannelResponseMessage(message.data.data.requestId, await createInvoice(message.data.data.data))
+      return sendResponse()
+    case 'searchAssets': 
+      await sendChannelResponseMessage(message.data.data.requestId, await searchAssets(message.data.data.data))
+      return sendResponse()
+      
+    case 'transferBtc': 
+      // await sendChannelResponseMessage(message.data.data.requestId, await searchAssets(message.data.data.data))
+      openWindowGoToUrl(Settings.SIGN_TRANSFER+'?requestId='+message.data.data.requestId, message.data.data.requestId,sender)
+      return sendResponse()
+    case 'sendTaprootAssets':
+      openWindowGoToUrl(Settings.SIGN_TRANSFER+'?requestId='+message.data.data.requestId, message.data.data.requestId,sender)
+      return sendResponse()
+    case 'signMessage':
+        openWindowGoToUrl(Settings.SIGN_MESSAGE+'?requestId='+message.data.data.requestId, message.data.data.requestId,sender)
+        return sendResponse()
+      //onListenTransaction onAccountChange addListenTxId
+    case 'addListenTxId': 
+      if(message.data.data.data.txIds && Array.isArray(message.data.data.data.txIds) && message.data.data.data.txIds.length > 0){
+        message.data.data.data.txIds.forEach((txid:string) => {
+          const isFound = ListenTransactionQueue.find(item => item.txid === txid)
+          if(!isFound){
+            ListenTransactionQueue.push({
+              txid,
+              status: TxsStatus.pending
+            })
+          }
+        })
+      }
+      return sendResponse()
+    case 'onAccountChange': 
+      // await sendChannelResponseMessage(message.data.data.requestId, message.data.data.data)
+      return sendResponse()
+    case 'onListenTransaction': 
+      // await sendChannelResponseMessage(message.data.data.requestId, message.data.data.data)
+      return sendResponse()
+
     case 'switchNetwork':
       openWindowGoToUrl(Settings.SWITCH_NETWORK+'?requestId='+message.data.data.requestId+'&networkType='+message.data.data.data.network, message.data.data.requestId,sender)
       return sendResponse()
+    case 'DisConnection':
+      await sendChannelResponseMessage(message.data.data.requestId, {})
+      return sendResponse()
     case 'RejectResult':
-      await sendChannelResponseMessage(message.data.requestId, {})
+      await sendChannelResponseMessage(message.data.requestId, {
+        rejectResult: true,
+        rejectMessage: message.data.rejectMessage ? message.data.rejectMessage: 'Account reject'
+      })
       return sendResponse()
     case 'ResolveResult':
-      const sendData = message.data
+      const sendData = JSON.parse(JSON.stringify(message.data))
       delete sendData.requestId
+      console.log('ResolveResult sendData: ', sendData, message.data)
       await sendChannelResponseMessage(message.data.requestId, sendData)
       return sendResponse()
     default:
@@ -371,9 +477,6 @@ function ReceiveEvents(encoded: string) {
   if (!encodes.includes(encoded)) {
     encodes.push(encoded)
     // console.log('ReceiveEvents is updated', encodes)
-    ActionSubscribeReceive()
-  } else {
-    ActionSubscribeReceive()
   }
 }
 
@@ -386,107 +489,9 @@ function InitConfig(data: configOpt) {
     sendMessage('isUnlocked', { status: false })
   }
   // console.log('Config is updated', configs)
-  ActionSubscribeReceive()
-}
-
-function ActionSubscribeReceive() {
-  const { networkRpcUrl } = configs
-  // console.log('networkRpcUrl: ', networkRpcUrl, encodes)
-  if (!networkRpcUrl || !encodes || encodes.length <= 0) {
-    return
-  }
-
-  let wc: WcClientObject
-  if (
-    !Object.prototype.hasOwnProperty.call(ws.client, 'ActionSubscribeReceive')
-  ) {
-    const REST_HOST = networkRpcUrl.split('://')[1]
-    console.log(
-      '======ws: start ws client for network: ',
-      `wss://${REST_HOST}/v1/taproot-assets/events/asset-receive?method=POST`
-    )
-    // @ts-ignore
-    wc = {
-      ws: new WebSocket(
-        `wss://${REST_HOST}/v1/taproot-assets/events/asset-receive?method=POST`
-      ),
-      // ws: new WebSocket(`wss://${REST_HOST}/v1/taproot-assets/events/asset-receive?method=POST`,[{
-      //   rejectUnauthorized: false,
-      //   headers: {
-      //     'Grpc-Metadata-Macaroon': networkRpcToken,
-      //   },
-      // }] ),
-      putMsg: [],
-    }
-    // @ts-ignore
-    wc.send = (data) => {
-      console.log('wc.send wc.status: ', wc.ws.readyState, data)
-      if (!wc.ws || wc.ws.readyState != 1) {
-        if (!wc.putMsg.includes(data)) {
-          wc.putMsg.push(data)
-        }
-      } else {
-        wc.sendJSON(data)
-      }
-    }
-    // @ts-ignore
-    wc.sendJSON = (data: any) => {
-      console.log('wc.sendJSON wc.ws.send: ', data)
-      wc.ws.send(JSON.stringify(data))
-    }
-    wc.subAll = () => {
-      while (encodes.length > 0) {
-        const enc = encodes.pop()
-        // wc.send({
-        //   filter_addr: enc,
-        //   // start_timestamp:  new Date('2024-04-20').getTime() * 1000
-        //   start_timestamp:  0
-        // })
-      }
-    }
-    console.log('======ws: wc.ws', wc)
-    wc.ws.onopen = () => {
-      console.log('======ws: ws is connected')
-      // wc.subAll()
-      wc.send({
-        filter_addr: '',
-        // start_timestamp:  new Date('2024-04-20').getTime() * 1000
-        start_timestamp: 0,
-      })
-    }
-    wc.ws.onmessage = (msg) => {
-      const json = JSON.parse(msg.data.toString())
-      console.log('======ws: ws on message: ', msg, json)
-      sendMessage('ws.message', json)
-    }
-    wc.ws.onclose = () => {
-      console.log('======ws: ws on closed')
-      // ws.client.ActionSubscribeReceive = null
-      // delete ws.client.ActionSubscribeReceive
-      // setTimeout(() => {
-      //   ActionSubscribeReceive()
-      // }, 1500)
-    }
-    wc.ws.onerror = (err) => {
-      console.log('======ws: ws on error: ', err)
-      // ws.client.ActionSubscribeReceive = null
-      // delete ws.client.ActionSubscribeReceive
-      // setTimeout(() => {
-      //   ActionSubscribeReceive()
-      // }, 1500)
-    }
-    // @ts-ignore
-    ws.client.ActionSubscribeReceive = wc
-  } else {
-    // @ts-ignore
-    wc = ws.client.ActionSubscribeReceive
-  }
-  if (!wc) {
-    return
-  }
-  setTimeout(() => {
-    wc.subAll()
-  }, 15000)
+  configs.networkType
+  setNetworkConfiguration(configs.networkType, configs.networkRpcUrl)
+  saveLocalStoreKey(CURRENT_USER_WALLET_ID, configs.currentInfo.wallet_id)
 }
 
 self.onerror = function (message, source, lineno, colno, error) {

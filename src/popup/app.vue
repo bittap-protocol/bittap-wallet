@@ -166,9 +166,9 @@ export default {
       this.updateGlobalState()
     },
     async updateGlobalState() {
+      this.btcPrice = this.store.btcPrice.USD
       // @ts-ignore
       this.assets = await this.store.getUserAssetsBalance()
-      this.btcPrice = this.store.btcPrice.USD
     },
     hideFullscreen() {
       this.fullWhite = false
@@ -178,6 +178,7 @@ export default {
         // @ts-ignore
         sendMessage('isUnlocked', null).then((res) => {
           hideFullscreen()
+          // @ts-ignore
           if (!res.status) {
             this.$router.push('/common/unlock')
           }
@@ -214,6 +215,9 @@ export default {
     },
     formatAssets(balance: number, len = 8, symbol = 'BTC') {
       return [Number(balance).toFixed(len), symbol.toUpperCase()].join(' ')
+    },
+    _BTC2Number(amount: number){
+      return amount/ 10 ** 8
     },
     showAssetName(asset_id: string): string {
       return this.store.getAssetsNameForAssetID(asset_id)
@@ -391,7 +395,9 @@ export default {
       <div class="text">{{ loadingText }}</div>
     </div>
   </div>
-  <RouterView></RouterView>
+  <Suspense>
+    <RouterView></RouterView>
+  </Suspense>
   <dialog
     :id="custom_confirm.id"
     :class="['modal', 'rounded-sm'].concat(custom_confirm.cls)"

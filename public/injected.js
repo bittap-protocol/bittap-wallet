@@ -1,33 +1,59 @@
+
 window.BittapWalletInjected = {
     queues:[],
     channelName: 'bittap.jssdk.event',
     REQUEST_TARGET: 'BITTAPWALLET_REQUEST',
     RESPONSE_TARGET: 'BITTAPWALLET_RESPONSE',
+    notRemoveTypes: ['onListenTransaction','onAccountChange'],
     init(){
-        // const res = chrome.runtime.connect('ekgmcbpgglflmgcfajnglpbcbdccnnge', {name: 'bittap-wallet'})
-        // console.log('res: ', res)
-        // @ts-ignore
+        const clientWallet = new  (function(){
+            this.client_id = window.BittapWalletInjected.getRequestId();
+            this.toString = function(){  return 'client id: '+ this.client_id }
+        })
         window.addEventListener('message',(message, sender) => {
             console.log('BittapWalletInjected 1 window.addEventListener(message):', JSON.stringify(message), sender)
-            if(message.data) {
-                if(event.data && event.data.target && event.data.target === window.BittapWalletInjected.RESPONSE_TARGET && event.data.channel && event.data.channel === window.BittapWalletInjected.channelName){
-                    const { type , data } = message.data.data
+            if(message && message.data) {
+                if(message.data 
+                    && message.data.target 
+                    && message.data.target === window.BittapWalletInjected.RESPONSE_TARGET 
+                    && message.data.channel 
+                    && message.data.channel === window.BittapWalletInjected.channelName
+                    && message.data.data.client_id === clientWallet.client_id
+                ){
+                    const { type , data, client_id } = message.data.data
                     const requestId = message.data.data.requestId
-                    console.log('BittapWalletInjected 2 window.addEventListener(message):', type, data, requestId)
+                    console.log('BittapWalletInjected 2 window.addEventListener(message):', type, data, requestId, client_id)
                     if(type && requestId){
                         const queue = window.BittapWalletInjected.getRequestQueueInfo(requestId)
-                        console.log('queue: ', queue)
+                        console.log('queue: ', queue, type , data)
                         if(!queue){
                             return false
                         }
-                        if(Object.prototype.hasOwnProperty.call(queue,'callback')){
-                            queue.callback && queue.callback({ type, data, requestId })
+                        if(!data){
+                            if(Object.prototype.hasOwnProperty.call(queue,'reject') && queue.reject && typeof queue.reject === 'function'){
+                                queue.reject && queue.reject({ type, data, requestId, err:new Error('result data is empty.') })
+                            }
+                            return 
                         }
-                        window.BittapWalletInjected.removeQueueItem(requestId)
+                        if(Object.prototype.hasOwnProperty.call(data,'rejectResult') && data.rejectResult){
+                            if(Object.prototype.hasOwnProperty.call(queue,'reject') && queue.reject && typeof queue.reject === 'function'){
+                                const msg = Object.prototype.hasOwnProperty.call(data,'rejectMessage') && data.rejectMessage ? data.rejectMessage : 'The queue task was rejected.'
+                                queue.reject && queue.reject({ type, data, requestId, err: new Error(msg) })
+                            }
+                            return
+                        }else{
+                            if(Object.prototype.hasOwnProperty.call(queue,'callback') && queue.callback && typeof queue.callback === 'function'){
+                                queue.callback && queue.callback({ type, data, requestId })
+                            }
+                        }
+                        if(!window.BittapWalletInjected.notRemoveTypes.includes(type)){
+                            window.BittapWalletInjected.removeQueueItem(requestId)
+                        }
                     }
                 }
             }
         });
+        return clientWallet
     },
     sendMessage(data){
         return window.postMessage({
@@ -49,12 +75,23 @@ window.BittapWalletInjected = {
         if(!Object.prototype.hasOwnProperty.call(queue,'type')) {
             throw new Error('type is empty')
         }
+        if(!Object.prototype.hasOwnProperty.call(queue,'client_id')) {
+            throw new Error('client_id is empty')
+        }
         queue.time = Date.now()
-        queue.requestId = window.BittapWalletInjected.getRequestId()
-        window.BittapWalletInjected.queues.push(queue)
+        queue.requestId = !window.BittapWalletInjected.notRemoveTypes.includes(queue.type) ? window.BittapWalletInjected.getRequestId() :queue.type
+        let queueInfo = window.BittapWalletInjected.getRequestQueueInfo(queue.requestId)
+        if(queueInfo){
+            queueInfo.data = queue.data
+            queueInfo.callback = queue.callback && typeof queue.callback === 'function' ? queue.callback : queueInfo.callback
+        }else{
+            queue.reject = Object.prototype.hasOwnProperty.call(queue,'reject') && queue.reject && typeof queue.reject === 'function'? queue.reject : undefined
+            window.BittapWalletInjected.queues.push(queue)
+        }
         window.BittapWalletInjected.sendMessage({
             type: queue.type,
             data: queue.data,
+            client_id: queue.client_id,
             requestId: queue.requestId,
         })
     },

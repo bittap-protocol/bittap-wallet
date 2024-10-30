@@ -128,13 +128,13 @@ import IconMdiApplicationImport from '@/components/svgIcon/MdiApplicationImport.
 // @ts-ignore
 import IconMdiAccountBoxEditOutline from '@/components/svgIcon/MdiAccountBoxEditOutline.vue'
 // @ts-ignore
-import IconMdiPasswordReset from '@/components/svgIcon/MdiPasswordReset.vue'
+// import IconMdiPasswordReset from '@/components/svgIcon/MdiPasswordReset.vue'
 // @ts-ignore
 import IconMdiCloudKey from '@/components/svgIcon/MdiCloudKey.vue'
 // @ts-ignore
 import IconMdiContentSave from '@/components/svgIcon/MdiContentSave.vue'
 // @ts-ignore
-import IconBackup from '@/components/svgIcon/Backup.vue'
+// import IconBackup from '@/components/svgIcon/Backup.vue'
 
 import { useAppStore } from '@/stores/app.store'
 
@@ -143,10 +143,10 @@ export default {
     IconMdiAccountAdd,
     IconMdiApplicationImport,
     IconMdiAccountBoxEditOutline,
-    IconMdiPasswordReset,
+
     IconMdiCloudKey,
     IconMdiContentSave,
-    IconBackup
+    // IconBackup
   },
   setup() {
     const store = useAppStore()
@@ -182,23 +182,28 @@ export default {
       // @ts-ignore
       this.$root.setTitle('Account mange')
     },
-    editName(index: number, name) {
+    editName(index: number, name:string) {
       this.editIndex = index
       this.newAccountName = name
+      // @ts-ignore
       modal_save.showModal()
     },
     async saveName() {
       this.store.changeAccountName(this.newAccountName, this.editIndex)
+      // @ts-ignore
       modal_save.close()
+      // @ts-ignore
       this.$root._toast('Edit success!', 'success')
     },
-    backupWords(index) {
+    backupWords(index:number) {
       const store = useAppStore()
       store.switchActiveAccount(index)
       this.$router.push('/common/backupKey?auth=yes')
     },
-    backupPrivate(account, index) {
+    // @ts-ignore
+    backupPrivate(account) {
       this.privateKey = account.privateKey
+      // @ts-ignore
       modal_backup.showModal()
     },
     async createAccount() {
@@ -207,6 +212,7 @@ export default {
       this.$root._toast('Create account success!', 'success', 1000)
       this.store.updateAllAccountsBtcBalance()
       setTimeout(() => {
+        // @ts-ignore
         this.$root._toast(
           'Please Backup Your Mnemonic Phrase First',
           'warning',

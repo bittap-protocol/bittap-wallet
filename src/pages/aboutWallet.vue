@@ -10,7 +10,7 @@
       <a
         class="it pp"
         target="_blank"
-        href="https://doc.bittap.org/developer-guides/overview"
+        href="https://doc.bittap.org/wallet-product/privacy-policy"
       >
         <span class="n">Privacy Policy</span>
         <span class="v"><IconArrowRight /></span>

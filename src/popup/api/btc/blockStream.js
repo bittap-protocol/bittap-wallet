@@ -95,6 +95,15 @@ const requestRpc = async (api, body = null, options = {}) => {
       } else {
         throw new Error('Request failed')
       }
+    }).catch(e => {
+      console.error('requestRpc catch: ', e)
+      if(!window){
+        throw new Error('FetchError: ' + e.message)
+      }else{
+        postToast('FetchError: ' + e.message, 'error', 3000)
+        hideLoading()
+        throw new Error('FetchError: ' + e.message)
+      }
     })
 }
 /**

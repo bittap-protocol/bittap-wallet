@@ -129,15 +129,15 @@ const resolveProvide = async () => {
     window.close()
 }
 
-const rejectProvideResult = async (rejectMessage?:string) => {
-    await sendMessage('RejectResult', {
-        requestId,
-        rejectMessage
-    })
-    setTimeout(() => {
-        window.close()
-    }, 200)
-}
+// const rejectProvideResult = async (rejectMessage?:string) => {
+//     await sendMessage('RejectResult', {
+//         requestId,
+//         rejectMessage
+//     })
+//     setTimeout(() => {
+//         window.close()
+//     }, 200)
+// }
 
 const queueInfo:RequestItem = (await sendMessage('getQueue', requestId)) as RequestItem
 console.log('queueInfo: ', queueInfo)

@@ -6,8 +6,8 @@
       </div>
       <div class="encode">
         <textarea
-          class="textarea"
           v-model="formData.to"
+          class="textarea"
           rows="8"
           placeholder="Enter invoice"
         />

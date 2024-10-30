@@ -79,6 +79,14 @@ export interface CurrentUserAssetsItem {
   timestamp?: number
 }
 
+export interface AccountChangeInfo {
+  account: {
+    btcAddress: string,
+    name: string
+  }
+  network: string
+}
+
 export type CurrentUserAssetsBalance = CurrentUserAssetsItem[]
 
 /**
@@ -87,6 +95,7 @@ export type CurrentUserAssetsBalance = CurrentUserAssetsItem[]
  * @returns boolean
  */
 export function TestPassword(pwd: string) {
+  // eslint-disable-next-line no-useless-escape
   return /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z\!\@\#\$\%\^\&\*\(\)\_\-+]{8,12}$/.test(
     pwd
   )

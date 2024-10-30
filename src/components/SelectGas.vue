@@ -13,7 +13,7 @@
       <div class="arrow">
         <span>{{ modelValue }} sat/vB</span>
         <span v-if="isWindow">({{ $root.formatAssets($root._BTC2Number(networkFee), 8, 'BTC') }} )</span>
-        <IconamoonArrowDown2Fill class="size-6" v-if="!isWindow"></IconamoonArrowDown2Fill>
+        <IconamoonArrowDown2Fill v-if="!isWindow" class="size-6"></IconamoonArrowDown2Fill>
         {{ isWindow? '&nbsp;&gt;' : '' }}
       </div>
     </button>
@@ -141,8 +141,16 @@ export default {
     Medium,
   },
   props: {
-    modelValue: Number,
-    isWindow: Boolean,
+    modelValue: {
+      type: Number,
+      required: false,
+      default: function(){ return 0 }
+    },
+    isWindow: {
+      type: Boolean,
+      required: false,
+      default: function(){ return false }
+    },
     networkFee: {
       type: Number,
       required: false,

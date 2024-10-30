@@ -84,7 +84,7 @@ export default defineConfig({
       routesFolder: [
         { src: 'src/pages', path: 'common/' },
         { src: 'src/pages/account', path: 'common/account' },
-        { src: 'src/content-script/iframe/pages', path: 'iframe/' },
+        // { src: 'src/content-script/iframe/pages', path: 'iframe/' },
         { src: 'src/options/pages', path: 'options/' },
         { src: 'src/popup/pages', path: 'popup/' },
         { src: 'src/setup/pages', path: 'setup/' },

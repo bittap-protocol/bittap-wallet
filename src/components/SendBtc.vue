@@ -67,7 +67,7 @@
 </template>
 
 <script>
-import { nslookupDomainInfo, PublishTransferBtc, TransferBtc,EstimateMaxBtc } from '@/popup/api/btc/blockStream'
+import { nslookupDomainInfo, TransferBtc,EstimateMaxBtc, PublishTransferBtcV2 } from '@/popup/api/btc/blockStream'
 import { postToast, isValidBitcoinAddress } from '@/popup/libs/tools'
 import { useAppStore } from '@/stores/app.store'
 import { Psbt } from 'bitcoinjs-lib'
@@ -230,7 +230,7 @@ export default {
           )
           // console.log('final_psbt: ', final_psbt)
           const tx = final_psbt.extractTransaction()
-          return PublishTransferBtc({
+          return PublishTransferBtcV2({
             wallet_id,
             final_psbt: tx.toBuffer().toString('base64'),
           })

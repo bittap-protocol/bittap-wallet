@@ -65,8 +65,8 @@
               </div>
               <div class="info flex flex-row justify-end items-center">
                 <div class="balance flex flex-col justify-center items-right pr-2 text-sm font-medium leading-snug text-right">
-                  <div class="btc text-[#3c454e]">{{ $root.formatAssets(acc.btcBalance, 6, 'BTC') }}</div>
-                  <div class="usd text-[#888f99]">≈${{ $root.formatToken($root.showUsdtBalance(acc.btcBalance), 2) }}</div>
+                  <div class="btc text-[#3c454e]">{{ $root.formatAssets($root._BTC2Number(acc.btcBalance), 6, 'BTC') }}</div>
+                  <div class="usd text-[#888f99]">≈${{ $root.formatToken($root.showUsdtBalance($root._BTC2Number(acc.btcBalance)), 2) }}</div>
                 </div>
                 <div class="arrow">
                   <IconMdiCheck

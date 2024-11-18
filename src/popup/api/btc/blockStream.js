@@ -28,7 +28,7 @@ const requestRpc = async (api, body = null, options = {}) => {
   if (netType === 0) {
     throw new Error('Not currently supported')
   }
-  console.log('netType, url: ', netType, url, import.meta.env.VITE_API_KEY)
+  // console.log('netType, url: ', netType, url, import.meta.env.VITE_API_KEY)
   const fetchUrl = [url, api].join('').replace('//', '/')
   const opts = Object.assign({}, options, {
     method: options.method || 'GET',
@@ -71,11 +71,11 @@ const requestRpc = async (api, body = null, options = {}) => {
   } else {
     delete opts.body
   }
-  console.log('requestRpc start: ', new URL(fetchUrl).pathname, ' is opts: ', body)
+  // console.log('requestRpc start: ', new URL(fetchUrl).pathname, ' is opts: ', body)
   return fetch(fetchUrl, opts)
     .then((res) => res.json())
     .then((data) => {
-      console.log('requestRpc then: ', new URL(fetchUrl).pathname, ' is res: ', data)
+      // console.log('requestRpc then: ', new URL(fetchUrl).pathname, ' is res: ', data)
       if (data) {
         if (data.code || data.message) {
           if(data.code === 4003) {
@@ -98,11 +98,11 @@ const requestRpc = async (api, body = null, options = {}) => {
     }).catch(e => {
       console.error('requestRpc catch: ', e)
       if(!window){
-        throw new Error('FetchError: ' + e.message)
+        throw new Error('FetchError: ' + e)
       }else{
-        postToast('FetchError: ' + e.message, 'error', 3000)
+        postToast('FetchError: ' + e, 'error', 3000)
         hideLoading()
-        throw new Error('FetchError: ' + e.message)
+        throw new Error('FetchError: ' + e)
       }
     })
 }
@@ -192,11 +192,15 @@ export async function ListAssetsQuery(asset_name, asset_id, page_num=1, page_siz
  * @returns Promise
  */
 export async function QueryAddressList(data) {
-  const asset = Object.assign({}, data)
-  if (!asset.wallet_id) {
+  const query = Object.assign({page_num:1, page_size:10}, data)
+  if (!query.wallet_id) {
     throw 'wallet_id is required'
   }
-  return requestRpc('/api/query-addrs', asset, { method: 'POST' })
+  // @ts-ignore
+  query.page_num = Math.max(Math.floor(query.page_num), 1);
+  // @ts-ignore
+  query.page_size = Math.max(Math.floor( query.page_size), 10);
+  return requestRpc('/api/query-addrs', query, { method: 'POST' })
     .then((res) => res.data.addrs)
     .catch((e) => [])
 }
@@ -226,7 +230,7 @@ export async function QueryBtcBalance(data) {
     throw 'wallet_id is required'
   }
   return requestRpc('/api/get-btc-balance', asset, { method: 'POST' })
-    .then((res) => res.data.balance / 10 ** 8)
+    .then((res) => res.data.balance)
     .catch((e) => 0)
 }
 
@@ -634,14 +638,24 @@ export async function validateAddress(p2trAddress) {
 
 // get current gas price
 export async function getGas() {
-  // const store = useAppStore()
   const testnet = getNetWorkType() === 0 ? '': '/testnet'
   try {
     const response = await fetch('https://mempool.space'+testnet+'/api/v1/fees/recommended')
     const data = await response.json()
     return data
   } catch (err) {
-    console.error('getGas onerro :', err)
+    console.warn('getGas onerro :', err)
+    return {"fastestFee":1,"halfHourFee":1,"hourFee":1,"economyFee":1,"minimumFee":1}
+  }
+}
+export async function getTxStatus(txid) {
+  const testnet = getNetWorkType() === 0 ? '': '/testnet'
+  try {
+    const response = await fetch(`https://mempool.space${testnet}/api/tx/${txid}/status`)
+    const data = await response.json()
+    return data
+  } catch (err) {
+    throw err
   }
 }
 
@@ -649,8 +663,7 @@ export async function getGas() {
 // get current gas price
 export async function nslookupDomainInfo(domainOrAddress) {
   const isAddress = isValidBitcoinAddress(domainOrAddress)
-  
-  // const store = useAppStore()
+
   const testnet = getNetWorkType() === 0 ? '': ''
   const result = { isAddress, data: null, }
   if(!isAddress){

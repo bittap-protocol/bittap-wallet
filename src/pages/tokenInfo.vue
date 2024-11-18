@@ -85,12 +85,12 @@ export default {
             }else{
                 this.asset_info = info.asset
             }
-            console.log('asset info: ', this.asset_info)
+            // console.log('asset info: ', this.asset_info)
             this.$root.setTitle(this.asset_info.asset_name.toUpperCase())
             const wallet_id = this.store.getCurrentWalletId()
             ListAssetHistory({ wallet_id, asset_id: !this.isBtc ? this.asset_id : 'btc'}).then(res=> {
                 this.historyLogs = res
-                console.log('this.historyLogs: ', this.historyLogs)
+                // console.log('this.historyLogs: ', this.historyLogs)
                 this.loading = false
             }).catch(() => {
                 this.loading = false

@@ -3,6 +3,7 @@
 // eslint-disable-next-line vue/no-v-html
 import { sendMessage, RequestItem, getQuery, SiteInfo, showLoading, hideLoading } from '@/popup/libs/tools';
 import { useAppStore } from '@/stores/app.store'
+import { ref } from 'vue'
 
 const store = useAppStore()
 store.setGoBackUrl('')
@@ -20,7 +21,7 @@ const siteInfo = ref({
     title: ""
 } as SiteInfo)
 const siteRow = store.getSiteInfo(host)
-console.log('siteRow:', siteRow)
+// console.log('siteRow:', siteRow)
 if(siteRow){
     siteInfo.value.host = siteRow.host
     siteInfo.value.href = siteRow.protocol + '//' + siteRow.host
@@ -33,15 +34,15 @@ if(siteRow){
 
 
 const queueInfo:RequestItem = (await sendMessage('getQueue', requestId)) as RequestItem
-console.log('queueInfo: ', queueInfo)
+// console.log('queueInfo: ', queueInfo)
 if(queueInfo){
     // @ts-ignore
     signMessage.value = queueInfo.data?.msg
 }
 
 
-const rejectProvide = async (rejectMessage?:string) => {
-    await sendMessage('RejectResult', {
+const rejectProvide = async (rejectMessage:string='') => {
+    await sendMessage('Bittap-RejectResult', {
         requestId,
         rejectMessage
     })
@@ -53,7 +54,7 @@ const resolveProvide = async () => {
     showLoading('Signature message...')
     const resultMessage = await store.signMessage(signMessage.value)
     hideLoading()
-    await sendMessage('ResolveResult', {
+    await sendMessage('Bittap-ResolveResult', {
         requestId,
         resultMessage
     })
@@ -61,7 +62,7 @@ const resolveProvide = async () => {
 }
 </script>
 <template>
-    <div class="mt-[-40px]">
+    <div class="mt-[-50px]">
         <div class="flex w-full">
             <div class="w-1/12"></div>
             <div class="w-10/12">
@@ -92,7 +93,7 @@ const resolveProvide = async () => {
                 <div class="flex pt-6 mb-0.5 justify-between">
                     <button
                         class="border border-purple-500 text-purple-500 font-bold px-8 py-1 rounded-2xl"
-                        @click="rejectProvide"
+                        @click="rejectProvide('')"
                     >
                         Cancel
                     </button>

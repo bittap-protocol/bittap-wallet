@@ -190,8 +190,6 @@ export default {
       // @ts-ignore
       if (k != v && this.modelValue > 0) {
         // @ts-ignore
-        console.log('value on value:', this.value, k, v)
-        // @ts-ignore
         this.$emit('update:modelValue', Number(this.modelValue))
       }
     },
@@ -207,7 +205,6 @@ export default {
     }, 1000 * 30)
   },
   beforeUnmount() {
-    console.log('SelectGas beforeUnmount')
     if (this.timer) {
       clearInterval(this.timer)
       this.timer = null
@@ -236,7 +233,6 @@ export default {
       this.formDataGas = gas
     },
     setGasConfirm() {
-      console.log('this.selectedCate: ', this.selectedCate)
       // @ts-ignore
       this.$emit('update:modelValue', this.formDataGas)
       // @ts-ignore
@@ -249,7 +245,6 @@ export default {
       this.$emit('update:modelValue', item.gas)
     },
     initGasPrice() {
-      console.log("getGasFees 1 ",new Date().toISOString())
       this.store.getGasFees().then((res: Fees) => {
         if (!res) {
           console.error('get gas data failed', res)
@@ -258,7 +253,6 @@ export default {
         for (const [key, value] of Object.entries(res)) {
           const r = this.categories.find((x) => x.key === key)
           if (r) {
-            console.log('getGasFees 2 ',new Date().toISOString(), r)
             // @ts-ignore
             r.gas = value
             if (Number(this.formDataGas) === 0 && key === 'halfHourFee' && this.selectedCate === '') {

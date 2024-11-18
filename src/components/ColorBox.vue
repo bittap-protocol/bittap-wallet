@@ -31,7 +31,7 @@
           </div>
           <div v-if="info.asset_type !== 1" class="balance">
             {{ info.asset_type === 'base' ? 
-            $root.formatAssets(info.balance, 8, 'BTC') :
+            $root.formatAssets($root._BTC2Number(info.balance), 8, 'BTC') :
             $root.formatAssets(info.balance, 0, info.asset_name)  }}  
           </div>
           <div v-if="info.asset_type === 1" class="balance">

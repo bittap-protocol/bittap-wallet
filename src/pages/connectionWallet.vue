@@ -73,7 +73,7 @@ const accountActive = ref(store.activeAccount)
 
 const requestId = getQuery('requestId')
 const networkType = getQuery('networkType')
-
+const autoConnection = ref(false)
 const rpcUrl = ref('')
 
 const siteInfo = ref({
@@ -82,26 +82,14 @@ const siteInfo = ref({
     icon: "",
     title: ""
 } as SiteInfo)
-// @ts-ignore
-getLocalStoreKey(REQUEST_CURRENT_SITE).then((siteInfoItem:SiteInfo) => {
-    console.log('siteInfoItem: ', siteInfoItem)
-    siteInfo.value.host = siteInfoItem.host
-    siteInfo.value.href = siteInfoItem.href
-    siteInfo.value.icon = siteInfoItem.icon
-    siteInfo.value.title = siteInfoItem.title
-    const site = store.getSiteInfo( new URL(siteInfoItem.href).host)
-    console.log('site: ', site)
-    if(site){
-        // setTimeout(() => {
-        //     resolveProvide()
-        // },500)
-    }
-})
+
+siteInfo.value = (await getLocalStoreKey(REQUEST_CURRENT_SITE)) as SiteInfo
+
 const accounts = computed(() => store.accountList)
 
 
 const rejectProvide = async () => {
-    await sendMessage('RejectConnectionWallet', {
+    await sendMessage('Bittap-RejectConnectionWallet', {
         requestId
     })
     setTimeout(() => {
@@ -110,16 +98,17 @@ const rejectProvide = async () => {
 }
 const resolveProvide = async () => {
     showLoading('Connecting...')
-    if(accountActive.value !== store.activeAccount){
-        await store.switchActiveAccount(accountActive.value)
-    }
+    
     const { btcAddress, name } = store.getActiveAccount()
     if(networkType && netWorkTypes.includes(networkType) && store.getNetWorkType()!== netWorkTypes.findIndex(o => o === networkType)){
         await store.changeNetWork(netWorkTypes.findIndex(o => o === networkType), rpcUrl.value)
     }
+    if(accountActive.value !== store.activeAccount){
+        await store.switchActiveAccount(accountActive.value)
+    }
     await store.getUserAssetsBalance()
     store.initConfig()
-    await sendMessage('ResolveConnectionWallet', {
+    await sendMessage('Bittap-ResolveConnectionWallet', {
         requestId,
         account: { btcAddress, name },
         network: netWorkTypes[store.getNetWorkType()]
@@ -129,21 +118,21 @@ const resolveProvide = async () => {
     window.close()
 }
 
-// const rejectProvideResult = async (rejectMessage?:string) => {
-//     await sendMessage('RejectResult', {
-//         requestId,
-//         rejectMessage
-//     })
-//     setTimeout(() => {
-//         window.close()
-//     }, 200)
-// }
-
 const queueInfo:RequestItem = (await sendMessage('getQueue', requestId)) as RequestItem
-console.log('queueInfo: ', queueInfo)
-if(queueInfo && networkType === 'regtest'){
+// console.log('queueInfo: ', queueInfo)
+if(queueInfo){
+    if(networkType === 'regtest'){
+        // @ts-ignore
+        rpcUrl.value = queueInfo.data?.url || LocalNetUrl
+    }
     // @ts-ignore
-    rpcUrl.value = queueInfo.data?.url || LocalNetUrl
+    autoConnection.value = queueInfo.data?.autoConnection || false
+
+    const site = store.getSiteInfo( new URL(siteInfo.value.href).host)
+    // console.log('site: ', site, autoConnection.value, queueInfo, queueInfo.data?.autoConnection)
+    if(autoConnection.value && site){
+        resolveProvide()
+    }
 }
 
 

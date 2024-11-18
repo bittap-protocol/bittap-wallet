@@ -89,7 +89,6 @@ export default {
     async initData() {
       this.loading = true
       this.store.getReceiveAddress().then((res) => {
-        console.log('getReceiveAddress res: ', res)
         this.historyList = res.reverse()
         this.loading = false
       }).catch(() => {

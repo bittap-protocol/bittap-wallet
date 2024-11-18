@@ -42,13 +42,6 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '~': fileURLToPath(new URL('./src', import.meta.url)),
       src: fileURLToPath(new URL('./src', import.meta.url)),
-      // stream: "stream-browserify",
-      // util: "rollup-plugin-node-polyfills/polyfills/util",
-      // buffer: 'rollup-plugin-node-polyfills/polyfills/buffer-es6',
-      // process: 'rollup-plugin-node-polyfills/polyfills/process-es6',
-      // events: 'rollup-plugin-node-polyfills/polyfills/events',
-      // stream: 'rollup-plugin-node-polyfills/polyfills/stream',
-      // crypto: 'rollup-plugin-node-polyfills/polyfills/crypto-es6',
     },
   },
   
@@ -85,7 +78,7 @@ export default defineConfig({
         { src: 'src/pages', path: 'common/' },
         { src: 'src/pages/account', path: 'common/account' },
         // { src: 'src/content-script/iframe/pages', path: 'iframe/' },
-        { src: 'src/options/pages', path: 'options/' },
+        // { src: 'src/options/pages', path: 'options/' },
         { src: 'src/popup/pages', path: 'popup/' },
         { src: 'src/setup/pages', path: 'setup/' },
       ],
@@ -159,10 +152,11 @@ export default defineConfig({
   define,
   build: {
     outDir: isProd ? 'dist/build' : 'dist/dev',
+    sourcemap: false,
     // target: 'esnext',
     rollupOptions: {
       input: {
-        iframe: 'src/content-script/iframe/index.html',
+        // iframe: 'src/content-script/iframe/index.html',
         setup: 'src/setup/index.html',
       },
       plugins: [
@@ -179,7 +173,11 @@ export default defineConfig({
         //   exclude: [],
         //   sourceMap: true,
         // })
-      ]
+      ],
+      output: {
+        compact: true,
+
+      }
     },
   },
   server: {
@@ -209,6 +207,8 @@ export default defineConfig({
         //       // stream: true,
         //   }),
       ],
+      pure: ['console.log'],
+      drop: ['debugger'],
     },
   },
 })

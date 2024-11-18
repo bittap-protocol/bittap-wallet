@@ -20,11 +20,18 @@ const signMessage:Ref<RequestSignTransaction> = ref({
     amount: 0,
     min_conf: 6,
     fee_rate: 1,
-    networkFee: 0
+    networkFee: 0,
 })
+
+const virtual_psbts = ref(null)
+// @ts-ignore
+const passive_asset_psbts = ref(null)
+
 const requestType:Ref<string> = ref('')
 
 const isLoading:Ref<boolean> = ref(false)
+const psbts: Ref<Psbt[]> = ref([])
+
 
 const taprootInfo = ref({
     amount: 0,
@@ -39,7 +46,7 @@ const siteInfo = ref({
     title: ""
 } as SiteInfo)
 const siteRow = store.getSiteInfo(host)
-console.log('siteRow:', siteRow)
+// console.log('siteRow:', siteRow)
 if(siteRow){
     siteInfo.value.host = siteRow.host
     siteInfo.value.href = siteRow.protocol + '//' + siteRow.host
@@ -50,8 +57,8 @@ if(siteRow){
 
 // const accountActive = ref(store.activeAccount)
 
-const rejectProvide = async (rejectMessage?:string) => {
-    await sendMessage('RejectResult', {
+const rejectProvide = async (rejectMessage:string='') => {
+    await sendMessage('Bittap-RejectResult', {
         requestId,
         rejectMessage
     })
@@ -68,7 +75,7 @@ const resolveProvide = async () => {
     showLoading('In process...')
     try{
         const { wallet_id } = store.getActiveAccount()
-        if(requestType.value === 'transferBtc'){
+        if(requestType.value === 'Bittap-transferBtc'){
             const sendData =  {
                 wallet_id,
                 recv_addr: signMessage.value.recv_addr,
@@ -90,15 +97,16 @@ const resolveProvide = async () => {
             isLoading.value = true
             hideLoading()
         }
-        if(requestType.value ==='sendTaprootAssets'){
+        if(requestType.value ==='Bittap-sendTaprootAssets'){
             const network = store.getNetwork()
-            const { virtual_psbts, passive_asset_psbts } = await TransferAssets({
-                wallet_id,
-                address: signMessage.value.receive_addr,
-                // @ts-ignore
-            }).then(res => res.data)
+            // const { virtual_psbts, passive_asset_psbts } = await TransferAssets({
+            //     wallet_id,
+            //     address: signMessage.value.receive_addr,
+            //     // @ts-ignore
+            // }).then(res => res.data)
             const asset_psbts = []
-            for (const virtual_psbt of virtual_psbts) {
+            // @ts-ignore
+            for (const virtual_psbt of virtual_psbts.value) {
                 const psbt = await store.signTapprootAssetTransfer(
                     Psbt.fromHex(virtual_psbt, { network: network, maximumFeeRate: signMessage.value.fee_rate })
                 )
@@ -108,7 +116,7 @@ const resolveProvide = async () => {
             const anchor_psbt = await AnchorVirtualPsbt({
                 wallet_id,
                 asset_psbts,
-                passive_asset_psbts,
+                passive_asset_psbts: passive_asset_psbts.value,
                 fee_rate: signMessage.value.fee_rate
                 // @ts-ignore
             }).then(res => res.data.anchor_psbt)
@@ -123,7 +131,7 @@ const resolveProvide = async () => {
             isLoading.value = true
             hideLoading()
         }
-        await sendMessage('ResolveResult', {
+        await sendMessage('Bittap-ResolveResult', {
             requestId,
             ...resultMessage    
         })
@@ -141,36 +149,61 @@ const estimateFee = async () => {
     EstimateTxFee({
         // @ts-ignore
         wallet_id: wallet_id,
-        type: requestType.value === 'transferBtc' ? 1: 2,
+        type: requestType.value === 'Bittap-transferBtc' ? 1: 2,
         fee_rate: signMessage.value.fee_rate,
-        amount: requestType.value === 'transferBtc' ? signMessage.value.amount : undefined,
+        amount: requestType.value === 'Bittap-transferBtc' ? signMessage.value.amount : undefined,
     }).then((txFee:number) => {
-        console.log('txFee: ', txFee)
+        // console.log('txFee: ', txFee)
         signMessage.value.networkFee = txFee
     }).finally(() => {
         isLoading.value = false
     })
 }
+
+const showHash = (hash:ArrayBuffer) => {
+    return Buffer.from(hash).toString('hex')
+}
+const showScript = (scriptText:ArrayBuffer) => {
+    return Buffer.from(scriptText).slice(1,33).toString('hex')
+}
+
 watch(() => signMessage.value.fee_rate, (k,v) => {
     if(k&& k!=v){
-        console.log('rate change: ', k, v, signMessage.value.fee_rate)
+        // console.log('rate change: ', k, v, signMessage.value.fee_rate)
         estimateFee()
     }
 })
+
+
 const queueInfo:RequestItem = (await sendMessage('getQueue', requestId)) as RequestItem
-console.log('queueInfo: ', queueInfo)
+// console.log('queueInfo: ', queueInfo)
 if(queueInfo){
     // @ts-ignore
     signMessage.value = queueInfo.data
     signMessage.value.fee_rate = signMessage.value.fee_rate || 0
     signMessage.value.min_conf = signMessage.value.min_conf || 6
     requestType.value = queueInfo.type
-    if(requestType.value === 'sendTaprootAssets'){
+    if(requestType.value === 'Bittap-sendTaprootAssets'){
         DecodeAssetsAddress({ addr: signMessage.value.receive_addr }).then(res => {
-            console.log('deCode:', res)
+            // console.log('deCode:', res)
             taprootInfo.value.amount = res.amount
             taprootInfo.value.asset_id = res.asset_id
             taprootInfo.value.asset_name = res.asset_name
+        })
+        TransferAssets({
+            wallet_id,
+            address: signMessage.value.receive_addr,
+            // @ts-ignore
+        }).then(res => res.data).then(res => {
+            console.log('TransferAssets res: ', res)
+            const network = store.getNetwork()
+            
+            res.virtual_psbts.forEach((virtual_psbt:string) => {
+                psbts.value.push(Psbt.fromHex(virtual_psbt, { network: network, maximumFeeRate: signMessage.value.fee_rate }))
+            })
+            console.log('psbts: ', psbts)
+            virtual_psbts.value = res.virtual_psbts
+            passive_asset_psbts.value = res.passive_asset_psbts
         })
     }
     
@@ -183,10 +216,9 @@ if(queueInfo){
 </script>
 
 <template>
-  <div class="mt-[-40px]">
-      <div class="flex w-full">
-          <div class="w-1/12"></div>
-          <div class="w-10/12">
+  <div class="mt-[-50px]">
+      <div class="flex flux-col justify-center items-center w-full px-4">
+          <div class="w-full">
               <div
                   class="flex bg-purple-200 rounded-md h-10 items-center justify-center"
               >
@@ -200,8 +232,8 @@ if(queueInfo){
                   <span>&nbsp;&nbsp;{{ siteInfo.href }}</span>
               </div>
 
-              <div v-if="requestType === 'transferBtc'" class="btc">
-                <div class="card place-items-center p-4 text-base font-bold">
+              <div v-if="requestType === 'Bittap-transferBtc'" class="btc">
+                <div class="card place-items-center p-2 text-base font-bold">
                     Sign transaction
                 </div>
                 <div
@@ -232,8 +264,8 @@ if(queueInfo){
             </div>
 
 
-            <div v-if="requestType === 'sendTaprootAssets'" class="taproot">
-                <div class="card place-items-center p-4 text-base font-bold">
+            <div v-if="requestType === 'Bittap-sendTaprootAssets'" class="taproot">
+                <div class="card place-items-center p-2 text-base font-bold">
                     Sign transaction
                 </div>
                 <div
@@ -246,41 +278,42 @@ if(queueInfo){
                         <span class="loading loading-ball loading-lg"></span>
                     </div>
                 </div>
+                <div class="psbt" v-for="(psbt, index) in psbts">
+                    <div class="card place-items-left pt-6 font-bold">
+                        Inputs ({{ psbt.inputCount }})
+                    </div>
+                    <div v-for="txInput in psbt.txInputs" :key="'tx-input-'+txInput.index" class="flex bg-purple-200 rounded-md p-2 justify-between">
+                        <span class="text-left  break-all">{{ showHash(txInput.hash) }}</span>
+                        <span class="text-right"> </span>
+                    </div>
+
+                    <div class="card place-items-left pt-6 font-bold">
+                        Outputs ({{ psbt.txOutputs.length }})
+                    </div>
+                    <div
+                        v-for="(txOutput, index) in psbt.txOutputs" :key="'tx-output-'+index" 
+                        class="flex bg-purple-200 rounded-sm p-2 mb-0.5 justify-between"
+                    >
+                        <span class="text-left  break-all">{{ showScript(txOutput.script) }}</span>
+                        <span class="text-right"> </span>
+                    </div>
+                </div>
                 <div class="card place-items-left pt-6 font-bold">
-                    Inputs (1)
+                    Invoice
                 </div>
                 <div class="flex bg-purple-200 rounded-md p-2 justify-between">
-                    <span class="text-left">btcpc...vifsof aa</span>
-                    <span class="text-right">0.0001 BTC</span>
-                </div>
-                <div class="card place-items-left pt-6 font-bold">
-                    Outputs (2)
-                </div>
-                <div
-                    class="flex bg-purple-200 rounded-sm p-2 mb-0.5 justify-between"
-                >
-                    <span class="text-left">btcpc...vifsof</span>
-                    <span class="text-right">0.0001 BTC</span>
-                </div>
-                <div
-                    class="flex bg-purple-200 rounded-sm p-2 mb-0.5 justify-between"
-                >
-                    <span class="text-left">btcpc...vifkdc</span>
-                    <span class="text-right">0.0002 BTC</span>
+                    <span class="text-left break-all">{{ signMessage.receive_addr }}</span>
                 </div>
             </div>
 
               <SelectGas v-model="signMessage.fee_rate" :is-window="true" :network-fee="signMessage.networkFee" />
 
-              <div class="flex pt-6 mb-0.5 justify-between">
-                    <button
-                        class="border border-purple-500 text-purple-500 font-bold px-8 py-1 rounded-2xl"
-                        @click="rejectProvide"
-                    >
+              <div class="flex pt-6 mb-2 justify-between">
+                    <button class="border border-purple-500 text-purple-500 font-bold px-8 py-1 rounded-2xl" @click="rejectProvide('')">
                         Reject
                     </button>
                     <button
-                        :disabled="isLoading"
+                        :disabled="isLoading || !signMessage.fee_rate"
                         class="border border-purple-500 bg-purple-500 text-white font-bold px-8 rounded-2xl"
                         @click="resolveProvide"
                     >

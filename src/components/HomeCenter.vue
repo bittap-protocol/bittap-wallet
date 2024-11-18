@@ -8,7 +8,7 @@
       <div class="account">
         <div class="assets">
           <div class="btc">
-            {{ $root.formatAssets(accountInfo.balance, 8, 'BTC') }}
+            {{ $root.formatAssets($root._BTC2Number(accountInfo.balance), 8, 'BTC') }}
           </div>
           <div class="usdt">≈${{ $root.formatAssets(usdtBalance, 2, '') }}</div>
         </div>
@@ -222,7 +222,7 @@
                   <div class="b">
                     {{
                       $root.formatToken(
-                        ass.amount,
+                        ass.asset_id === 'Base' ? $root._BTC2Number(ass.amount) : ass.amount,
                         ass.asset_id === 'Base' ? 8 : 0
                       )
                     }}
@@ -231,7 +231,7 @@
                     v-if="ass.asset_id === 'Base'"
                     class="u"
                   >≈${{
-                      $root.formatToken($root.showUsdtBalance(ass.amount), 2)
+                      $root.formatToken($root.showUsdtBalance($root._BTC2Number(ass.amount)), 2)
                     }}</div>
                   <div
                     v-else
@@ -350,7 +350,7 @@ import { TransferRow, useAppStore } from '@/stores/app.store'
 // import { getBalance, getBTCUSDTPrice } from '@/popup/api/btc/blockStream'
 
 import { QueryBtcBalance } from '@/popup/api/btc/blockStream'
-import { hideFullscreen, showAddressAndAssetId } from '@/popup/libs/tools'
+import { BROADCAST_ON_LISTEN_TRANSACTION_EVENT, hideFullscreen, showAddressAndAssetId } from '@/popup/libs/tools'
 // import { postToast } from '@/popup/libs/tools';
 // import Import from './svgIcon/Import.vue';
 
@@ -402,7 +402,7 @@ export default {
   computed: {
     usdtBalance() {
       // @ts-ignore
-      return this.$root.btcPrice * this.accountInfo.balance
+      return this.$root.btcPrice * this.$root._BTC2Number(this.accountInfo.balance)
     },
     activeAccountIndex() {
       return this.store.activeAccount
@@ -520,6 +520,9 @@ export default {
               this.$router.push('/common/unlock')
             }
             break
+          case BROADCAST_ON_LISTEN_TRANSACTION_EVENT:
+            this.refreshData()
+            break;
           default:
             break
         }

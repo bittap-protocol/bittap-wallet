@@ -24,7 +24,7 @@
       <div class="label">
         <span class="label-text">Amount</span>
         <span class="text-[#888f99] text-sm font-normal">
-          Balance: {{ $root.formatAssets(store.currentBtcBalance, 8, 'BTC') }}
+          Balance: {{ $root.formatAssets($root._BTC2Number(store.currentBtcBalance), 8, 'BTC') }}
         </span>
       </div>
       <div class="input-field">
@@ -32,7 +32,7 @@
           v-model="formData.amount"
           type="number"
           min="0.00000001"
-          :max="store.currentBtcBalance"
+          :max="$root._BTC2Number(store.currentBtcBalance)"
           placeholder="Please enter"
           class="field"
         />
@@ -54,7 +54,7 @@
         :disabled="
           Number(formData.amount) <= 0 ||
           isSubmitting ||
-          store.currentBtcBalance * 10 ** 8 <
+          store.currentBtcBalance <
             formData.amount * 10 ** 8 + Number(formData.fee_rate)
         "
         class="button"
@@ -67,8 +67,8 @@
 </template>
 
 <script>
-import { nslookupDomainInfo, PublishTransferBtc, TransferBtc,EstimateMaxBtc } from '@/popup/api/btc/blockStream'
-import { postToast, isValidBitcoinAddress } from '@/popup/libs/tools'
+import { nslookupDomainInfo, TransferBtc,EstimateMaxBtc, PublishTransferBtcV2 } from '@/popup/api/btc/blockStream'
+import { postToast, isValidBitcoinAddress, addTransactionStatusListen } from '@/popup/libs/tools'
 import { useAppStore } from '@/stores/app.store'
 import { Psbt } from 'bitcoinjs-lib'
 export default {
@@ -163,7 +163,7 @@ export default {
         0,
         Number(
           Number(
-            (this.store.currentBtcBalance * 10 ** 8 -
+            (this.store.currentBtcBalance -
               Number(this.formData.fee_rate)) /
               10 ** 8
           ).toFixed(6)
@@ -230,11 +230,12 @@ export default {
           )
           // console.log('final_psbt: ', final_psbt)
           const tx = final_psbt.extractTransaction()
-          return PublishTransferBtc({
+          return PublishTransferBtcV2({
             wallet_id,
             final_psbt: tx.toBuffer().toString('base64'),
-          })
-            .then(() => {
+          }).then(res => res.data.tx_id)
+            .then(tx_id => {
+              addTransactionStatusListen([tx_id])
               this.isSubmitting = false
               this.$root._hideLoading()
               this.$root._toast('Submit Success', 'success')

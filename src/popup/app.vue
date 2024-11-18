@@ -12,6 +12,7 @@ import IconBack from '@/components/svgIcon/IconBack.vue'
 import { useAppStore } from '@/stores/app.store'
 
 import {
+  BROADCAST_ON_LISTEN_TRANSACTION_EVENT,
   hideFullscreen,
   randomInt,
   sendMessage,
@@ -46,12 +47,11 @@ export default {
       // console.log('goBackUrl.value: ', goBackUrl.value)
       goBackUrl.value ? router.push(goBackUrl.value) : window.history.go(-1)
     }
-    console.log('router.currentRoute.value.fullPath: ', router.currentRoute.value.fullPath)
     const isHome = computed(() =>
-      ['/', '/popup'].includes(router.currentRoute.value.fullPath)
+      ['/', '/popup'].includes(router ? router.currentRoute.value.fullPath : '/')
     )
     const path_css = computed(
-      () => 'path' + router.currentRoute.value.fullPath.split('/').join('_')
+      () => 'path' + !router ? '':  router.currentRoute.value.fullPath.split('/').join('_')
     )
     // console.log('isHome: ', isHome.value, accountCount.value)
 
@@ -113,15 +113,21 @@ export default {
       })
       // console.log('sessionPassword: ', sessionPassword)
       // @ts-ignore
-      // chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      //   // 2. A page requested user data, respond with a copy of `user`
-      //   console.log('chrome.runtime.onMessage:', message)
-      //   const data = message && JSON.parse(message)
-      //   if (data.event === 'toast') {
-      //     this._toast(data.text, data.type, data.delay)
-      //   }
-      //   sendResponse({ result: true })
-      // });
+      chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        // 2. A page requested user data, respond with a copy of `user`
+        console.log('chrome.runtime.onMessage:', message)
+        // const data = message && JSON.parse(message)
+        // if (data.event === 'toast') {
+        //   this._toast(data.text, data.type, data.delay)
+        // }
+        switch(message.type){
+          case BROADCAST_ON_LISTEN_TRANSACTION_EVENT:
+            this._toast('Transaction confirmed hash: '+message.data.txid)
+            break;
+          default:break
+        }
+        sendResponse()
+      });
       window.addEventListener(
         'message',
         (event) => {
@@ -130,7 +136,7 @@ export default {
             return false
           }
           if (data.event === 'toast') {
-            console.log('window.addEventListener on message is event: ', event)
+            // console.log('window.addEventListener on message is event: ', event)
             const { text, type, delay } = data.data
             this._toast(text, type, delay)
           }
@@ -147,17 +153,17 @@ export default {
         },
         false
       )
-      const channelName = 'bittap.jssdk.event'
+      // const channelName = 'bittap.jssdk.event'
       // @ts-ignore
-      chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            console.log('Home center chrome.runtime.onMessage:', message, sender)
-            const { type, event, data } = message
-            if(channelName === type){
-              // const { type , data, requestId } = data
-              console.log('Home center chrome.runtime.onMessage json :', type, event, data)
-            }
-            sendResponse()
-      })
+      // chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      //       // console.log('Home center chrome.runtime.onMessage:', message, sender)
+      //       const { type, event, data } = message
+      //       if(channelName === type){
+      //         // const { type , data, requestId } = data
+      //         // console.log('Home center chrome.runtime.onMessage json :', type, event, data)
+      //       }
+      //       sendResponse()
+      // })
       // console.log('store: ', this.$store)
       // const store = useAppStore()
       // // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -169,6 +175,14 @@ export default {
       this.btcPrice = this.store.btcPrice.USD
       // @ts-ignore
       this.assets = await this.store.getUserAssetsBalance()
+      // this.assets.map(x => {
+      //   // @ts-ignore
+      //   // if(x.asset_type === 'base'){
+      //   //   // @ts-ignore
+      //   //   x.amount = x.amount / 10**8 
+      //   // }
+      //   return x
+      // })
     },
     hideFullscreen() {
       this.fullWhite = false
@@ -346,7 +360,7 @@ export default {
       <div class="title font-medium text-lg">
         <div v-if="!isHome && title">{{ title }}</div>
       </div>
-      <div class="setting font-normal text-sm">
+      <div class="setting font-normal text-sm pr-2">
         <router-link
           v-if="$router.currentRoute.value.fullPath === '/common/mangeAssets'"
           to="/common/importAssets"

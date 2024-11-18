@@ -53,7 +53,7 @@
           formData.to.length <= 60 ||
           isSubmitting ||
           showInfo.asset_name === 'Unknown' ||
-          store.currentBtcBalance * 10 ** 8 <= formData.gas ||
+          store.currentBtcBalance <= formData.gas ||
           assetBalance <= 0
         "
         class="button"
@@ -74,7 +74,7 @@ import {
   TransferAssets,
   PublishTransfer,
 } from '@/popup/api/btc/blockStream'
-import { toHex, getQuery } from '@/popup/libs/tools'
+import { toHex, getQuery, addTransactionStatusListen } from '@/popup/libs/tools'
 // import { decodeUnknownKeyVals } from '@/popup/libs/tools';
 
 export default {
@@ -121,7 +121,7 @@ export default {
       this.assetBalance = await this.store.getCurrentWalletForAssetBalance(
         this.showInfo.asset_id
       )
-      console.log('this.assetBalance: ', this.assetBalance)
+      // console.log('this.assetBalance: ', this.assetBalance)
       if (this.assetBalance < Number(this.showInfo.amount)) {
         this.$root._toast(
           'The "' +
@@ -132,7 +132,7 @@ export default {
         )
       } else {
         if (
-          this.store.currentBtcBalance * 10 ** 8 <
+          this.store.currentBtcBalance <
           Number(this.formData.gas)
         ) {
           this.$root._toast('The BTC balance is insufficient', 'warning', 5000)
@@ -140,7 +140,7 @@ export default {
       }
     },
     showAddressInfo() {
-      console.log(' this.formData: ', this.formData)
+      // console.log(' this.formData: ', this.formData)
       DecodeAssetsAddress({ addr: this.formData.to }).then((res) => {
         this.showInfo = res
         this.getAssetBalance()
@@ -233,6 +233,7 @@ export default {
                   )
                   this.formData.to = ''
                   this.isSubmitting = false
+                  addTransactionStatusListen([txHash])
                   this.$root._hideLoading()
                   setTimeout(() => {
                     this.$router.push('/')

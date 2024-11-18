@@ -12,7 +12,6 @@ import {
   TxsStatus,
   REQUEST_CURRENT_SITE,
   saveLocalStoreKey,
-  getLocalStoreKey,
   RequestItem,
   channelName,
   REQUEST_TARGET,
@@ -21,11 +20,14 @@ import {
   CURRENT_USER_WALLET_ID,
   netWorkTypes,
   AccountChangeInfo,
+  ON_LISTEN_TRANSACTION_EVENT,
+  isTxId,
 } from '@/popup/libs/tools'
 
-import { createInvoice, createWindow, getCurrentAssets, Settings, WindowOptions, searchAssets } from './utils'
+import { createInvoice, createWindow, getCurrentAssets, Settings, WindowOptions, searchAssets, getInvoices } from './utils'
+import { getTxStatus } from '@/popup/api/btc/blockStream'
 
-import mempoolJS from "@mempool/mempool.js";
+
 
 let sessionPassword: string | null = null
 
@@ -53,13 +55,13 @@ const ListenTransactionQueue:Array<ResponseTransactionStatus> = []
 const ListenSleepTime = 1000*30
 
 const findQueue = (requestId: string) =>{
-  console.log('SdkRequestQueue: ', requestId, SdkRequestQueue)
+  // console.log('SdkRequestQueue: ', requestId, SdkRequestQueue)
   return SdkRequestQueue.find(item => item.requestId === requestId)
 }
 const removeQueue = (requestId: string) => {
   const index = SdkRequestQueue.findIndex(item => item.requestId === requestId)
   if (index!== -1) {
-    console.log('Queue remove: ', index, SdkRequestQueue[index])
+    // console.log('Queue remove: ', index, SdkRequestQueue[index])
     SdkRequestQueue.splice(index, 1)
   }
 }
@@ -76,14 +78,13 @@ const scanTransaction = async () => {
   if(pendingList.length <= 0){
     return 
   }
-  const { bitcoin: { transactions } } = mempoolJS({
-    hostname: 'mempool.space'
-  });
-  const handlerName = 'onListenTransaction'
+  const handlerName = ON_LISTEN_TRANSACTION_EVENT
   for(let i = 0; i< pendingList.length; i++){
     const task = pendingList[i]
-    const txStatusResult = await transactions.getTxStatus({ txid: task.txid });
-    console.log(task.txid, txStatusResult);
+    // console.log('scanTransaction run task : ', task.txid, task)
+    const txStatusResult = await getTxStatus(task.txid);
+    
+    // console.log('scanTransaction => transactions.getTxStatus res : ',task.txid, txStatusResult);
     if(txStatusResult.confirmed){
       broadcastMessage(handlerName, {
         status: TxsStatus.confirmed,
@@ -92,6 +93,7 @@ const scanTransaction = async () => {
         block_time: txStatusResult.block_time,
         txid: task.txid,
       })
+      task.status = TxsStatus.confirmed
     }
   }
   
@@ -115,9 +117,7 @@ const broadcastMessage = (handlerName:string, data:any) => {
       }
       tabs.forEach(tab => {
         // @ts-ignore
-        chrome.tabs.sendMessage(tab.id, sendMsg, (response) => {
-          console.log('Response from content script:', response);
-        });
+        chrome.tabs.sendMessage(tab.id, sendMsg);
       })
     });
   })
@@ -138,19 +138,13 @@ const sendChannelResponseMessage = (requestId:string, data:any) => {
       target: RESPONSE_TARGET,
       channel: channelName
     }
-    console.log('sendChannelResponseMessage: ', sendMsg)
+    // console.log('sendChannelResponseMessage: ', sendMsg)
     removeQueue(requestId)
     chrome.tabs.query({ active: true }, (tabs) => {
-      console.log('tabs: ', tabs)
-      // if (tabs[0]) {
         tabs.forEach(tab => {
           // @ts-ignore
-          chrome.tabs.sendMessage(tab.id, sendMsg, (response) => {
-            console.log('Response from content script:', response);
-          });
+          chrome.tabs.sendMessage(tab.id, sendMsg);
         })
-        
-      // }
     });
   }else{
     removeQueue(requestId)
@@ -176,16 +170,6 @@ const clearPassword = () => {
   sessionPassword = null
   chrome.storage.session.set({ sessionPassword: '' })
 }
-
-// const getExtensionsId = () => {
-//   // @ts-ignore
-//   if(chrome.runtime){ // 方法一
-//       return chrome.runtime?.id || '-1';
-//   }else if(chrome.i18n){ // 方法二
-//       return chrome.i18n.getMessage("@@extension_id") || '-1';
-//   }
-//   return '-1'
-// }
 
 // window.addEventListener('message', (message) => {
 //   console.log('background window on message: ', message)
@@ -243,7 +227,7 @@ chrome.runtime.onConnect.addListener(async () => {
 // @ts-ignore
 let openerWin:chrome.windows.Window = null
 
-const openWindowGoToUrl = (url:string, requestId:string, sender:chrome.runtime.MessageSender) => {
+const openWindowGoToUrl = async (url:string, requestId:string, sender:chrome.runtime.MessageSender) => {
   
   const queue = findQueue(requestId)
   if(!queue){
@@ -269,7 +253,7 @@ const openWindowGoToUrl = (url:string, requestId:string, sender:chrome.runtime.M
     // @ts-ignore
     chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       switch (message.type) {
-        case 'DisConnection':
+        case 'Bittap-DisConnection':
           if(openerWin){
             // @ts-ignore
             await chrome.windows.remove(openerWin.id)
@@ -284,7 +268,7 @@ const openWindowGoToUrl = (url:string, requestId:string, sender:chrome.runtime.M
   const extParams = '&host='+new URL(sender.tab?.url).host
   if(!checkUnlockSate()){
     const [path, query] = url.split('?')
-    console.log('path, query:')
+    // console.log('path, query:')
     // @ts-ignore
     createWindow(Settings.BASE_URL + Settings.UNLOCK_WALLET+'?redirect='+path+'&'+query+extParams, winOpts, openerWin).then(res => {
       // @ts-ignore
@@ -305,7 +289,7 @@ const openWindowGoToUrl = (url:string, requestId:string, sender:chrome.runtime.M
 let taskTimer:  NodeJS.Timeout | null = null
 // @ts-ignore
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-  console.log('Message received on background('+message.type+'): ', message, sender, sendResponse)
+  // console.log('Message received on background('+message.type+'): ', message, sender, sendResponse)
   if(taskTimer){
     clearInterval(taskTimer)
     taskTimer = null
@@ -316,7 +300,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   if(message.data && message.data.channel && message.data.channel === channelName &&  message.data.target){
     if(message.data.target === REQUEST_TARGET){
       SdkRequestQueue.push(message.data.data)
-      console.log('SdkRequestQueue on Request: ', SdkRequestQueue.length, SdkRequestQueue[SdkRequestQueue.length-1])
+      // console.log('SdkRequestQueue on Request: ', SdkRequestQueue.length, SdkRequestQueue[SdkRequestQueue.length-1])
     }
   }
   switch (message.type) {
@@ -408,88 +392,96 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       )
       // @ts-ignore
       return sendResponse({ type: 'decryptMnemonic', data: decryptedMnemonic })
-    case 'connectionWallet':
+    case 'Bittap-connectionWallet':
       // @ts-ignore
-      const { type, requestId } = message.data.data
+      const { requestId } = message.data.data
       const networkType = message.data.data.data.network
       // @ts-ignore
       message.data.siteInfo.icon = message.data.siteInfo.icon || sender.tab?.favIconUrl
-      console.log('connectionWallet data: ', type, requestId, networkType, message.data, message.data.siteInfo)
+      // console.log('connectionWallet data: ', type, requestId, networkType, message.data, message.data.siteInfo)
       await saveLocalStoreKey(REQUEST_CURRENT_SITE, message.data.siteInfo)
-      const siteInfo = await getLocalStoreKey(REQUEST_CURRENT_SITE)
-      console.log('createWindow siteInfo: ', siteInfo)
+      // const siteInfo = await getLocalStoreKey(REQUEST_CURRENT_SITE)
+      // console.log('createWindow siteInfo: ', siteInfo)
       openWindowGoToUrl(Settings.CONNECTION_WALLET+'?requestId='+requestId+'&networkType='+networkType, requestId, sender)
       return sendResponse();
 
-    case 'RejectConnectionWallet':
+    case 'Bittap-RejectConnectionWallet':
       await sendChannelResponseMessage(message.data.requestId, {
         rejectResult: true,
         rejectMessage: 'Account cancelled'
       })
       return sendResponse()
-    case 'ResolveConnectionWallet':
+    case 'Bittap-ResolveConnectionWallet':
       const { account, network } = message.data
       await sendChannelResponseMessage(message.data.requestId, {
         account, network
       })
       return sendResponse()
-    case 'getCurrentAssets': 
+    case 'Bittap-getCurrentAssets': 
       await sendChannelResponseMessage(message.data.data.requestId, await getCurrentAssets())
       return sendResponse()
-    case 'createInvoice': 
+    case 'Bittap-createInvoice': 
       await sendChannelResponseMessage(message.data.data.requestId, await createInvoice(message.data.data.data))
       return sendResponse()
-    case 'searchAssets': 
+    case 'Bittap-searchAssets': 
       await sendChannelResponseMessage(message.data.data.requestId, await searchAssets(message.data.data.data))
       return sendResponse()
+    case 'Bittap-getInvoices': 
+      await sendChannelResponseMessage(message.data.data.requestId, await getInvoices(message.data.data.data))
+      return sendResponse()
       
-    case 'transferBtc': 
+    case 'Bittap-transferBtc': 
       // await sendChannelResponseMessage(message.data.data.requestId, await searchAssets(message.data.data.data))
       openWindowGoToUrl(Settings.SIGN_TRANSFER+'?requestId='+message.data.data.requestId, message.data.data.requestId,sender)
       return sendResponse()
-    case 'sendTaprootAssets':
+    case 'Bittap-sendTaprootAssets':
       openWindowGoToUrl(Settings.SIGN_TRANSFER+'?requestId='+message.data.data.requestId, message.data.data.requestId,sender)
       return sendResponse()
-    case 'signMessage':
+    case 'Bittap-signMessage':
         openWindowGoToUrl(Settings.SIGN_MESSAGE+'?requestId='+message.data.data.requestId, message.data.data.requestId,sender)
         return sendResponse()
       //onListenTransaction onAccountChange addListenTxId
-    case 'addListenTxId': 
+    case 'Bittap-addListenTxId': 
       if(message.data.data.data.txIds && Array.isArray(message.data.data.data.txIds) && message.data.data.data.txIds.length > 0){
         message.data.data.data.txIds.forEach((txid:string) => {
+          if(!txid || !isTxId(txid)){
+            return
+          }
           const isFound = ListenTransactionQueue.find(item => item.txid === txid)
           if(!isFound){
             ListenTransactionQueue.push({
               txid,
               status: TxsStatus.pending
             })
+          }else{
+            isFound.status = TxsStatus.pending
           }
         })
       }
       return sendResponse()
-    case 'onAccountChange': 
+    case 'Bittap-onAccountChange': 
       // await sendChannelResponseMessage(message.data.data.requestId, message.data.data.data)
       return sendResponse()
-    case 'onListenTransaction': 
+    case ON_LISTEN_TRANSACTION_EVENT: 
       // await sendChannelResponseMessage(message.data.data.requestId, message.data.data.data)
       return sendResponse()
 
-    case 'switchNetwork':
+    case 'Bittap-switchNetwork':
       openWindowGoToUrl(Settings.SWITCH_NETWORK+'?requestId='+message.data.data.requestId+'&networkType='+message.data.data.data.network, message.data.data.requestId,sender)
       return sendResponse()
-    case 'DisConnection':
+    case 'Bittap-DisConnection':
       await sendChannelResponseMessage(message.data.data.requestId, {})
       return sendResponse()
-    case 'RejectResult':
+    case 'Bittap-RejectResult':
       await sendChannelResponseMessage(message.data.requestId, {
         rejectResult: true,
         rejectMessage: message.data.rejectMessage ? message.data.rejectMessage: 'Account reject'
       })
       return sendResponse()
-    case 'ResolveResult':
+    case 'Bittap-ResolveResult':
       const sendData = JSON.parse(JSON.stringify(message.data))
       delete sendData.requestId
-      console.log('ResolveResult sendData: ', sendData, message.data)
+      // console.log('ResolveResult sendData: ', sendData, message.data)
       await sendChannelResponseMessage(message.data.requestId, sendData)
       return sendResponse()
     default:
@@ -516,30 +508,33 @@ function InitConfig(data: configOpt) {
   const accountChangeData:AccountChangeInfo = {
     account: {
       // @ts-ignore
-      btcAddress: configs.activeAccount.btcAddress,
+      btcAddress: configs.currentInfo.btcAddress,
       // @ts-ignore
-      name: configs.activeAccount.name,
+      name: configs.currentInfo.name,
     },
-    network: netWorkTypes[configs.networkType]
+    network: {
+      name: netWorkTypes[configs.networkType],
+    }
   }
   const sendHandlerCall = (sendData:AccountChangeInfo) => {
     setTimeout(() => {
-      broadcastMessage('onAccountChange', sendData)
+      broadcastMessage('Bittap-onAccountChange', JSON.parse(JSON.stringify(sendData)))
     }, 500)
   }
   if(Object.prototype.hasOwnProperty.call(data, 'networkType') && data.networkType !== configs.networkType){
     sendHandler = true
-    accountChangeData.network = netWorkTypes[data.networkType]
+    accountChangeData.network.name = netWorkTypes[data.networkType]
   }
   if(Object.prototype.hasOwnProperty.call(data, 'activeAccount') && data.activeAccount !== configs.activeAccount) {
     sendHandler = true
     // @ts-ignore
-    accountChangeData.account.btcAddress = data.activeAccount.btcAddress
+    accountChangeData.account.btcAddress = data.currentInfo.btcAddress
     // @ts-ignore
-    accountChangeData.account.name = data.activeAccount.name
+    accountChangeData.account.name = data.currentInfo.name
     
   }
   if(sendHandler) {
+    // console.log('accountChangeData: ', accountChangeData)
     sendHandlerCall(accountChangeData)
   }
   Object.keys(data).forEach((key) => {

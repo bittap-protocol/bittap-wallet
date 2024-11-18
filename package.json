@@ -93,13 +93,13 @@
   "license": "MIT",
   "scripts": {
     "zip": "rm -rf ./dist/zip/*.zip;jszip-cli add ./dist/build/  --output ./dist/zip/BitTap-Build-${npm_package_version}_`date +%s`.zip && open ./dist/zip/",
-    "build": "rm -rf ./dist/build &&vite build --sourcemap",
-    "buildZip": "rm -rf ./dist/build &&vite build --sourcemap && pnpm run zip",
+    "build": "rm -rf ./dist/build &&vite build",
+    "buildZip": "rm -rf ./dist/build &&vite build && pnpm run zip",
     "dev": "echo Current version:${npm_package_version}; rm -rf ./dist/dev && vite",
     "lint": "eslint . --fix --ext js,mjs,cjs,ts,mts,cts,vue",
     "preview": "vite preview",
     "makeLib": "npx browserify --standalone bitcoin - -o ./src/popup/bitcoinjs-lib.js <<<'module.exports = require('bitcoinjs-lib');'"
   },
   "type": "module",
-  "version": "0.3.0"
+  "version": "1.0.2"
 }

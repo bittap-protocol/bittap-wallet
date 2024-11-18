@@ -317,11 +317,6 @@ export const useAppStore = defineStore('app', () => {
     initConfig()
   }
 
-
-  // chrome.storage.local.set({ key: value }).then(() => { console.log("Value is set"); });029-61199530
-
-  // chrome.storage.local.get(["key"]).then((result) => { console.log("Value is " + result.key); });
-
   // You should probably use chrome.storage API instead of localStorage since localStorage history can be cleared by the user.
   // See https://developer.chrome.com/docs/extensions/reference/api/storage
 
@@ -482,10 +477,11 @@ export const useAppStore = defineStore('app', () => {
       })
     }
     const results = currentTokens.length >0 ? currentTokens : assets
-
+    console.log('ac.btcBalance: ', ac.btcBalance)
     results.unshift({
       asset_id: 'Base',
-      amount: ac.btcBalance as number,
+      // @ts-ignore
+      amount: ac.btcBalance,
       name: 'BTC',
       asset_type: 'base',
       timestamp: 0
@@ -514,7 +510,7 @@ export const useAppStore = defineStore('app', () => {
   ): Promise<number> => {
     const userAssets = await getUserAssetsBalance()
     const currentAsset = userAssets.find((x) => x.asset_id === asset_id)
-    console.log('userAssets:', userAssets, currentAsset, asset_id)
+    // console.log('userAssets:', userAssets, currentAsset, asset_id)
     return currentAsset ? currentAsset.amount : 0
   }
 
@@ -780,11 +776,14 @@ export const useAppStore = defineStore('app', () => {
     opts = {}
   ) => {
     const { phraseIndex } = getActiveAccount()
+    
     const dePhrase: PhraseRow = phrases.value[phraseIndex]
+    
     //
     if (!dePhrase || !dePhrase.phrase) {
       throw Error('Invalid dePhrase')
     }
+    console.log('path:',path, phraseIndex, dePhrase.phrase)
     // @ts-ignore
     const phrase: string = await sendMessage('decryptMnemonic', dePhrase.phrase)
     if (!phrase || phrase.split(' ').length != 12) {
@@ -808,7 +807,9 @@ export const useAppStore = defineStore('app', () => {
   }
 
   const signMessage = async (_msg:string): Promise<string> => {
-    const child = await getCurrentAccountKeyPair(PathKey.m44, false)
+    const network = getNetwork()
+    const path = networkType.value === 0 ? "m/44'/0'/0'" : "m/44'/1'/0'"
+    const child = await getCurrentAccountKeyPair(path, false)
 
     const BITCOIN_MESSAGE_PREFIX = "\x18Bitcoin Signed Message:\n";
 
@@ -822,7 +823,7 @@ export const useAppStore = defineStore('app', () => {
       
       return crypto.hash256(totalBuffer);
     }
-    const network = getNetwork()
+    
 
     const messageHash = hashMessage(_msg);
 
@@ -965,12 +966,12 @@ export const useAppStore = defineStore('app', () => {
     return tokens.value.filter((token) => token.wallet_id === wallet_id)
   }
   const addToken = (token: tokenInfo): void => {
-    console.log('token: ', token)
+    // console.log('token: ', token)
     token.wallet_id = token.wallet_id ? token.wallet_id : getCurrentWalletId()
     const isFound = tokens.value.some(
       (o) => o.wallet_id === token.wallet_id && o.asset_id === token.asset_id
     )
-    console.log('isFound: ', isFound)
+    // console.log('isFound: ', isFound)
     if(!isFound) {
       tokens.value.push(token)
     }

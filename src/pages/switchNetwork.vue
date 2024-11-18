@@ -1,5 +1,5 @@
 <template>
-    <div class="mt-[-66px] py-2 px-4">
+    <div class="mt-[-56px] py-2 px-4">
         <div class="flex w-full">
             <div class="w-full">
                 <div
@@ -45,7 +45,7 @@
                 <div class="flex px-4 h-12 justify-between items-center fixed z-10 left-0 bottom-0 w-full bg-white">
                     <button
                         class="border border-primary text-primary font-bold px-8 py-2 rounded-xl hover:bg-primary/20"
-                        @click="rejectProvide"
+                        @click="rejectProvide('')"
                     >
                         Reject
                     </button>
@@ -75,8 +75,8 @@ const networkType = getQuery('networkType')
 const host = getQuery('host')
 
 
-const rejectProvide = async (rejectMessage?:string) => {
-    await sendMessage('RejectResult', {
+const rejectProvide = async (rejectMessage:string='') => {
+    await sendMessage('Bittap-RejectResult', {
         requestId,
         rejectMessage
     })
@@ -90,7 +90,7 @@ const resolveProvide = async () => {
         await store.getUserAssetsBalance()
         store.initConfig()
         hideLoading()
-        sendMessage('ResolveResult', {
+        sendMessage('Bittap-ResolveResult', {
             requestId,
         })
     }).catch((error) => {
@@ -122,7 +122,7 @@ if(siteRow){
 }
 
 const queueInfo:RequestItem = (await sendMessage('getQueue', requestId)) as RequestItem
-console.log('queueInfo: ', queueInfo)
+// console.log('queueInfo: ', queueInfo)
 if(queueInfo && networkType === 'regtest'){
     // @ts-ignore
     rpcUrl.value = queueInfo.data?.url || LocalNetUrl

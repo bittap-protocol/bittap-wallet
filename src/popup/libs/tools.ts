@@ -36,12 +36,22 @@ export const CURRENT_USER_ASSETS =  'CURRENT_USER_ASSETS'
 export const CURRENT_USER_INDEX =  'CURRENT_USER_INDEX'
 export const CURRENT_USER_WALLET_ID =  'CURRENT_USER_WALLET_ID'
 
+export const ON_LISTEN_TRANSACTION_EVENT =  'Bittap-onListenTransaction'
+export const ADD_LISTEN_TX_ID =  'Bittap-addListenTxId'
+
+export const BROADCAST_ON_LISTEN_TRANSACTION_EVENT =  'broadcast-Bittap-onListenTransaction'
+
 
 export const networkType = useStorage('networkType', 2)
 export const networkRpcUrl = useStorage('networkRpcUrl',TestNetUrl)
 export const networkRpcToken = useStorage('networkRpcToken', '')
 export const networkRpcTokenExpiredTime = useStorage('networkRpcTokenExpiredTime', -1)
 
+
+export interface RequestPageOptions{
+  page_num?: number
+  page_size?: number
+}
 
 export interface RequestItem {
   type: string
@@ -59,8 +69,8 @@ export interface RequestSignTransaction{
     // Fee rate.
   fee_rate?: number
   // network fee
-  networkFee?: number,
-  receive_addr?: string,
+  networkFee?: number
+  receive_addr?: string
 }
 
 
@@ -79,12 +89,16 @@ export interface CurrentUserAssetsItem {
   timestamp?: number
 }
 
+
+
 export interface AccountChangeInfo {
   account: {
     btcAddress: string,
     name: string
   }
-  network: string
+  network: {
+    name: string
+  }
 }
 
 export type CurrentUserAssetsBalance = CurrentUserAssetsItem[]
@@ -111,8 +125,22 @@ export function TestUrl(url: string) {
   return /^(http|ftp|https):\/\/[\w\-_]+/.test(url)
 }
 
+/**
+ * verify asset_id
+ * @param id
+ * @returns boolean
+ */
 export function isAssetId(id:string):boolean {
   return /^[0-9a-f]{64}$/.test(id)
+}
+
+/**
+ * verify txid
+ * @param txid 
+ * @returns 
+ */
+export function isTxId(txid: string): boolean {
+  return /^[a-fA-F0-9]{64}$/.test(txid);
 }
 
 export function getNetWorkType () {
@@ -135,7 +163,7 @@ export function getNetWorkConfig(): { netType: number, url: string, token: strin
 export function setNetworkConfiguration(netType:number, url:string):void {
   networkType.value = netType
   networkRpcUrl.value = url
-  console.log('setNetworkConfiguration:', netType, url)
+  // console.log('setNetworkConfiguration:', netType, url)
 }
 
 export function setRpcToken(rpcToken:string):void {
@@ -212,6 +240,22 @@ export function sendMessage(
       .sendMessage({ type: type, data: data })
       .then((r) => (r && r.data) || '')
   )
+}
+
+/**
+ * add transaction status listen
+ * @param txIds txids to listen
+ * @returns Promise<unknown>
+ */
+export function addTransactionStatusListen(txIds: string[]){
+  // message.data.data.data.txIds
+  return sendMessage(ADD_LISTEN_TX_ID, {
+    data:{
+      data:{
+        txIds
+      }
+    }
+  })
 }
 
 /**
@@ -463,7 +507,6 @@ export async function getLocalStoreKey(key:string) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function saveLocalStoreKey(key:string, value:any) {
-  console.log('chrome.storage.local.set {[key]:value}: ', {[key]:value})
     return chrome.storage.local.set({[key]:value})
 }
 

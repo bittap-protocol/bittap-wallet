@@ -4,14 +4,14 @@ window.BittapWalletInjected = {
     channelName: 'bittap.jssdk.event',
     REQUEST_TARGET: 'BITTAPWALLET_REQUEST',
     RESPONSE_TARGET: 'BITTAPWALLET_RESPONSE',
-    notRemoveTypes: ['onListenTransaction','onAccountChange'],
+    notRemoveTypes: ['Bittap-onListenTransaction','Bittap-onAccountChange'],
     init(){
         const clientWallet = new  (function(){
             this.client_id = window.BittapWalletInjected.getRequestId();
             this.toString = function(){  return 'client id: '+ this.client_id }
         })
         window.addEventListener('message',(message, sender) => {
-            console.log('BittapWalletInjected 1 window.addEventListener(message):', JSON.stringify(message), sender)
+            // console.log('BittapWalletInjected 1 window.addEventListener(message):', JSON.stringify(message), sender)
             if(message && message.data) {
                 if(message.data 
                     && message.data.target 
@@ -22,10 +22,10 @@ window.BittapWalletInjected = {
                 ){
                     const { type , data, client_id } = message.data.data
                     const requestId = message.data.data.requestId
-                    console.log('BittapWalletInjected 2 window.addEventListener(message):', type, data, requestId, client_id)
+                    // console.log('BittapWalletInjected 2 window.addEventListener(message):', type, data, requestId, client_id)
                     if(type && requestId){
                         const queue = window.BittapWalletInjected.getRequestQueueInfo(requestId)
-                        console.log('queue: ', queue, type , data)
+                        // console.log('queue: ', queue, type , data)
                         if(!queue){
                             return false
                         }
@@ -78,7 +78,9 @@ window.BittapWalletInjected = {
         if(!Object.prototype.hasOwnProperty.call(queue,'client_id')) {
             throw new Error('client_id is empty')
         }
+       
         queue.time = Date.now()
+        queue.type = ['Bittap', queue.type].join('-')
         queue.requestId = !window.BittapWalletInjected.notRemoveTypes.includes(queue.type) ? window.BittapWalletInjected.getRequestId() :queue.type
         let queueInfo = window.BittapWalletInjected.getRequestQueueInfo(queue.requestId)
         if(queueInfo){
@@ -94,6 +96,19 @@ window.BittapWalletInjected = {
             client_id: queue.client_id,
             requestId: queue.requestId,
         })
+        if(queue.type === 'Bittap-DisConnection'){
+            const removeQueueForClient = () => {
+                queues.forEach((que, queueIndex) => {
+                    if(!window.BittapWalletInjected.notRemoveTypes.includes(que.type) && que.client_id === queue.client_id ){
+                        window.BittapWalletInjected.queues.splice(queueIndex, 1)
+                    }
+                })
+            }
+            setTimeout(() => {
+                removeQueueForClient()
+            }, 0)
+        }
+        
     },
     getRequestId(){
         return Date.now() + Math.random().toString(36).substr(2, 9)

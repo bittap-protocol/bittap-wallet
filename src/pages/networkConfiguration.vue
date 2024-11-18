@@ -115,7 +115,6 @@ export default {
   },
   methods: {
     initData() {
-      console.log('store:', store)
       store.setGoBackUrl('')
       store.isGoBack()
       // @ts-ignore

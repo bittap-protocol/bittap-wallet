@@ -65,8 +65,6 @@ declare module 'vue-router/auto/routes' {
     '/common/transactionDetails': RouteRecordInfo<'/common/transactionDetails', '/common/transactionDetails', Record<never, never>, Record<never, never>>,
     '/common/unlock': RouteRecordInfo<'/common/unlock', '/common/unlock', Record<never, never>, Record<never, never>>,
     '/common/welcome': RouteRecordInfo<'/common/welcome', '/common/welcome', Record<never, never>, Record<never, never>>,
-    '/iframe/': RouteRecordInfo<'/iframe/', '/iframe', Record<never, never>, Record<never, never>>,
-    '/options/': RouteRecordInfo<'/options/', '/options', Record<never, never>, Record<never, never>>,
     '/popup/': RouteRecordInfo<'/popup/', '/popup', Record<never, never>, Record<never, never>>,
     '/setup/': RouteRecordInfo<'/setup/', '/setup', Record<never, never>, Record<never, never>>,
     '/setup/install': RouteRecordInfo<'/setup/install', '/setup/install', Record<never, never>, Record<never, never>>,

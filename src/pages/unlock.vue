@@ -86,10 +86,9 @@ export default {
   created() {
     this.initData()
     window.addEventListener('keydown', this.onKeyDownFunction, true)
-    console.log('import.meta.env.MODE:', import.meta.env.DEV)
-    if (import.meta.env.DEV) {
-      this.password = 'Abc12345'
-    }
+    // if (import.meta.env.DEV) {
+    //   this.password = ''
+    // }
     // postToast('Success', 'success', 500000)
   },
   methods: {

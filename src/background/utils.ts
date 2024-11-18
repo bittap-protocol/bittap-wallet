@@ -1,10 +1,9 @@
-import { CURRENT_USER_ASSETS, CURRENT_USER_WALLET_ID, getLocalStoreKey } from '@/popup/libs/tools';
-import { DecodeAssetsAddress, ListAssetsQuery, NewAssetAddress } from '@/popup/api/btc/blockStream';
+import { CURRENT_USER_ASSETS, CURRENT_USER_WALLET_ID, getLocalStoreKey, RequestPageOptions } from '@/popup/libs/tools';
+import { DecodeAssetsAddress, ListAssetsQuery, NewAssetAddress, QueryAddressList } from '@/popup/api/btc/blockStream';
 
 
 
 export const Settings = {
-    NETWORK: 'testnet',
     BASE_URL: '/src/popup/index.html#',
     UNLOCK_WALLET: '/common/unlock',
     CONNECTION_WALLET: '/common/connectionWallet',
@@ -64,7 +63,7 @@ export async function createWindow(url:string, opts:WindowOptions= {}, openerWin
             // tabId: 0,
 
         }, opts)
-        console.log('create options: ', createData)
+        // console.log('create options: ', createData)
         return chrome.windows.create(createData)
     }else{
         // @ts-ignore
@@ -84,13 +83,20 @@ export function getCurrentActiveUserInfo(){
 }
 export async function getCurrentAssets(){
     const result = await getLocalStoreKey(CURRENT_USER_ASSETS)
-    console.log('getCurrentAssets result: ', result)
+    // console.log('getCurrentAssets result: ', result)
+    return result
+}
+
+export async function getInvoices(_opt: RequestPageOptions={}){
+    const wallet_id:string = (await getLocalStoreKey(CURRENT_USER_WALLET_ID)) as string 
+    const result = await QueryAddressList({wallet_id, ..._opt })
+    // console.log('getInvoices result: ', result)
     return result
 }
 
 export async function createInvoice({ asset_id, amount }: { asset_id: string, amount: string}){
     const wallet_id:string = (await getLocalStoreKey(CURRENT_USER_WALLET_ID)) as string 
-    console.log('createInvoice wallet_id: ', wallet_id, asset_id, amount)
+    // console.log('createInvoice wallet_id: ', wallet_id, asset_id, amount)
     // @ts-ignore
     return await DecodeAssetsAddress({addr: await NewAssetAddress(wallet_id, asset_id, amount).then(res => res.data.address)})
 }

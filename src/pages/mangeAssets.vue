@@ -139,7 +139,7 @@ export default {
       const assets_name = !isAssetId(this.searchKeyword ) ? this.searchKeyword : undefined
       const wallet_id = this.store.getCurrentWalletId()
       
-      ListAssetsQuery(assets_name, assets_id, 1, 9999).then((res) => {
+      ListAssetsQuery(assets_name, assets_id, 1, 30).then((res) => {
         this.searchIng = false
         if(res) {
           res.forEach(x => {

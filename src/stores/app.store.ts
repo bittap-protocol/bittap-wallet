@@ -145,21 +145,6 @@ export interface SiteInfoRow {
 
 export type ReceiveAddrRow = ReceiveAddrInfo
 
-// @ts-ignore
-// import browserCrypto from 'browser-crypto';
-
-// const {
-// *   randomBytes,
-// * } = await import('node:crypto');
-// *
-// * const buf = randomBytes(256);
-
-// import * as ecc from 'tiny-secp256k1'
-// import bip32 from 'bip32'
-// import bip39 from 'bip39'
-// @ts-ignore
-// import bitcoin from '~/popup/bitcoinjs-lib.js'
-
 let RequestFeesLoading = false
 
 export const useAppStore = defineStore('app', () => {
@@ -233,7 +218,9 @@ export const useAppStore = defineStore('app', () => {
   }
   
   const changeNetWork = async (nt: number, url = '', token = '') => {
-    if (![0, 1, 2].includes(nt)) {
+    console.log('changeNetWork: ', nt)
+    // if (![0, 1, 2].includes(nt)) {
+    if (![1, 2].includes(nt)) {
       throw new Error('Network type not support')
     }
     if (nt === 1) {

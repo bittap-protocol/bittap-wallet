@@ -638,7 +638,7 @@ export async function validateAddress(p2trAddress) {
 
 // get current gas price
 export async function getGas() {
-  const testnet = getNetWorkType() === 0 ? '': '/testnet'
+  const testnet = getNetWorkType() === 0 ? '': '/signet'
   try {
     const response = await fetch('https://mempool.space'+testnet+'/api/v1/fees/recommended')
     const data = await response.json()
@@ -649,7 +649,7 @@ export async function getGas() {
   }
 }
 export async function getTxStatus(txid) {
-  const testnet = getNetWorkType() === 0 ? '': '/testnet'
+  const testnet = getNetWorkType() === 0 ? '': '/signet'
   try {
     const response = await fetch(`https://mempool.space${testnet}/api/tx/${txid}/status`)
     const data = await response.json()

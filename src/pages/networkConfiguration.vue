@@ -52,7 +52,12 @@
               <input v-model="token" type="text" class="field" />
             </label>
           </div> -->
-      <div class="item">
+      <div v-if="Number(networkType)===0" class="flex justify-center items-center">
+        <div class=" text-red-500 p-4 font-bold text-lg">
+          The mainnet is not open.
+        </div>
+      </div>
+      <div v-if="Number(networkType)>=1" class="item">
         <button
           class="button"
           @click="changeConfig"

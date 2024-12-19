@@ -19,7 +19,11 @@
       "~/*": ["./src/*"],
       "src/*": ["./src/*"]
     },
-    "types": ["chrome-types"]
+    "types": [
+      "vite/client",
+      "chrome-types",
+      "chrome"
+    ]
   },
   "include": [
     "vite.config.ts",
@@ -27,8 +31,8 @@
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/**/*.tsx",
-    "src/**/*.vue"
-, "src/content-script/injected.js"  ],
+    "src/**/*.vue", 
+  ],
   "references": [
     {
       "path": "./tsconfig.node.json"

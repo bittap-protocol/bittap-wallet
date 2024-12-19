@@ -411,7 +411,7 @@ export default {
       return this.store
         .getTransferList()
         .filter((x: TransferRow) => (x.wallet_id = this.wallet_id))
-        .sort((a: TransferRow, b: TransferRow) => b.timestamp - a.timestamp)
+        // .sort((a: TransferRow, b: TransferRow) => b.timestamp - a.timestamp)
     },
   },
   // computed(() => store.getActiveAccount())

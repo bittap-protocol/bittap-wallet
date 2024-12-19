@@ -42,6 +42,53 @@ export interface AssetInfo{
     total_proofs: number
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+interface BittapWalletInjected {
+    queues: Queue[];
+    channelName: string;
+    REQUEST_TARGET: string;
+    RESPONSE_TARGET: string;
+    notRemoveTypes: string[];
+    init(): ClientWallet;
+    sendMessage(data: any): void;
+    sendRequestJsBridge(queue: Queue): void;
+    getRequestId(): string;
+    getRequestQueue(): Queue[];
+    getRequestQueueInfo(requestId: string): Queue | undefined;
+    removeQueueItem(requestId: string): void;
+}
+
+interface Queue {
+    type: string;
+    client_id: string;
+    data?: any;
+    time?: number;
+    requestId?: string;
+    callback?: (response: ResponseData) => void;
+    reject?: (error: ErrorData) => void;
+}
+
+interface ResponseData {
+    type: string;
+    data: any;
+    requestId: string;
+}
+
+interface ErrorData extends ResponseData {
+    err: Error;
+}
+
+interface ClientWallet {
+    client_id: string;
+    toString(): string;
+}
+declare global {
+    interface Window {
+        BittapWalletInjected: BittapWalletInjected;
+    }
+}
+
+
 export function getTabId():number{
     return Math.floor(Math.random()*10**4)+10000;
 }
@@ -117,3 +164,144 @@ export async function searchAssets({asset_name, asset_id, page_num=1, page_size=
     })
 }
 
+
+
+
+export function jsInjectInit(){
+    /**
+     * Checks the doctype of the current document if it exists
+     *
+     * @returns {boolean} {@code true} if the doctype is html or if none exists
+     */
+    const  doctypeCheck = ()  => {
+        const { doctype } = window.document;
+        if (doctype) {
+        return doctype.name === 'html';
+        }
+        return true;
+    }
+    if ((Object.prototype.hasOwnProperty.call(window,'BittapWalletInjected') && window.BittapWalletInjected) || 
+        !doctypeCheck()) {
+        return 
+    }
+    window.BittapWalletInjected = {
+        queues: [],
+        channelName: 'bittap.jssdk.event',
+        REQUEST_TARGET: 'BITTAPWALLET_REQUEST',
+        RESPONSE_TARGET: 'BITTAPWALLET_RESPONSE',
+        notRemoveTypes: ['Bittap-onListenTransaction', 'Bittap-onAccountChange'],
+        init(): ClientWallet {
+            // const clientWallet: ClientWallet = new (function(this: ClientWallet) {
+            //     this.client_id = window.BittapWalletInjected.getRequestId();
+            //     this.toString = function() { return 'client id: ' + this.client_id; };
+            // })();
+            const clientWallet: ClientWallet = {
+                client_id: window.BittapWalletInjected.getRequestId(),
+                toString() { return 'client id: ' + this.client_id; }
+            }
+
+            window.addEventListener('message', (event: MessageEvent) => {
+                const message = event.data;
+                if (message && 
+                    message.target === window.BittapWalletInjected.RESPONSE_TARGET &&
+                    message.channel === window.BittapWalletInjected.channelName &&
+                    message.data.client_id === clientWallet.client_id
+                ) {
+                    const { type, data, requestId } = message.data;
+                    if (type && requestId) {
+                        const queue = window.BittapWalletInjected.getRequestQueueInfo(requestId);
+                        if (!queue) {
+                            return false;
+                        }
+                        if (!data) {
+                            queue.reject?.({ type, data, requestId, err: new Error('result data is empty.') });
+                            return;
+                        }
+                        if (data.rejectResult) {
+                            const msg = data.rejectMessage || 'The queue task was rejected.';
+                            queue.reject?.({ type, data, requestId, err: new Error(msg) });
+                            return;
+                        } else {
+                            queue.callback?.({ type, data, requestId });
+                        }
+                        if (!window.BittapWalletInjected.notRemoveTypes.includes(type)) {
+                            window.BittapWalletInjected.removeQueueItem(requestId);
+                        }
+                    }
+                }
+            });
+
+            return clientWallet;
+        },
+        sendMessage(data: any): void {
+            window.postMessage({
+                channel: window.BittapWalletInjected.channelName,
+                data,
+                target: window.BittapWalletInjected.REQUEST_TARGET,
+                siteInfo: {
+                    title: document.title,
+                    host: window.location.hostname,
+                    href: window.location.href,
+                    icon: window.location.protocol + "//" + window.location.host + "/favicon.ico"
+                }
+            }, '*');
+        },
+        sendRequestJsBridge(queue: Queue): void {
+            if (!queue) {
+                throw new Error('queue is empty');
+            }
+            if (!queue.type) {
+                throw new Error('type is empty');
+            }
+            if (!queue.client_id) {
+                throw new Error('client_id is empty');
+            }
+
+            queue.time = Date.now();
+            queue.type = ['Bittap', queue.type].join('-');
+            queue.requestId = !window.BittapWalletInjected.notRemoveTypes.includes(queue.type) ? window.BittapWalletInjected.getRequestId() : queue.type;
+            let queueInfo = window.BittapWalletInjected.getRequestQueueInfo(queue.requestId);
+            if (queueInfo) {
+                queueInfo.data = queue.data;
+                queueInfo.callback = queue.callback;
+            } else {
+                window.BittapWalletInjected.queues.push(queue);
+            }
+            window.BittapWalletInjected.sendMessage({
+                type: queue.type,
+                data: queue.data,
+                client_id: queue.client_id,
+                requestId: queue.requestId,
+            });
+
+            if (queue.type === 'Bittap-DisConnection') {
+                const removeQueueForClient = () => {
+                    window.BittapWalletInjected.queues.forEach((que, queueIndex) => {
+                        if (!window.BittapWalletInjected.notRemoveTypes.includes(que.type) && que.client_id === queue.client_id) {
+                            window.BittapWalletInjected.queues.splice(queueIndex, 1);
+                        }
+                    });
+                };
+                setTimeout(removeQueueForClient, 0);
+            }
+        },
+        getRequestId(): string {
+            return Date.now() + Math.random().toString(36).substr(2, 9);
+        },
+        
+        getRequestQueue(): Queue[] {
+            return window.BittapWalletInjected.queues;
+        },
+        getRequestQueueInfo(requestId: string): Queue | undefined {
+            return window.BittapWalletInjected.queues.find((queue) => queue.requestId === requestId);
+        },
+        removeQueueItem(requestId: string): void {
+            const queueIndex = window.BittapWalletInjected.queues.findIndex((queue) => queue.requestId === requestId);
+            if (queueIndex > -1) {
+                window.BittapWalletInjected.queues.splice(queueIndex, 1);
+            }
+        },
+    };
+
+    console.log('Bittap Wallet Injected');
+}

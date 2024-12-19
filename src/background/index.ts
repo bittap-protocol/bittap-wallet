@@ -4,6 +4,7 @@
 // import myWasmModule from '@/assets/main.wasm?url';
 
 // import { phrases, getActiveAccount, activeAccount } from '@/stores/app.store'
+// import { jsInjectInit } from './utils'
 import {
   sendMessage,
   encryptData,
@@ -24,8 +25,9 @@ import {
   isTxId,
 } from '@/popup/libs/tools'
 
-import { createInvoice, createWindow, getCurrentAssets, Settings, WindowOptions, searchAssets, getInvoices } from './utils'
+import { createInvoice, createWindow, getCurrentAssets, Settings, WindowOptions, searchAssets, getInvoices, jsInjectInit } from './utils'
 import { getTxStatus } from '@/popup/api/btc/blockStream'
+import { URL } from 'url'
 
 
 
@@ -548,6 +550,25 @@ function InitConfig(data: configOpt) {
   setNetworkConfiguration(configs.networkType, configs.networkRpcUrl)
   saveLocalStoreKey(CURRENT_USER_WALLET_ID, configs.currentInfo.wallet_id)
 }
+
+// background.js
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  console.log('chrome.tabs.onUpdated: ', tabId, changeInfo, tab);
+  // @ts-ignore
+  if (changeInfo.status === 'complete' && ['https:','http:'].includes(new URL(tab.url).protocol)) {
+    chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      // files: [chrome.runtime.getURL('injected.js')],
+      func: jsInjectInit,
+      world: 'MAIN',
+      injectImmediately: true
+    }).then(res => {
+      console.log('executeScript is executed.', res);
+    }).catch(error => {
+      console.error('Error injecting script:', error);
+    });
+  }
+});
 
 self.onerror = function (message, source, lineno, colno, error) {
   console.info(

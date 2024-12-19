@@ -101,7 +101,11 @@ const resolveProvide = async () => {
     
     const { btcAddress, name } = store.getActiveAccount()
     if(networkType && netWorkTypes.includes(networkType) && store.getNetWorkType()!== netWorkTypes.findIndex(o => o === networkType)){
-        await store.changeNetWork(netWorkTypes.findIndex(o => o === networkType), rpcUrl.value)
+        await store.changeNetWork(netWorkTypes.findIndex(o => o === networkType), rpcUrl.value).catch((error) => {
+            hideLoading()
+            showLoading('Switch network failed:'+error)
+            throw error
+        })
     }
     if(accountActive.value !== store.activeAccount){
         await store.switchActiveAccount(accountActive.value)

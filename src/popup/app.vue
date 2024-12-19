@@ -209,7 +209,7 @@ export default {
       if (this.store.getNetWorkConfig().netType === 0) {
         return 'https://mempool.space/tx/' + hash
       } else {
-        return 'https://mempool.space/testnet/tx/' + hash
+        return 'https://mempool.space/signet/tx/' + hash
       }
     },
     _toast(text: string, type = 'info', delay = 3000) {
@@ -407,7 +407,7 @@ export default {
     <div class="mask"></div>
     <div class="loading-main">
       <div class="loading loading-dots loading-lg"></div>
-      <div class="text">{{ loadingText }}</div>
+      <div class="text p-2">{{ loadingText }}</div>
     </div>
   </div>
   <Suspense>

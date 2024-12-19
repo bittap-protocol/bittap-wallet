@@ -1,20 +1,15 @@
 {
   "dependencies": {
     "@bitcoinerlab/secp256k1": "^1.1.1",
-    "@mempool/mempool.js": "^2.3.0",
-    "@tevm/blockexplorer": "1.0.0-next.28",
     "bignumber.js": "^9.1.2",
     "bip32": "^4.0.0",
     "bip39": "^3.1.0",
     "bitcoinjs-lib": "^6.1.5",
-    "bitcore-lib": "^10.0.28",
-    "browser-crypto": "^2.1.0",
     "bs58check-ts": "^0.1.0",
     "buffer": "^6.0.3",
     "crypto-js": "^4.2.0",
     "ecpair": "^2.1.0",
     "events": "^3.3.0",
-    "extensionizer": "^1.0.1",
     "hdkey": "^2.1.0",
     "marked": "^11.1.1",
     "nanoid": "^5.0.7",
@@ -25,11 +20,12 @@
     "vite-plugin-node-polyfills": "^0.21.0",
     "vue": "^3.4.10",
     "vue-qr": "^4.0.9",
-    "vue-router": "^4.2.5"
+    "vue-router": "^4.2.5",
+    "webextension-polyfill": "^0.12.0"
   },
   "description": "BitTap wallet",
   "devDependencies": {
-    "@crxjs/vite-plugin": "2.0.0-beta.22",
+    "@crxjs/vite-plugin": "2.0.0-beta.28",
     "@ffflorian/jszip-cli": "^3.6.4",
     "@iconify-json/carbon": "^1.1.31",
     "@iconify-json/iconamoon": "^1.1.4",
@@ -101,5 +97,5 @@
     "makeLib": "npx browserify --standalone bitcoin - -o ./src/popup/bitcoinjs-lib.js <<<'module.exports = require('bitcoinjs-lib');'"
   },
   "type": "module",
-  "version": "1.0.2"
+  "version": "1.0.7"
 }

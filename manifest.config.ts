@@ -51,15 +51,16 @@ export default defineManifest(async (env) => ({
   //     "value": "same-origin"
   // },
   content_security_policy: {
+    // "script-src 'self' 'wasm-unsafe-eval' 'inline-speculation-rules'
     // extension_pages: "script-src 'self' 'wasm-eval'; object-src 'self';",
     // extension_pages: "script-src 'self' 'wasm-unsafe-eval' http://localhost:* http://127.0.0.1:*; object-src 'self'; script-src-elem 'self' http://localhost:* http://127.0.0.1:*;",
-    // extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; script-src-elem 'self'",
+    extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; script-src-elem 'self'  http://localhost:* http://127.0.0.1:* chrome-extension://*;",
     // // extension_pages: "script-src 'self'; object-src 'self';",
     // sandbox: "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'wasm-eval' 'unsafe-eval' http://localhost:* http://127.0.0.1:* https://vite.dev/*; child-src 'self'; script-src-elem 'self' 'unsafe-inline' http://localhost:* http://127.0.0.1:* https://vite.dev/*;"
-    // "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",
+    // "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; script-src 'self' 'wasm-unsafe-eval' 'inline-speculation-rules'",
     // "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'wasm-eval' 'unsafe-eval'; child-src 'self';"
-    extension_pages: `script-src 'self' 'wasm-unsafe-eval' http://localhost http://127.0.0.1; object-src 'self';script-src-elem 'self' http://localhost http://127.0.0.1;`,
-    sandbox: `sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' chrome-extension://* http://localhost http://127.0.0.1 https://vite.dev; child-src 'self'; script-src-elem 'self' 'unsafe-inline' http://localhost http://127.0.0.1 https://vite.dev;`
+    // extension_pages: `script-src 'self' 'wasm-unsafe-eval' http://localhost http://127.0.0.1; object-src 'self';script-src-elem 'self' http://localhost http://127.0.0.1;`,
+    // sandbox: `sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' chrome-extension://* http://localhost http://127.0.0.1 https://vite.dev; child-src 'self'; script-src-elem 'self' 'unsafe-inline' http://localhost http://127.0.0.1 https://vite.dev;`
     // extension_pages: `script-src 'self' 'wasm-unsafe-eval'; object-src 'self';`,
   },
   externally_connectable: {
@@ -69,13 +70,21 @@ export default defineManifest(async (env) => ({
   homepage_url: 'https://www.bittap.org',
   author: 'https://www.bittap.org',
   minimum_chrome_version: "88",
-  host_permissions: ['<all_urls>'],
+  // host_permissions: ['<all_urls>'],
+  host_permissions: ['*://*/*'],
   // options_page: 'src/options/index.html',
-  permissions: ['storage','clipboardWrite','unlimitedStorage',"scripting","activeTab",'tabs'],
+  permissions: ['storage','clipboardWrite','unlimitedStorage','scripting',"activeTab",'tabs'],
   web_accessible_resources: [
     {
       "resources": ["injected.js"],
       matches: ['<all_urls>'],
+      "all_frames": true,
+      "match_about_blank": false,
+      use_dynamic_url: false,
     },
+    {
+      "resources": ["assets/*"],  // Adjust the path as needed
+      "matches": ["<all_urls>"]     // Or a more specific URL pattern
+    }
   ],
 }))

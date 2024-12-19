@@ -37,6 +37,7 @@
         Unlock
       </button>
       <router-link
+        v-if="!requestId"
         to="/common/importAccount?clear=all"
         class="btn btn-link no-underline"
       >

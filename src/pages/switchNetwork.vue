@@ -86,13 +86,14 @@ const rejectProvide = async (rejectMessage:string='') => {
 }
 const resolveProvide = async () => {
     showLoading('Switch network...')
-    await store.changeNetWork(netWorkTypes.findIndex(o => o === networkType), rpcUrl.value).finally(async () => {
+    await store.changeNetWork(netWorkTypes.findIndex(o => o === networkType), rpcUrl.value).then(async()=>{
         await store.getUserAssetsBalance()
         store.initConfig()
-        hideLoading()
-        sendMessage('Bittap-ResolveResult', {
+         sendMessage('Bittap-ResolveResult', {
             requestId,
         })
+    }).finally(async () => {
+        hideLoading()
     }).catch((error) => {
         console.error('store.changeNetWork on error: ', error)
         rejectProvide(error+'')

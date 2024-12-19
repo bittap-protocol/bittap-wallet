@@ -128,7 +128,7 @@ export default {
   },
   methods: {
     txUrl(tx_id:string){
-      return getTxUrl(tx_id,this.store.getNetWorkType() === 0 ? '': 'testnet')
+      return getTxUrl(tx_id,this.store.getNetWorkType() === 0 ? '': 'signet')
     }
   }
 }

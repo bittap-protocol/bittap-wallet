@@ -97,5 +97,5 @@
     "makeLib": "npx browserify --standalone bitcoin - -o ./src/popup/bitcoinjs-lib.js <<<'module.exports = require('bitcoinjs-lib');'"
   },
   "type": "module",
-  "version": "1.0.7"
+  "version": "1.0.8"
 }

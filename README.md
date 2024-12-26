@@ -1,3 +1,9 @@
+### About Bittap wallet
+
+Decentralized solutions on Taproot Assets and Lightning Network
+
+The BitTap team aims to build a decentralized infrastructure for applications on Taproot Assets protocol and Lightning Network. Our first product is a decentralized wallet based on the Taproot Assets protocol. This wallet is a truly non-custodial Taproot Assets wallet, addressing the issue of asset centralization by trading platforms and providing users with the same security and user experience like what MetaMask wallet does on Ethereum.
+
 ### Project Structure
 
 - `src` - main source.
@@ -41,12 +47,19 @@ To build the extension, run
 pnpm build
 ```
 
-And then pack files under `dist`, you can upload `dist.crx` or `dist.xpi` to appropriate extension store.
+### Build zip file
 
-## Contributors
-<!-- readme: collaborators,contributors -end -->
+To build the extension, run
 
-## Credits
+```bash
+pnpm buildZip
+```
 
-This template is heavenly inspired by: https://github.com/antfu/vitesse-webext
-# bittap-wallet
+
+# Links
+[Official website](https://bittap.org/)
+[Document center](https://doc.bittap.org/)
+[Api Docs](https://doc.bittap.org/developer-guides/api-reference)
+[JS SDK Docs](https://doc.bittap.org/developer-guides/js-sdk)
+[Privacy Policy](https://doc.bittap.org/wallet-product/privacy-policy)
+

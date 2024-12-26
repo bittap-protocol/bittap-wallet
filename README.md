@@ -57,9 +57,9 @@ pnpm buildZip
 
 
 # Links
-[Official website](https://bittap.org/)
-[Document center](https://doc.bittap.org/)
-[Api Docs](https://doc.bittap.org/developer-guides/api-reference)
-[JS SDK Docs](https://doc.bittap.org/developer-guides/js-sdk)
-[Privacy Policy](https://doc.bittap.org/wallet-product/privacy-policy)
+- [Official website](https://bittap.org/)
+- [Document center](https://doc.bittap.org/)
+- [Api Docs](https://doc.bittap.org/developer-guides/api-reference)
+- [JS SDK Docs](https://doc.bittap.org/developer-guides/js-sdk)
+- [Privacy Policy](https://doc.bittap.org/wallet-product/privacy-policy)
 
